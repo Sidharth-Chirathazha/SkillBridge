@@ -4,76 +4,85 @@ from student.models import StudentProfile
 from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from django.core.mail import send_mail
-import random
-from django.conf import settings
 from .models import Skill
+from .utils import generate_email_otp
 
 User = get_user_model()
 
 # Serializer for User Registration 
 class UserCreationSerializer(serializers.Serializer):
     email = serializers.EmailField()
-    role = serializers.ChoiceField(choices=["student","tutor"])
-    password = serializers.CharField(write_only=True)
+    role = serializers.ChoiceField(choices=["student","tutor"], required=False)
+    password = serializers.CharField(write_only=True, required=False)
+    otp = serializers.IntegerField(write_only=True, required=False)
+    new_password = serializers.CharField(write_only=True, required=False)
 
     def validate_email(self, email):
-        if User.objects.filter(email=email).exists():
-            raise serializers.ValidationError("Email already exists")
+        if 'new_password' not in self.initial_data:
+            if User.objects.filter(email=email).exists():
+                if 'role' in self.initial_data:
+                    raise serializers.ValidationError("Email already exists")
+            else:
+                if 'role' not in self.initial_data:
+                    raise serializers.ValidationError("Email does not exist")
+        
         return email
     
-    def save(self):
-        email = self.validated_data['email']
-        role = self.validated_data['role']
-        password = self.validated_data['password']
-
-        otp = random.randint(100000,999999)
-
-        cache.set(f'otp_{email}', otp, timeout=30)
-
-        send_mail(
-            subject="Your OTP for Registration",
-            message=f"Your OTP for Registration is {otp}. Expires in 2 minutes",
-            from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[email],
-        )
-        return {"message": "OTP sent successfully.", "email": email, "role": role}
-
-# Serializer for OTP verification
-class OtpVerificationSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    otp = serializers.IntegerField()
-    role = serializers.ChoiceField(choices=["student", "tutor"])
-    password = serializers.CharField(write_only=True)
-
     def validate(self, attrs):
-        email = attrs.get('email')
-        otp = attrs.get('otp')
+        if 'otp' in attrs:
+            email = attrs.get('email')
+            otp = attrs.get('otp')
 
-        # Check if the OTP is correct
-        cached_otp = cache.get(f'otp_{email}')
-        if cached_otp is None:
-            raise serializers.ValidationError("Otp has expired. Please request for a new OTP.")
-        if int(otp) != cached_otp:
-            raise serializers.ValidationError("Invalid OTP.")
-        
+            # Check if the OTP is correct
+            cached_otp = cache.get(f'otp_{email}')
+            if cached_otp is None:
+                raise serializers.ValidationError("Otp has expired. Please request for a new OTP.")
+            if int(otp) != cached_otp:
+                raise serializers.ValidationError("Invalid OTP.")
+            
+            # Ensure new_password is provided for password reset
+            if 'new_password' in attrs and not attrs.get('new_password'):
+                raise serializers.ValidationError("New password is required for password reset.")
+            
         return attrs
     
     def save(self):
-        email = self.validated_data['email']
-        role = self.validated_data['role']
-        password = self.validated_data['password']
+        email = self.validated_data.get('email')
+        role = self.validated_data.get('role')
+        password = self.validated_data.get('password')
+        otp = self.validated_data.get('otp')
+        new_password = self.validated_data.get('new_password')
 
-        user = User.objects.create_user(email=email, password=password, role=role)
-
-        if role == 'student':
-            StudentProfile.objects.create(user=user)
-        elif role == 'tutor':
-            TutorProfile.objects.create(user=user)
+        if otp and role and password: # Case 1: User creation after OTP verification
+            user = User.objects.create(email=email, password=password, role=role)
+            if role == 'student':
+                StudentProfile.objects.create(user=user)
+            elif role == 'tutor':
+                TutorProfile.objects.create(user=user)
+            cache.delete(f'otp_{email}') # Remove OTP after successful verification
+            return {"message": "User created successfully."}
         
-        cache.delete(f'otp_{email}')
-
-        return user
+        elif email and password and role:
+            generate_email_otp(email, subject="Registration")
+            return {"message": "OTP sent for registration.", "email": email}
+        
+        elif email and not(password or role or otp or new_password):
+            if not User.objects.filter(email=email).exists():
+                raise serializers.ValidationError("Email does not exists")
+            generate_email_otp(email, subject="Password reset")
+            return {"message": "OTP sent for password reset.", "email": email}
+        
+        elif email and otp and not new_password:
+            return {"message": "OTP verified. You can now reset your password."}
+        
+        elif email and new_password:
+            user = User.objects.get(email=email)
+            user.set_password(new_password)
+            user.save()
+            cache.delete(f'otp_{email}')
+            return {"message": "Your password has been reset successfully."}
+        
+        raise serializers.ValidationError("Invalid request parameters.")
 
 # Serializer for User Login  
 class UserLoginSerializer(serializers.Serializer):
@@ -104,7 +113,7 @@ class UserLoginSerializer(serializers.Serializer):
 
 # User Serializer
 class UserProfileSerializer(serializers.ModelSerializer):
-    skills = serializers.PrimaryKeyRelatedField(queryset=Skill.objects.all, many=True, required=False)
+    skills = serializers.PrimaryKeyRelatedField(queryset=Skill.objects.all(), many=True, required=False)
 
     class Meta:
         model = User
@@ -112,6 +121,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'email', 'first_name', 'last_name', 'phone', 'profile_pic_url', 'bio', 
             'country', 'city', 'skills', 'wallet_balance', 'role'
         ]
-        read_only_fields = ['wallet_balance', 'role']
+        read_only_fields = ['email', 'wallet_balance', 'role']
 
     

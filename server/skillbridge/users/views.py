@@ -1,4 +1,4 @@
-from .serializers import UserCreationSerializer,UserLoginSerializer,OtpVerificationSerializer,UserProfileSerializer
+from .serializers import UserCreationSerializer,UserLoginSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -9,10 +9,9 @@ from django.utils.decorators import method_decorator
 from student.serializers import StudentProfileSerializer
 from tutor.serializers import TutorProfileSerializer
 
-
 # Create your views here.
 
-class UserCreationView(APIView):
+class UserCreationHandlerView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
@@ -22,16 +21,6 @@ class UserCreationView(APIView):
             return Response(response, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-class OtpVerificationView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request, *args, **kwargs):
-        serializer = OtpVerificationSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            return Response({"message": "User registered successfully."}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 @method_decorator(csrf_exempt, name='dispatch')
 class UserLoginView(APIView):
@@ -53,48 +42,47 @@ class UserLoginView(APIView):
             }, status=status.HTTP_200_OK)
             
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class UserLogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self,request):
+        try:
+            refresh_token = request.data.get('refresh')
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response({"message": "Logout successful."}, status=status.HTTP_205_RESET_CONTENT)
+        except Exception as e:
+            return Response({"error": "Invalid token or already logged out."}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        user = request.user
-        user_data = UserProfileSerializer(user).data
-
-        if user.role == 'tutor':
-            tutor_data = TutorProfileSerializer(user.tutor_profile).data
-            return Response({**user_data, **tutor_data})
-        
-        elif user.role == 'student':
-            student_data = StudentProfileSerializer(user.student_profile).data
-            return Response({**user_data, **student_data})
-        
-        return Response(user_data)
-
-    def post(self, request):
+    def get(self,request):
         user = request.user
         if user.role == 'tutor':
-            user_serializer = UserProfileSerializer(user, data=request.data, partial = True)
-            tutor_serializer = TutorProfileSerializer(user.tutor_profile, data=request.data, partial=True)
-
-            if user_serializer.is_valid() and tutor_serializer.is_valid():
-                user_serializer.save()
-                tutor_serializer.save()
-                return Response({"message": "Tutor profile completed."}, status=status.HTTP_200_OK)
-
-            return Response(
-                {"user_errors": user_serializer.errors, "tutor_errors": tutor_serializer.errors},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
+            serializer = TutorProfileSerializer(user.tutor_profile)
         elif user.role == 'student':
-            user_serializer = UserProfileSerializer(user, data=request.data, partial=True)
+            serializer = StudentProfileSerializer(user.student_profile)
+        else:
+            return Response({'error': 'Invalid role'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def put(self,request):
+        user = request.user
+        if user.role == 'tutor':
+            serializer = TutorProfileSerializer(user.tutor_profile, data=request.data, partial=True)
+        elif user.role == 'student':
+            serializer = StudentProfileSerializer(user.student_profile, data=request.data, partial=True)
+        else:
+            return Response({'error': 'Invalid role'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-            if user_serializer.is_valid():
-                user_serializer.save()
-                return Response({"message": "Student profile completed."}, status=status.HTTP_200_OK)
-
-            return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response({"error": "Invalid role."}, status=status.HTTP_400_BAD_REQUEST)
+   

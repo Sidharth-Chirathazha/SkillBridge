@@ -5,7 +5,7 @@ import StudentDashboard from '../pages/student/StudentDashboard'
 const StudentRoutes = () => {
   return (
     <Routes>
-        <Route path="/student/dashboard" element={<StudentDashboard/>}/>
+        <Route path="dashboard" element={<StudentDashboard/>}/>
     </Routes>
   )
 }

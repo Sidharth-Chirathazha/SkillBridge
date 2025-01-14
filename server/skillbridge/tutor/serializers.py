@@ -1,40 +1,60 @@
 from rest_framework import serializers
 from .models import TutorEducation,TutorProfile,TutorWorkExperience
+from socialmedia.serializers import SocialMediaPlatformSerializer
+from users.serializers import UserProfileSerializer,Skill
+from socialmedia.models import SocialMediaPlatform
 
 
 class TutorEducationSerializer(serializers.ModelSerializer):
     class Meta:
         model = TutorEducation
-        fields = ['id', 'university', 'degree', 'year_of_passing']
+        fields = ['university', 'degree', 'year_of_passing']
 
 class TutorWorkExperienceSerializer(serializers.ModelSerializer):
     class Meta:
         model = TutorWorkExperience
-        fields = ['id', 'company', 'job_role', 'date_of_joining', 'date_of_leaving']
+        fields = ['company', 'job_role', 'date_of_joining', 'date_of_leaving']
 
 class TutorProfileSerializer(serializers.ModelSerializer):
-    educations = TutorEducationSerializer(many=True)
-    work_experiences = TutorWorkExperienceSerializer(many=True)
+    user = UserProfileSerializer()
+    educations = TutorEducationSerializer(many=True, required=True)
+    work_experiences = TutorWorkExperienceSerializer(many=True, required=True)
+    social_media_profiles = SocialMediaPlatformSerializer(many=True, required=False)
 
     class Meta:
         model = TutorProfile
-        fields = ['resume_url', 'rating', 'is_verified', 'educations', 'work_experiences']
+        fields = ['user', 'resume_url', 'rating', 'is_verified', 
+            'educations', 'work_experiences', 'social_media_profiles']
         read_only_fields = ['is_verified', 'rating']
 
     def update(self, instance, validated_data):
+        user_data = validated_data.pop('user',{})
         educations_data = validated_data.pop('educations', [])
         work_experiences_data = validated_data.pop('work_experiences', [])
+        social_media_data = validated_data.pop('social_media_profiles', [])
+
+        # Update Skills
+        skill_ids = user_data.get('skills', [])
+        if skill_ids:
+            skill_ids = [skill.id if hasattr(skill, 'id') else skill for skill in skill_ids]
+            instance.user.skills.set(Skill.objects.filter(id__in=skill_ids))
+
+        #Update User fields
+        for field, value in user_data.items():
+            if field != 'skills':
+                setattr(instance.user, field, value)
+        instance.user.save()
 
         # Update educations
-        for edu_data in educations_data:
-            TutorEducation.objects.update_or_create(
-                tutor_profile = instance, id=edu_data.get('id'), defaults=edu_data
-            )
+        for edu in educations_data:
+            TutorEducation.objects.update_or_create(tutor_profile=instance, **edu)
         
         # Update work experiences
-        for work_data in work_experiences_data:
-            TutorWorkExperience.objects.update_or_create(
-                tutor_profile = instance, id=work_data.get('id'), defaults=work_data
-            )
+        for work in work_experiences_data:
+            TutorWorkExperience.objects.update_or_create(tutor_profile=instance, **work)
 
-        return super().update(instance, validated_data)
+        # Update Social Media Profiles
+        for social in social_media_data:
+            SocialMediaPlatform.objects.create(tutor_profile=instance, **social)
+
+        return instance

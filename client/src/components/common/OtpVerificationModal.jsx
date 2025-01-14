@@ -2,6 +2,7 @@ import React, {useState, useEffect, useRef} from 'react'
 import { X } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux';
 import { verifyOtp, registerUser } from '../../redux/slices/authSlice';
+import toast from 'react-hot-toast';
 
 
 
@@ -9,7 +10,6 @@ const OtpVerificationModal = ({isOpen, onClose, email, role, password}) => {
   const [otp, setOtp] = useState(['','','','','','']);
   const [timeLeft, setTimeLeft] = useState(30);
   const [canResend, setCanResend] = useState(false);
-  const [error, setError] = useState('');
   const inputRefs = useRef([]);
 
   const dispatch = useDispatch();
@@ -17,7 +17,7 @@ const OtpVerificationModal = ({isOpen, onClose, email, role, password}) => {
 
   useEffect(()=>{
     if (isError && message){
-      setError(message);
+      toast.error(message);
     }
   }, [isError, message]);
 
@@ -74,24 +74,24 @@ const OtpVerificationModal = ({isOpen, onClose, email, role, password}) => {
   const handleResend = () => {
     setTimeLeft(30);
     setCanResend(false);
-    setError('')
     // Add your resend OTP logic here
     dispatch(registerUser({email, role, password}))
+    toast.success("An OTP has been sent to your email")
     
   };
 
   const handleSubmit = async () => {
     const otpString = otp.join('');
     if (otpString.length !== 6) {
-      setError("Please enter a 6 digit otp")
+      toast.error("Please enter a 6 digit otp")
       return;
     }
-    setError('');
 
     dispatch(verifyOtp({email, otp:otpString, role, password}))
     .unwrap()
     .then(()=>{
       onClose();
+      toast.success("User Registered Successfully")
     })
     .catch((error)=>{
 
@@ -157,9 +157,6 @@ const OtpVerificationModal = ({isOpen, onClose, email, role, password}) => {
             </button>
           )}
         </div>
-
-        {/* Error Message */}
-        {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
 
 
         {/* Verify Button */}

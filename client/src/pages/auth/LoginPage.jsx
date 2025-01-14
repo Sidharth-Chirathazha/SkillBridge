@@ -4,9 +4,9 @@ import auth_image from '../../assets/images/auth_image.jpg'
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import GoogleButton from '../../components/common/GoogleButton';
-import {Alert, AlertDescription} from '../../components/common/ui/Alert'
 import { resetState, loginUser } from '../../redux/slices/authSlice';
-import { XCircle } from 'lucide-react';
+import ForgotPasswordModal from '../../components/common/ForgotPasswordModal';
+import toast from 'react-hot-toast';
 
 
 
@@ -16,6 +16,8 @@ const LoginPage = ()=> {
     password: '',
   });
 
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+
   const [userType, setUserType] = useState('student');
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -24,6 +26,7 @@ const LoginPage = ()=> {
 
   useEffect(()=>{
     if(isError){
+      toast.error(message)
       dispatch(resetState())
     }
   },[formData,dispatch])
@@ -128,15 +131,7 @@ const LoginPage = ()=> {
               </div>
             </div>
 
-            {/* Error Message */}
-            {isError && (
-            <Alert variant="destructive" className="mb-4 flex items-center gap-2  text-red-500 border-red-500 bg-red-50">
-              <XCircle className="h-4 w-4 flex-shrink-0 mt-1" />
-              <AlertDescription className="text-sm leading-tight mt-1.5">
-                {message}
-              </AlertDescription>
-            </Alert>
-            )}
+           
 
             <form onSubmit={handleSubmit} className="space-y-3">
               <div>
@@ -172,7 +167,7 @@ const LoginPage = ()=> {
               </button>
               <div className="text-right">
                 <p className="text-sm text-[#273044]">
-                  <a href="#" className="text-[#F23276] hover:text-[#1E467F]  text-xs">
+                  <a onClick={() => setIsForgotPasswordOpen(true)} className="text-[#F23276] hover:text-[#1E467F] hover:cursor-pointer  text-xs">
                     Forgot password?
                   </a>
                 </p>
@@ -198,6 +193,10 @@ const LoginPage = ()=> {
             </form>
           </div>
         </div>
+        <ForgotPasswordModal 
+          isOpen={isForgotPasswordOpen} 
+          onClose={() => setIsForgotPasswordOpen(false)} 
+        />
       </div>
     </div>
   );

@@ -52,9 +52,17 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),  # Customize as per your project needs
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),    # Customize as per your project needs
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),  # Customize as needed
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),    # Customize as needed
+    'ROTATE_REFRESH_TOKENS': False,                # Optional: Set True to use rotating refresh tokens
+    'BLACKLIST_AFTER_ROTATION': True,              # Required for blacklist functionality
+    'ALGORITHM': 'HS256',                          # Default: Modify if needed
+    'SIGNING_KEY': SECRET_KEY,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
 }
+
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',  # Default authentication
@@ -76,6 +84,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 MIDDLEWARE = [

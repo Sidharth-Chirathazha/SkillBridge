@@ -1,8 +1,11 @@
 import React from 'react'
+import UserLayout from '../../components/common/UserLayout'
 
 const TutorDashboard = () => {
   return (
-    <div>TutorDashboard</div>
+    <UserLayout>
+      <div>TutorDashboard</div>
+    </UserLayout>
   )
 }
 

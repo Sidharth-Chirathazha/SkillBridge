@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import {useDispatch, useSelector} from 'react-redux'
 import GoogleButton from '../../components/common/GoogleButton';
 import { registerUser } from '../../redux/slices/authSlice';
+import toast from 'react-hot-toast';
 
 const RegistrationPage = ()=> {
   const [formData, setFormData] = useState({
@@ -33,9 +34,10 @@ const RegistrationPage = ()=> {
 
   useEffect(()=>{
     if(isError){
-      setErrors(prev=>({...prev,general: message}));
+      // setErrors(prev=>({...prev,general: message}));
+      toast.error(message)
     }
-  }, [isError, message]);
+  }, [isError]);
 
   const validateForm = ()=>{
     let tempErrors = {
@@ -92,10 +94,13 @@ const RegistrationPage = ()=> {
       dispatch(registerUser({email, role, password}))
       .unwrap()
       .then(()=>{
+        toast.success("OTP has been successfully sent to your email.")
         setIsOtpModalOpen(true);
       })
       .catch((error)=>{
-        setErrors(prev=>({...prev, general: error}));
+        // setErrors(prev=>({...prev, general: error}));
+        // toast.error(error)
+
       });
     }
   };
@@ -155,7 +160,7 @@ const RegistrationPage = ()=> {
           <div className="w-1/2 p-8 mt-2 bg-white">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold text-[#273044]">Sign up</h2>
-              <button className="text-[#F23276] hover:text-[#1E467F] text-xs">
+              <button onClick={()=>navigate('/')} className="text-[#F23276] hover:text-[#1E467F] text-xs">
                 Back to Home
               </button>
             </div>
@@ -186,11 +191,11 @@ const RegistrationPage = ()=> {
               </div>
             </div>
 
-            {errors.general && (
+            {/* {errors.general && (
               <div className="bg-red-50 border border-red-200 text-red-500 px-4 py-2 rounded-md text-sm mb-4">
                 {errors.general}
               </div>
-            )}
+            )} */}
 
             <form onSubmit={handleSubmit} className="space-y-3">
               {renderInputField("email","Email address")}
