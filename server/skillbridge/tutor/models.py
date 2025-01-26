@@ -1,5 +1,8 @@
 from django.db import models
 from users.models import User
+import cloudinary
+import cloudinary.uploader
+import cloudinary.models
 
 # Create your models here.
 
@@ -7,10 +10,10 @@ from users.models import User
 # Tutor Profile
 class TutorProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="tutor_profile")
-    resume_url = models.URLField()
+    resume_url = cloudinary.models.CloudinaryField('file', blank=True, null=True)
     rating = models.FloatField(default=0.0)
     is_verified = models.BooleanField(default=False)
-    
+    cur_job_role = models.CharField(max_length=200, default="Not Specified")
 
     def __str__(self):
         return self.user.email

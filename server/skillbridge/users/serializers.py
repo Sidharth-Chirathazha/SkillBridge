@@ -6,6 +6,8 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from .models import Skill
 from .utils import generate_email_otp
+from cloudinary.utils import cloudinary_url
+from cloudinary.uploader import upload as cloudinary_upload
 
 User = get_user_model()
 
@@ -54,11 +56,13 @@ class UserCreationSerializer(serializers.Serializer):
         new_password = self.validated_data.get('new_password')
 
         if otp and role and password: # Case 1: User creation after OTP verification
-            user = User.objects.create(email=email, password=password, role=role)
+            user = User.objects.create_user(email=email, password=password, role=role)
             if role == 'student':
                 StudentProfile.objects.create(user=user)
+                print("Student created")
             elif role == 'tutor':
                 TutorProfile.objects.create(user=user)
+                print("Tutor created")
             cache.delete(f'otp_{email}') # Remove OTP after successful verification
             return {"message": "User created successfully."}
         
@@ -114,13 +118,55 @@ class UserLoginSerializer(serializers.Serializer):
 # User Serializer
 class UserProfileSerializer(serializers.ModelSerializer):
     skills = serializers.PrimaryKeyRelatedField(queryset=Skill.objects.all(), many=True, required=False)
+    profile_pic_url = serializers.ImageField(required=False, allow_null=True)
+    phone = serializers.CharField()
+    linkedin_url = serializers.CharField()
 
     class Meta:
         model = User
         fields = [
-            'email', 'first_name', 'last_name', 'phone', 'profile_pic_url', 'bio', 
+            'email', 'first_name', 'last_name', 'phone', 'profile_pic_url','linkedin_url', 'bio', 
             'country', 'city', 'skills', 'wallet_balance', 'role'
         ]
-        read_only_fields = ['email', 'wallet_balance', 'role']
+        read_only_fields = ['wallet_balance', 'role']
+
+    
+    def validate_phone(self, value):
+        print("Inside validate_phone")
+        user = self.context.get('request').user
+
+        if value == user.phone:
+            return value
+        
+        if User.objects.filter(phone=value).exclude(id=user.id).exists():
+            print("Inside If")
+            raise serializers.ValidationError("This phone number is already in use.")
+        return value
+    
+    def validate_linkedin_url(self, value):
+        print("Inside validate_linkedin_url")
+        user = self.context.get('request').user
+
+        if value == user.linkedin_url:
+            return value
+        
+        if User.objects.filter(linkedin_url=value).exclude(id=user.id).exists():
+            print("Inside If")
+            raise serializers.ValidationError("This linkedin url is already in use.")
+        return value
+    
+    def update(self, instance, validated_data):
+        # Handle profile_pic_url (Cloudinary upload)
+        profile_pic = validated_data.pop('profile_pic_url', None)
+        if profile_pic:
+             # Upload the image to Cloudinary and get the public_id
+             cloudinary_response = cloudinary_upload(profile_pic)
+             instance.profile_pic_url = cloudinary_response.get('public_id')
+
+        # Update other fields
+        for field, value in validated_data.items():
+            setattr(instance, field, value)
+        instance.save()
+        return instance
 
     

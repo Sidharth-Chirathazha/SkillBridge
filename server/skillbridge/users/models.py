@@ -1,16 +1,20 @@
 from django.contrib.auth.models import AbstractBaseUser,BaseUserManager,PermissionsMixin
 from django.core.validators import MinValueValidator
 from django.db import models
-
+import cloudinary
+import cloudinary.uploader
+import cloudinary.models
 # Create your models here.
 
 # User Model
 class UserManager(BaseUserManager):
-    def create_user(self, email, password=None, **extra_fields):
+    def create_user(self, email, password=None, role=None, **extra_fields):
         if not email:
             raise ValueError("The Email field is required")
+        if not role:
+            raise ValueError("The Role field is required for non - super users")
         email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
+        user = self.model(email=email, role=role, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
@@ -18,7 +22,7 @@ class UserManager(BaseUserManager):
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        return self.create_user(email, password, **extra_fields)
+        return self.create_user(email, password,role='admin', **extra_fields)
     
 class Skill(models.Model):
     skill_name = models.CharField(max_length=100,unique=True)
@@ -41,7 +45,8 @@ class User(AbstractBaseUser):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
-    profile_pic_url = models.URLField(blank=True, null=True)
+    profile_pic_url = cloudinary.models.CloudinaryField('image', blank=True, null=True)
+    linkedin_url = models.CharField(unique=True, null=True, blank=True)
     bio = models.TextField(blank=True, null=True)
     country = models.CharField(max_length=100,null=True, blank=True)
     city = models.CharField(max_length=100,null=True, blank=True)

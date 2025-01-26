@@ -3,10 +3,10 @@ import sb_logo_white from '../../assets/images/sb_logo_white.png'
 import auth_image from '../../assets/images/auth_image.jpg'
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import GoogleButton from '../../components/common/GoogleButton';
-import { resetState, loginUser } from '../../redux/slices/authSlice';
+import { resetState, loginUser, googleLogin } from '../../redux/slices/authSlice';
 import ForgotPasswordModal from '../../components/common/ForgotPasswordModal';
 import toast from 'react-hot-toast';
+import { GoogleLogin } from '@react-oauth/google';
 
 
 
@@ -24,6 +24,13 @@ const LoginPage = ()=> {
 
   const {isLoading, isError, isSuccess, message, role} = useSelector((state)=>state.auth);
 
+  const handleGoogleSuccess = (response) =>{
+    const token = response.tokenId || response.credential;
+    dispatch(googleLogin({token,role:userType}));
+  };
+
+
+
   useEffect(()=>{
     if(isError){
       toast.error(message)
@@ -37,8 +44,10 @@ const LoginPage = ()=> {
 
     if (role==='student'){
       navigate('/student/dashboard');
+      toast.success(message);
     }else if(role==='tutor'){
       navigate('/tutor/dashboard');
+      toast.success(message)
     }
 
     return ()=>{
@@ -180,7 +189,16 @@ const LoginPage = ()=> {
                 <div className="flex-1 border-t border-gray-200"></div>
               </div>
 
-              <GoogleButton/>
+              {/* Google Login Button */}
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                buttonText={`Continue with Google as ${userType}`}
+                useOneTap
+                text="continue_with"
+                theme="outline"
+                size="large"
+                cookiePolicy="single_host_origin"
+              />
 
               <div className="text-center space-y-2 ">
                 <p className="text-sm text-[#273044]">

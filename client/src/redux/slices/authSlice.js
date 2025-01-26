@@ -73,6 +73,36 @@ export const loginUser = createAsyncThunk(
   }
 );
 
+//Thunk for Google Authentication
+export const googleLogin = createAsyncThunk(
+  "/googleLogin",
+  async({token, role}, thunkAPI)=>{
+      try{
+          const response =  await authService.googleLogin(token,role);
+          if(response.access){
+            localStorage.setItem("access_token", response.access)
+            
+          }
+          if(response.refresh){
+            localStorage.setItem("refresh_token", response.refresh)
+            
+          }
+          return response;
+      }catch(error){
+        const message = 
+        (error.response && 
+         error.response.data && 
+         (error.response.data.email || // Check for field-specific error
+          error.response.data.message || // Check for general message
+          Object.values(error.response.data)[0])) || // Get first error if it's an object
+          error.message ||
+          error.toString();
+          
+          return thunkAPI.rejectWithValue(message);
+      }
+  }
+);
+
 //Thunk for User Logout
 export const logoutUser = createAsyncThunk(
   "/logoutUser",
@@ -163,8 +193,34 @@ export const fetchUser = createAsyncThunk(
   async(_, thunkAPI)=>{
       try{
           const response = await authService.fetchUser();
-          console.log(response);
           return response
+          
+      }catch(error){
+        const message = 
+        (error.response && 
+         error.response.data && 
+         (error.response.data.message || // Check for general message
+          Object.values(error.response.data)[0])) || // Get first error if it's an object
+          error.message ||
+          error.toString();
+          
+          return thunkAPI.rejectWithValue(message);
+      }
+  }
+);
+
+//Thunk for updating user profile
+export const updateUser = createAsyncThunk(
+  
+  "/updateUser",
+  async(formData, thunkAPI)=>{
+    console.log("Inside Update uer thunk");
+      try{
+        console.log("Request Data:", formData);
+        
+        const response = await authService.updateUser(formData);
+        console.log(response.data);
+        return response.data
           
       }catch(error){
         const message = 
@@ -187,6 +243,8 @@ const authSlice = createSlice({
       isLoading: false,
       isError: false,
       isSuccess: false,
+      isGoogleError: false,
+      isGoogleSuccess:false,
       message: "",
       role:null,
       otpRequestSuccess: false,
@@ -200,6 +258,8 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.isError = false;
         state.isSuccess = false;
+        state.isGoogleError = false;
+        state.isGoogleSuccess = false;
         state.message = "";
         state.otpRequestSuccess = false;
         state.otpVerifySuccess = false;
@@ -259,6 +319,26 @@ const authSlice = createSlice({
         .addCase(loginUser.rejected, (state,action)=>{
           state.isLoading = false;
           state.isError = true;
+          state.message = action.payload;
+        })
+
+        //Handle Goole Login
+        .addCase(googleLogin.pending, (state)=>{
+          state.isLoading = true;
+        })
+        .addCase(googleLogin.fulfilled,(state,action)=>{
+          state.isLoading = false;
+          state.isSuccess = true;
+          state.isGoogleSuccess = true;
+          state.role = action.payload.role;
+          state.message = "Google login Successfull";
+          state.isAuthenticated = true;
+          localStorage.setItem('isAuthenticated', 'true');
+        })
+        .addCase(googleLogin.rejected, (state,action)=>{
+          state.isLoading = false;
+          state.isError = true;
+          state.isGoogleError = true;
           state.message = action.payload;
         })
 
@@ -350,7 +430,23 @@ const authSlice = createSlice({
           state.isSuccess = false;
           state.message = action.payload || "Failed to fetch profile.";
           state.isAuthenticated = true
-        });
+        })
+
+        // Handle User Profile Updation
+        .addCase(updateUser.pending, (state) => {
+          state.isLoading = true;
+        })
+        .addCase(updateUser.fulfilled, (state, action) => {
+          state.isLoading = false;
+          state.isSuccess = true;
+          // state.userData = action.payload; // Store the registered user data
+        })
+        .addCase(updateUser.rejected, (state, action) => {
+          state.isLoading = false;
+          state.isError = true;
+          state.message = action.payload;
+          console.log("updateUser slice:",state.message);
+        })
     },
   });
   

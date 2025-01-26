@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, HomeIcon, Users, GraduationCap, Book, MessageSquare, Star, UserRoundPen, LogOut, PlusCircle, ChevronDown, Loader } from 'lucide-react';
-import tutor from '../../assets/images/tutor.jpg';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import { fetchUser, logoutUser } from '../../redux/slices/authSlice';
@@ -14,23 +13,51 @@ const UserLayout = ({ children }) => {
   const {userData, isAuthenticated} = useSelector((state)=>state.auth)
   const [loading , setLoading] = useState(true);
 
+  const tutorNavItems = [
+    { name: 'Dashboard', icon: HomeIcon, path:'/tutor/dashboard/' },
+    { name: 'Teaching', icon: Book, path:'/tutor/dashboard/' },
+    { name: 'Courses', icon: GraduationCap, path:'/tutor/dashboard/' },
+    { name: 'Community', icon: Users, path:'/tutor/dashboard/' },
+    { name: 'Messages', icon: MessageSquare, path:'/tutor/dashboard/' },
+    { name: 'Reviews', icon: Star, path:'/tutor/dashboard/' },
+    { name: 'Account', icon: UserRoundPen, path:'/tutor/profile/' },
+  ];
+
+  const studentNavItems = [
+    { name: 'Dashboard', icon: HomeIcon, path:'/student/dashboard/' },
+    { name: 'Courses', icon: GraduationCap, path:'/student/dashboard/' },
+    { name: 'Community', icon: Users, path:'/student/dashboard/' },
+    { name: 'Messages', icon: MessageSquare, path:'/student/dashboard/' },
+    { name: 'Account', icon: UserRoundPen, path:'/student/profile/' },
+  ];
+
+
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     const refresh_token = localStorage.getItem("refresh_token");
+    const access_token = localStorage.getItem("access_token");
 
-    if (!refresh_token) {
+    if (!refresh_token || !access_token) {
         console.log("Refresh token is missing");
         return;
     }
 
-    // Dispatch logout action
-    dispatch(logoutUser({ refresh: refresh_token }));
+    try{
+      await dispatch(logoutUser({refresh:refresh_token})).unwrap();
 
-    // Clear tokens from localStorage
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+
+      toast.success("Logged out successfully.");
+      navigate("/login");
+    }catch(error){
+      console.log("Logout failed:", error);
+      toast.error("Failed to logout.");
+      
+    }
   };
 
   useEffect(() => {
@@ -49,14 +76,13 @@ const UserLayout = ({ children }) => {
     fetchData();
   }, [dispatch]);
  
-  console.log(userData);
   
-  useEffect(()=>{
-    if(!isAuthenticated){
-        toast.success("Logged out successfully");
-        navigate('/login');
-    }
-  },[isAuthenticated, navigate])
+  // useEffect(()=>{
+  //   if(!isAuthenticated){
+  //       toast.success("Logged out successfully");
+  //       navigate('/login');
+  //   }
+  // },[isAuthenticated, navigate])
 
   // Handle clicking outside of dropdown
   useEffect(() => {
@@ -70,15 +96,17 @@ const UserLayout = ({ children }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const navItems = [
-    { name: 'Dashboard', icon: HomeIcon },
-    { name: 'Teaching', icon: Book },
-    { name: 'Courses', icon: GraduationCap },
-    { name: 'Community', icon: Users },
-    { name: 'Messages', icon: MessageSquare },
-    { name: 'Reviews', icon: Star },
-    { name: 'Account', icon: UserRoundPen },
-  ];
+  const handleNavigation = (item) => {
+    setActivePage(item.name);
+    navigate(item.path);
+  }
+
+  
+
+
+  if (!userData || !userData.user) {
+    return <p>No user data available.</p>;
+  }
 
 
   if (loading || !userData) {
@@ -89,14 +117,19 @@ const UserLayout = ({ children }) => {
     );
   }
 
+  console.log(userData.user.email);
+  const navItems = userData.user.role === 'tutor' ? tutorNavItems:studentNavItems;
+  
+
   return (
     <div className="flex h-screen bg-background-500">
       {/* Sidebar */}
       <div className="w-64 bg-primary text-background-50 flex flex-col">
         {/* Logo Area */}
         <div className="p-4 mb-6">
-          <div className="text-2xl font-semibold text-background-50">
-            <span className="text-secondary">Skill</span>Bridge
+          <div className="flex items-center space-x-2 cursor-pointer group">
+            <GraduationCap className="text-background-50 text-2xl group-hover:text-secondary transition-all duration-700" />
+            <span className="text-background-50 text-xl font-bold group-hover:text-secondary transition-all duration-700">SkillBridge</span>
           </div>
         </div>
 
@@ -105,7 +138,7 @@ const UserLayout = ({ children }) => {
           {navItems.map((item) => (
             <button
               key={item.name}
-              onClick={() => setActivePage(item.name)}
+              onClick={() => handleNavigation(item)}
               className={`w-full flex items-center px-4 py-3 text-sm font-medium ${
                 activePage === item.name
                   ? 'bg-primary-600 text-background-50'
@@ -119,9 +152,9 @@ const UserLayout = ({ children }) => {
         </nav>
 
         {/* Logout Button */}
-        <button onClick={handleLogout} className="w-full flex items-center px-4 py-3 text-sm font-medium text-background-300 hover:bg-primary-600 hover:text-background-50">
+        <button onClick={handleLogout} className="w-full flex items-center px-4 py-3 text-sm font-medium text-background-50 hover:text-secondary-500 transition-all duration-500">
           <LogOut className="h-5 w-5 mr-3" />
-          Logout
+            Logout
         </button>
       </div>
 
@@ -143,10 +176,17 @@ const UserLayout = ({ children }) => {
 
           <div className="flex items-center gap-4">
             {/* Add Course Button */}
-            <button className="px-4 py-2 bg-primary text-background-50 rounded-lg flex items-center hover:bg-secondary transition-colors duration-500">
+            {userData.user.role === 'tutor' && (
+            <button className={`px-4 py-2 rounded-lg flex items-center transition-colors duration-500 ${
+                  userData?.is_verified
+                    ? "bg-primary text-background-50 hover:bg-secondary"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
+                disabled={!userData?.is_verified}>
               <PlusCircle className="h-5 w-5 mr-2" />
               Add Course
             </button>
+            )}
 
             {/* Profile Dropdown */}
             <div className="relative" ref={dropdownRef}>
@@ -155,12 +195,12 @@ const UserLayout = ({ children }) => {
                 className="flex items-center space-x-3 focus:outline-none"
               >
                 <img
-                  src={tutor}
+                  src={userData.user.profile_pic_url}
                   alt="Profile"
                   className="w-10 h-10 rounded-full border-2 border-background-200"
                 />
                 <div className="flex items-center">
-                  <span className="text-sm font-medium text-text-500 mr-2">{userData.email || 'Nil'}</span>
+                  <span className="text-sm font-medium text-text-500 mr-2">{userData.user.email || 'Nil'}</span>
                   <ChevronDown className={`h-4 w-4 text-text-400 transition-transform ${isProfileOpen ? 'transform rotate-180' : ''}`} />
                 </div>
               </button>
@@ -172,6 +212,7 @@ const UserLayout = ({ children }) => {
                     <button
                       className="w-full text-left px-4 py-2 text-sm text-text-500 hover:bg-background-100"
                       role="menuitem"
+                      onClick={()=> navigate('/tutor/profile')}
                     >
                       Profile Settings
                     </button>

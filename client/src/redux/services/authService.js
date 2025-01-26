@@ -21,7 +21,11 @@ export const loginUser = async(userData)=>{
 
 //User Logout
 export const logoutUser = async(tokenData)=>{
-    const response = await axiosInstance.post("/logout/", tokenData);
+    const response = await axiosInstance.post(
+        "/logout/", 
+        tokenData,
+        { requiresAuth:true }
+    );
     return response.data;
 }
 
@@ -45,8 +49,29 @@ export const resetPassword = async(resetData)=>{
 
 //Fetch Users
 export const fetchUser = async()=>{
-    const response = await axiosInstance.get("/profile/", {
-        requiresAuth: true,
-    });
+    const response = await axiosInstance.get(
+        "/profile/", 
+        {requiresAuth: true}
+    );
     return response.data
 }
+
+//Update User Profile
+export const updateUser = async (formData) => {
+    const config = {
+      requiresAuth: true,
+      headers: {} // Let Axios set the Content-Type for FormData
+    };
+    
+    return await axiosInstance.put("/profile/complete/", formData, config);
+  };
+
+// Google Authentication
+export const googleLogin = async(token, role)=>{
+    const response = await axiosInstance.post("/google-login/", {
+        token,
+        role,
+    });
+    return response.data;
+}
+  

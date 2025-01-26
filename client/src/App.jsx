@@ -4,48 +4,54 @@ import AuthRoutes from './routes/AuthRoutes'
 import StudentRoutes from './routes/StudentRoutes'
 import TutorRoutes from './routes/TutorRoutes'
 import {Toaster} from 'react-hot-toast'
+import AdminRoutes from './routes/AdminRoutes'
+import { GoogleOAuthProvider } from '@react-oauth/google'
 
 
+const GOOGLE_CLIENT_ID = '459413727415-dvf8noohso39n8cd10nvvbcm0amnicmo.apps.googleusercontent.com'
 
 function App() {
   return (
-    <BrowserRouter>
-      {/* Toaster configuration */}
-      <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 3000,
-            style: {
-              background: '#333',
-              color: '#fff',
-              padding: '16px',
-              borderRadius: '8px',
-            },
-            success: {
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <BrowserRouter>
+        {/* Toaster configuration */}
+        <Toaster
+            position="bottom-right"
+            toastOptions={{
+              duration: 3000,
               style: {
-                background: '#10B981',
+                background: '#333',
+                color: '#fff',
+                padding: '16px',
+                borderRadius: '8px',
               },
-              icon: '✓',
-            },
-            error: {
-              style: {
-                background: '#EF4444',
+              success: {
+                style: {
+                  background: '#10B981',
+                },
+                icon: '✓',
               },
-              icon: '✕',
-            },
-            loading: {
-              style: {
-                background: '#3B82F6',
+              error: {
+                style: {
+                  background: '#EF4444',
+                },
+                icon: '✕',
               },
-            },
-          }}
-        />
-        <Routes>
-          <Route path="/*" element={<AuthRoutes />} />
-          <Route path="/student/*" element={<StudentRoutes />} />
-          <Route path="/tutor/*" element={<TutorRoutes />} />
-        </Routes>
-    </BrowserRouter>
+              loading: {
+                style: {
+                  background: '#3B82F6',
+                },
+              },
+            }}
+          />
+          <Routes>
+            <Route path="/*" element={<AuthRoutes />} />
+            <Route path="/student/*" element={<StudentRoutes />} />
+            <Route path="/tutor/*" element={<TutorRoutes />} />
+            <Route path="/admin/*" element={<AdminRoutes/>}/>
+          </Routes>
+      </BrowserRouter>
+    </GoogleOAuthProvider>
   )
 }
 

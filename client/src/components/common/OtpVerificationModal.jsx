@@ -3,6 +3,7 @@ import { X } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux';
 import { verifyOtp, registerUser } from '../../redux/slices/authSlice';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 
 
@@ -11,8 +12,11 @@ const OtpVerificationModal = ({isOpen, onClose, email, role, password}) => {
   const [timeLeft, setTimeLeft] = useState(30);
   const [canResend, setCanResend] = useState(false);
   const inputRefs = useRef([]);
+  const timerRef = useRef(null);
+  const startTimeRef = useRef(null);
 
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { isLoading, isError, message } = useSelector(state => state.auth);
 
   useEffect(()=>{
@@ -21,25 +25,37 @@ const OtpVerificationModal = ({isOpen, onClose, email, role, password}) => {
     }
   }, [isError, message]);
 
-
   useEffect(()=>{
-    let timer;
-    if (timeLeft > 0 && isOpen){
-        timer = setInterval(()=>{
-            setTimeLeft(prev=>{
-                if (prev <= 1){
-                    setCanResend(true);
-                    clearInterval(timer);
-                    return 0;
-                }
-                return prev-1;
-            });
-        },1000);
+    if(isOpen){
+      setTimeLeft(30);
+      setCanResend(false);
+
+      startTimeRef.current = Date.now();
+
+      timerRef.current = setInterval(()=>{
+        const elapsedSeconds = Math.floor((Date.now() - startTimeRef.current)/1000);
+        const newTimeLeft = Math.max(30 - elapsedSeconds, 0);
+
+        setTimeLeft(newTimeLeft);
+
+        if(newTimeLeft === 0){
+          setCanResend(true);
+          clearInterval(timerRef.current);
+        }
+      },100);
+    }else{
+      if(timerRef.current){
+        clearInterval(timerRef.current);
+      }
     }
+
     return ()=>{
-        if(timer) clearInterval(timer);
-    }
-  },[timeLeft,isOpen]);
+      if(timerRef.current){
+        clearInterval(timerRef.current)
+      }
+    };
+  },[isOpen]);
+
 
   const handleChange = (index,value)=>{
     if (value.length > 1) return;// Prevent multiple digits
@@ -74,6 +90,7 @@ const OtpVerificationModal = ({isOpen, onClose, email, role, password}) => {
   const handleResend = () => {
     setTimeLeft(30);
     setCanResend(false);
+    startTimeRef.current = Date.now();
     // Add your resend OTP logic here
     dispatch(registerUser({email, role, password}))
     toast.success("An OTP has been sent to your email")
@@ -91,7 +108,8 @@ const OtpVerificationModal = ({isOpen, onClose, email, role, password}) => {
     .unwrap()
     .then(()=>{
       onClose();
-      toast.success("User Registered Successfully")
+      toast.success("User Registered Successfully");
+      navigate('/login')
     })
     .catch((error)=>{
 

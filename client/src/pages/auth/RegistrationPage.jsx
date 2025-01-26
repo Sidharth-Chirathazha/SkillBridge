@@ -4,9 +4,9 @@ import auth_image from '../../assets/images/auth_image.jpg'
 import OtpVerificationModal from '../../components/common/OtpVerificationModal';
 import { useNavigate } from 'react-router-dom';
 import {useDispatch, useSelector} from 'react-redux'
-import GoogleButton from '../../components/common/GoogleButton';
-import { registerUser } from '../../redux/slices/authSlice';
+import { googleLogin, registerUser, resetState } from '../../redux/slices/authSlice';
 import toast from 'react-hot-toast';
+import { GoogleLogin } from '@react-oauth/google';
 
 const RegistrationPage = ()=> {
   const [formData, setFormData] = useState({
@@ -28,16 +28,33 @@ const RegistrationPage = ()=> {
   const navigate = useNavigate()
   const dispatch = useDispatch()
 
-  const {isError, message, isLoading} = useSelector(state=>state.auth);
+  const {isError, message, isLoading, isGoogleSuccess, isGoogleError} = useSelector(state=>state.auth);
   const {email,password} = formData
   const role = userType;
 
+  const handleGoogleSuccess = (response) =>{
+      const token = response.tokenId || response.credential;
+      dispatch(googleLogin({token,role:userType}));
+    };
+
+
+  useEffect(() => {
+    if (isGoogleSuccess) {
+      if (userType === 'student') {
+        navigate('/student/dashboard');
+      } else if (userType === 'tutor') {
+        navigate('/tutor/dashboard');
+      }
+      toast.success(message);
+    }
+  }, [isGoogleSuccess, userType, navigate, message]);
+
   useEffect(()=>{
-    if(isError){
+    if(isError || isGoogleError){
       // setErrors(prev=>({...prev,general: message}));
       toast.error(message)
     }
-  }, [isError]);
+  }, [isError, isGoogleError]);
 
   const validateForm = ()=>{
     let tempErrors = {
@@ -218,7 +235,18 @@ const RegistrationPage = ()=> {
                 <div className="flex-1 border-t border-gray-200"></div>
               </div>
 
-              <GoogleButton/>
+              {/* Google Login Button */}
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                buttonText={`Continue with Google as ${userType}`}
+                useOneTap
+                text="continue_with"
+                theme="outline"
+                size="large"
+                cookiePolicy="single_host_origin"
+                flow="auth-code"  // Use authorization code flow
+                redirect_uri="http://localhost:5173"
+              />
 
               <div className="text-center space-y-2">
                 <p className="text-sm text-[#273044]">

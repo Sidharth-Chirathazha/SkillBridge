@@ -16,6 +16,8 @@ const ForgotPasswordModal = ({isOpen, onClose}) => {
   const [timeLeft, setTimeLeft] = useState(30);
   const [canResend, setCanResend] = useState(false);
   const inputRefs = useRef([]);
+  const timerRef = useRef(null);
+  const startTimeRef = useRef(null);
 
   const dispatch = useDispatch();
   const { isLoading, isError, isSuccess, message,otpRequestSuccess, 
@@ -27,6 +29,7 @@ const ForgotPasswordModal = ({isOpen, onClose}) => {
     if (otpRequestSuccess) {
       toast.success('OTP sent successfully to your email');
       setStep(2);
+      startTimeRef.current = Date.now();
       setTimeLeft(30);
       setCanResend(false);
       dispatch(resetState());
@@ -56,36 +59,51 @@ const ForgotPasswordModal = ({isOpen, onClose}) => {
     }
   }, [isError, message]);
 
-  useEffect(()=>{
-    let timer;
-    if (timeLeft > 0 && isOpen && step === 2){
-        timer = setInterval(()=>{
-            setTimeLeft(prev=>{
-                if(prev<=1){
-                    setCanResend(true);
-                    clearInterval(timer);
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
+useEffect(()=>{
+  if(isOpen && step === 2){
+    if(startTimeRef.current === null){
+      startTimeRef.current = Date.now();
+      setTimeLeft(30);
+      setCanResend(false);
     }
-    return ()=>{
-        if (timer) clearInterval(timer);
-    };
-  }, [timeLeft, isOpen, step]);
+    timerRef.current = setInterval(()=>{
+      const elapsedSeconds = Math.floor((Date.now() - startTimeRef.current)/1000);
+      const newTimeLeft = Math.max(30 - elapsedSeconds, 0);
 
-  const handleClose = () => {
-    setStep(1);
-    setEmail('');
-    setOtp(['', '', '', '', '', '']);
-    setPasswords({
-      newPassword: '',
-      confirmPassword: '',
-    });
-    dispatch(resetState());
-    onClose();
+      setTimeLeft(newTimeLeft);
+
+      if(newTimeLeft === 0){
+        setCanResend(true);
+        clearInterval(timerRef.current);
+      }
+    }, 100);
+  }
+
+  return () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
   };
+}, [isOpen, step])
+
+const handleClose = () => {
+  setStep(1);
+  setEmail('');
+  setOtp(['', '', '', '', '', '']);
+  setPasswords({
+    newPassword: '',
+    confirmPassword: '',
+  });
+  // Reset timer state
+  if (timerRef.current) {
+    clearInterval(timerRef.current);
+  }
+  startTimeRef.current = null;
+  setTimeLeft(30);
+  setCanResend(false);
+  dispatch(resetState());
+  onClose();
+};
 
   const handleEmailSubmit = async()=>{
     dispatch(requestResetPasswordOtp({email}));
@@ -118,6 +136,7 @@ const ForgotPasswordModal = ({isOpen, onClose}) => {
   };
 
   const handleResendOTP = ()=>{
+    startTimeRef.current = Date.now();
     setTimeLeft(30);
     setCanResend(false);
     dispatch(requestResetPasswordOtp({email}));

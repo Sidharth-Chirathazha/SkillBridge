@@ -14,6 +14,9 @@ from pathlib import Path
 from dotenv import load_dotenv
 from datetime import timedelta
 import os
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
  
 
 load_dotenv()
@@ -52,7 +55,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),  # Customize as needed
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),  # Customize as needed
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),    # Customize as needed
     'ROTATE_REFRESH_TOKENS': False,                # Optional: Set True to use rotating refresh tokens
     'BLACKLIST_AFTER_ROTATION': True,              # Required for blacklist functionality
@@ -81,10 +84,17 @@ INSTALLED_APPS = [
     'tutor',
     'student',
     'socialmedia',
+    'sbAdmin',
     'rest_framework',
     'corsheaders',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
+    'django.contrib.sites',  # Required by allauth
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+    'dj_rest_auth.registration',
 ]
 
 MIDDLEWARE = [
@@ -96,6 +106,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
+
 ]
 
 ROOT_URLCONF = 'skillbridge.urls'
@@ -189,3 +201,35 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 AUTH_USER_MODEL = 'users.User'
+
+SITE_ID = 1
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APP': {
+            'client_id': os.getenv('GOOGLE_CLIENT_ID'),
+            'secret': os.getenv('GOOGLE_CLIENT_SECRET'),
+            'key': ''
+        }
+    }
+}
+
+# Add the following in your settings.py
+
+# This tells Django to use the default redirect page after login
+LOGIN_REDIRECT_URL = '/'
+
+# Define the URL for social login provider (Google in this case)
+SOCIAL_AUTH_GOOGLE_OAUTH2_CALLBACK_URL = 'http://127.0.0.1:8000/accounts/google/login/callback/'
+
+# This setting is needed if you're using the allauth views for login/logout
+ACCOUNT_AUTHENTICATED_REDIRECT_URL = '/'  # URL to redirect after successful login
+
+
+
+
+cloudinary.config(
+    cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),  # Replace with your Cloudinary cloud name
+    api_key=os.getenv('CLOUDINARY_API_KEY'),       # Replace with your Cloudinary API key
+    api_secret=os.getenv('CLOUDINARY_API_SECRET')  # Replace with your Cloudinary API secret
+)
