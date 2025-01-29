@@ -34,7 +34,7 @@ const AdminLayout = ({ children }) => {
     { name: 'Students', icon: Users,  path:'/admin/students/' },
     { name: 'Tutors', icon: FileText,  path:'/admin/tutors/' },
     { name: 'Courses', icon: FileText,  path:'/admin/dashboard/' },
-    { name: 'Add Features', icon: FileText,  path:'/admin/dashboard/' },
+    { name: 'Content Management', icon: FileText,  path:'/admin/contentManagement/' },
     { name: 'Communities', icon: Database,  path:'/admin/dashboard/' },
     { name: 'Settings', icon: Settings,  path:'/admin/dashboard/' },
   ];
@@ -90,13 +90,6 @@ const AdminLayout = ({ children }) => {
       
       fetchData();
     }, [dispatch]);
-
-  // useEffect(()=>{
-  //   if(!isAdminAuthenticated){
-  //       toast.success("Logged out successfully");
-  //       navigate('/admin/login');
-  //   }
-  // },[isAdminAuthenticated, navigate])
 
   // Dynamically set activePage based on current route
   useEffect(() => {

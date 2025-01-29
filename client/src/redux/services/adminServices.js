@@ -62,3 +62,22 @@ export const updateUserActiveStatus = async (id, is_active)=>{
     );
     return response.data
 }
+
+//Add Skill
+export const addSkill = async(skillData)=>{
+    const response = await axiosInstance.post(
+        "/skills/", 
+        skillData,
+        {requiresAuth: true}
+    );
+    return response.data
+}
+
+//Delete Skill
+export const deleteSkill = async(id)=>{
+    const response = await axiosInstance.delete(
+        `/skills/${id}`, 
+        {requiresAuth: true}
+    );
+    return response.data
+}

@@ -74,4 +74,14 @@ export const googleLogin = async(token, role)=>{
     });
     return response.data;
 }
+
+//Fetch Skills
+export const fetchSkills = async()=>{
+    const response = await axiosInstance.get(
+        "/skills/", 
+        {requiresAuth: true}
+    );
+    return response.data
+}
+
   

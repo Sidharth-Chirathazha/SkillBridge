@@ -1,9 +1,7 @@
 from rest_framework import serializers
 from .models import TutorEducation,TutorProfile,TutorWorkExperience
-from socialmedia.serializers import SocialMediaPlatformSerializer
 from users.serializers import UserProfileSerializer
 from users.models import Skill
-from socialmedia.models import SocialMediaPlatform
 from cloudinary.utils import cloudinary_url
 from cloudinary.uploader import upload as cloudinary_upload
 

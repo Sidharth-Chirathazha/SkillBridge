@@ -4,13 +4,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import { fetchUser, logoutUser } from '../../redux/slices/authSlice';
 import { useNavigate } from 'react-router-dom';
+import { Button } from "@mui/material";
 
 const UserLayout = ({ children }) => {
   const [activePage, setActivePage] = useState('Dashboard');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const {userData, isAuthenticated} = useSelector((state)=>state.auth)
+  const {userData} = useSelector((state)=>state.auth)
   const [loading , setLoading] = useState(true);
 
   const tutorNavItems = [
@@ -175,17 +176,23 @@ const UserLayout = ({ children }) => {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Add Course Button */}
-            {userData.user.role === 'tutor' && (
-            <button className={`px-4 py-2 rounded-lg flex items-center transition-colors duration-500 ${
-                  userData?.is_verified
-                    ? "bg-primary text-background-50 hover:bg-secondary"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                }`}
-                disabled={!userData?.is_verified}>
-              <PlusCircle className="h-5 w-5 mr-2" />
-              Add Course
-            </button>
+            {userData.user.role === "tutor" && (
+              <Button
+                startIcon={<PlusCircle className="h-5 w-5" />}
+                variant="contained"
+                color={userData?.is_verified ? "primary" : "inherit"}
+                disabled={!userData?.is_verified}
+                onClick={() => userData?.is_verified && navigate("/tutor/createCourse")}
+                sx={{
+                  "&.Mui-disabled": {
+                    backgroundColor: "gray",
+                    color: "white",
+                    cursor: "not-allowed",
+                  },
+                }}
+              >
+                Add Course
+              </Button>
             )}
 
             {/* Profile Dropdown */}

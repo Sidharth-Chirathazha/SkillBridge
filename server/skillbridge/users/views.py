@@ -1,9 +1,10 @@
-from .serializers import UserCreationSerializer,UserLoginSerializer
+from .serializers import UserCreationSerializer,UserLoginSerializer, SkillSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.permissions import AllowAny,IsAuthenticated
+from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework.permissions import AllowAny,IsAuthenticated,IsAdminUser
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from student.serializers import StudentProfileSerializer
@@ -12,11 +13,14 @@ from rest_framework.parsers import MultiPartParser,FormParser,JSONParser
 import json
 from student.models import StudentProfile
 from tutor.models import TutorProfile
-from users.models import User
+from users.models import User, Skill
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 
 # Create your views here.
+
+class CustomTokenRefreshView(TokenRefreshView):
+    pass
 
 class UserCreationHandlerView(APIView):
     permission_classes = [AllowAny]
@@ -63,7 +67,7 @@ class UserLogoutView(APIView):
             return Response({"message": "Logout successful."}, status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
             return Response({"error": "Invalid token or already logged out."}, status=status.HTTP_400_BAD_REQUEST)
-
+        
 
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
@@ -96,6 +100,7 @@ class UserProfileView(APIView):
             json_data = {}
 
         print("inside put :", json_data)
+        print("Inside put",user.role)
         # Include file data if available
         if 'profile_pic' in request.FILES:
             print("Inside if in put",request.FILES['profile_pic'])
@@ -169,5 +174,35 @@ class GoogleLoginView(APIView):
 
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class SkillListHandleView(APIView):
+    """Handling permission classes based on the authenticated user"""
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAuthenticated()]
+        elif self.request.method in ['POST', 'DELETE']:
+            return [IsAdminUser()]
+        return super().get_permissions()
+    
+    def get(self, request):
+        skills = Skill.objects.all()
+        serializer = SkillSerializer(skills, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = SkillSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, skill_id):
+        try:
+            skill = Skill.objects.get(id=skill_id)
+            skill.delete()
+            return Response({"message": "Skill deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+        except Skill.DoesNotExist:
+            return Response({"error": "Skill not found."}, status=status.HTTP_404_NOT_FOUND)
+
 
    

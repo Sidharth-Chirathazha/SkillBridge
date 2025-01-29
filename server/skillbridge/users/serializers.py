@@ -119,8 +119,8 @@ class UserLoginSerializer(serializers.Serializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     skills = serializers.PrimaryKeyRelatedField(queryset=Skill.objects.all(), many=True, required=False)
     profile_pic_url = serializers.ImageField(required=False, allow_null=True)
-    phone = serializers.CharField()
-    linkedin_url = serializers.CharField()
+    phone = serializers.CharField(required=False, allow_null=True)
+    linkedin_url = serializers.CharField(required=False, allow_null=True)
 
     class Meta:
         model = User
@@ -168,5 +168,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
             setattr(instance, field, value)
         instance.save()
         return instance
+    
+class SkillSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Skill
+        fields = ['id', 'skill_name']
 
     

@@ -7,6 +7,7 @@ import AdminTutorsManagement from '../pages/admin/AdminTutorsManagement'
 import AdminTutorDetailView from '../pages/admin/AdminTutorDetailView'
 import AdminStudentManagement from '../pages/admin/AdminStudentManagement'
 import AdminStudentDetailView from '../pages/admin/AdminStudentDetailView'
+import AdminContentManagement from '../pages/admin/AdminContentManagement'
 
 const AdminRoutes = () => {
   return (
@@ -18,6 +19,7 @@ const AdminRoutes = () => {
           <Route path="/tutors/:id" element={<AdminTutorDetailView/>}/>
           <Route path="students" element={<AdminStudentManagement/>}/>
           <Route path="/students/:id" element={<AdminStudentDetailView/>}/>
+          <Route path="/contentManagement/" element={<AdminContentManagement/>}/>
         </Route>
     </Routes>
   )

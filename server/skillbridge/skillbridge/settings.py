@@ -55,7 +55,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),  # Customize as needed
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),  # Customize as needed
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),    # Customize as needed
     'ROTATE_REFRESH_TOKENS': False,                # Optional: Set True to use rotating refresh tokens
     'BLACKLIST_AFTER_ROTATION': True,              # Required for blacklist functionality
@@ -85,6 +85,7 @@ INSTALLED_APPS = [
     'student',
     'socialmedia',
     'sbAdmin',
+    'courses',
     'rest_framework',
     'corsheaders',
     'rest_framework_simplejwt',

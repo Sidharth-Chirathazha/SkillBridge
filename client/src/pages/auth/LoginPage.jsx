@@ -1,223 +1,201 @@
 import React, { useEffect, useState } from 'react';
-import sb_logo_white from '../../assets/images/sb_logo_white.png'
-import auth_image from '../../assets/images/auth_image.jpg'
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { resetState, loginUser, googleLogin } from '../../redux/slices/authSlice';
 import ForgotPasswordModal from '../../components/common/ForgotPasswordModal';
 import toast from 'react-hot-toast';
 import { GoogleLogin } from '@react-oauth/google';
+import { GraduationCap } from 'lucide-react';
+import auth_image from '../../assets/images/auth_image.jpg';
 
-
-
-const LoginPage = ()=> {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
-
+const LoginPage = () => {
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
-
   const [userType, setUserType] = useState('student');
+  
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { isLoading, isError, isSuccess, message, role } = useSelector((state) => state.auth);
 
-  const {isLoading, isError, isSuccess, message, role} = useSelector((state)=>state.auth);
-
-  const handleGoogleSuccess = (response) =>{
+  const handleGoogleSuccess = (response) => {
     const token = response.tokenId || response.credential;
-    dispatch(googleLogin({token,role:userType}));
+    dispatch(googleLogin({ token, role: userType }));
   };
 
-
-
-  useEffect(()=>{
-    if(isError){
-      toast.error(message)
-      dispatch(resetState())
+  useEffect(() => {
+    if (isError) {
+      toast.error(message);
+      dispatch(resetState());
     }
-  },[formData,dispatch])
+  }, [isError, message, dispatch]);
 
-  useEffect(()=>{
-
+  useEffect(() => {
     dispatch(resetState());
-
-    if (role==='student'){
+    if (role === 'student') {
       navigate('/student/dashboard');
       toast.success(message);
-    }else if(role==='tutor'){
+    } else if (role === 'tutor') {
       navigate('/tutor/dashboard');
-      toast.success(message)
+      toast.success(message);
     }
-
-    return ()=>{
-      dispatch(resetState());
-    };
   }, [isSuccess, role, navigate, dispatch]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
-  
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const userData = {
-      ...formData,
-      role:userType
-    };
-    dispatch(loginUser(userData));
+    dispatch(loginUser({ ...formData, role: userType }));
   };
 
   return (
-    <div className="h-screen bg-[#EEF1F7] flex items-center justify-center p-4">
-      <div className="max-w-4xl w-full bg-white rounded-xl shadow-lg overflow-hidden h-[80vh]">
-        <div className="flex h-full">
-          {/* Left Side */}
-          <div className="bg-[#1E467F] p-2 w-1/2 flex flex-col items-center justify-center space-y-0">
-            <div className="flex-none mb-0 mt-10">
-              <img 
-                src={sb_logo_white}
-                alt="SkillBridge Logo"
-                className="h-36 w-auto "
-              />
-            </div>
-            
-            <div className="flex-1 flex items-center justify-center ">
-              <img 
-                src={auth_image}
-                alt="Learning"
-                className="rounded-full object-cover w-60 h-60shadow-lg mb-10 "
-              />
-            </div>
-            
-            <div className="flex-none mb-20">
-              <h2 className="text-white/90 text-center text-lg font-semibold mb-2">Welcome to SkillBridge</h2>
-              <p className="text-white/90 text-center text-sm mb-32">
-                Discover. Learn. Connect. Your gateway to endless possibilities
+    <div className="min-h-screen bg-background-500 flex items-center justify-center p-4">
+      <div className="max-w-6xl w-full bg-white rounded-2xl shadow-xl overflow-hidden flex">
+        {/* Left Section - Graphic */}
+        <div className="hidden md:flex flex-col items-center justify-center bg-primary-500 w-1/2 p-8 space-y-6">
+          <div className="mb-4 flex items-center space-x-3 cursor-pointer group">
+            <GraduationCap size={40} className="text-background-50 group-hover:text-secondary transition-all duration-700" />
+            <span className="text-background-50 text-3xl font-bold group-hover:text-secondary transition-all duration-700">SkillBridge</span>
+          </div>
+          <img 
+            src={auth_image} 
+            alt="Education"
+            className="w-56 h-56 object-cover rounded-xl shadow-lg"
+          />
+          <div className="text-center space-y-2">
+            <h2 className="text-xl font-bold text-white">Continue Your Journey</h2>
+            <p className="text-background-300 text-sm">
+              Your gateway to endless learning possibilities
+            </p>
+          </div>
+        </div>
+
+        {/* Right Section - Form */}
+        <div className="w-full md:w-1/2 p-8 md:p-10 flex flex-col">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h1 className="text-2xl font-bold text-text-500">Welcome Back</h1>
+              <p className="text-text-400 mt-1 text-sm">
+                {userType === 'student' ? 'Student' : 'Tutor'} Login
               </p>
             </div>
+            <button 
+              onClick={() => navigate('/')}
+              className="text-secondary-500 hover:text-primary-600 text-sm"
+            >
+              ← Back Home
+            </button>
           </div>
 
-          {/* Right Side */}
-          <div className="w-1/2 p-8 mt-7 bg-white">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-[#273044]">Login</h2>
-              <button 
-                onClick={()=>navigate('/')}
-                className="text-[#F23276] hover:text-[#1E467F] text-xs">
-                Back to Home
-              </button>
-            </div>
+          {/* Role Selector */}
+          <div className="flex gap-3 mb-6">
+            <button
+              onClick={() => setUserType('student')}
+              className={`flex-1 py-2.5 rounded-lg transition-colors ${
+                userType === 'student'
+                  ? 'bg-secondary-500 text-white shadow-md'
+                  : 'bg-background-100 text-text-400 hover:bg-background-200'
+              }`}
+            >
+              Student
+            </button>
+            <button
+              onClick={() => setUserType('tutor')}
+              className={`flex-1 py-2.5 rounded-lg transition-colors ${
+                userType === 'tutor'
+                  ? 'bg-secondary-500 text-white shadow-md'
+                  : 'bg-background-100 text-text-400 hover:bg-background-200'
+              }`}
+            >
+              Tutor
+            </button>
+          </div>
 
-            {/* User Type Toggle */}
-            <div className="mb-4">
-              <div className="flex space-x-1">
-                <button
-                  onClick={() => setUserType('tutor')}
-                  className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                    userType === 'tutor' 
-                      ? 'bg-[#F23276] text-white' 
-                      : 'text-[#273044] border border-[#F23276] hover:bg-[#F23276]/5'
-                  }`}
-                >
-                  TUTOR
-                </button>
-                <button
-                  onClick={() => setUserType('student')}
-                  className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                    userType === 'student' 
-                      ? 'bg-[#F23276] text-white' 
-                      : 'text-[#273044] border border-[#F23276] hover:bg-[#F23276]/5'
-                  }`}
-                >
-                  STUDENT
-                </button>
-              </div>
-            </div>
-
-           
-
-            <form onSubmit={handleSubmit} className="space-y-3">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-3">
               <div>
-                <label className="block mb-1 text-xs font-medium text-[#273044]">Email address</label>
+                <label className="block text-sm font-medium text-text-500 mb-1">
+                  Email Address
+                </label>
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full p-2 rounded-md border-gray-200 border focus:ring-1 focus:ring-[#F23276] focus:border-[#F23276] focus:outline-none text-sm"
-                  required
+                  className="w-full px-4 py-2.5 rounded-lg border border-background-300 focus:outline-none focus:ring-2 focus:ring-secondary-500"
                 />
               </div>
 
               <div>
-                <label className="block mb-1 text-xs font-medium text-[#273044]">Password</label>
+                <label className="block text-sm font-medium text-text-500 mb-1">
+                  Password
+                </label>
                 <input
                   type="password"
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="w-full p-2 rounded-md border-gray-200 border focus:ring-1 focus:ring-[#F23276] focus:border-[#F23276] focus:outline-none text-sm"
-                  required
+                  className="w-full px-4 py-2.5 rounded-lg border border-background-300 focus:outline-none focus:ring-2 focus:ring-secondary-500"
                 />
               </div>
+            </div>
 
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-[#F23276] text-white py-2 rounded-md hover:bg-[#1E467F] transition-colors text-sm mt-2"
-              >
-                {isLoading ? 'Logging in...' : 'Login'}
-              </button>
-              <div className="text-right">
-                <p className="text-sm text-[#273044]">
-                  <a onClick={() => setIsForgotPasswordOpen(true)} className="text-[#F23276] hover:text-[#1E467F] hover:cursor-pointer  text-xs">
-                    Forgot password?
-                  </a>
-                </p>
-              </div>
-              
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`w-full py-3 rounded-lg bg-secondary-500 hover:bg-secondary-600 text-white font-medium transition-colors ${
+                isLoading ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              {isLoading ? 'Logging In...' : 'Login'}
+            </button>
+          </form>
 
-              <div className="flex items-center justify-center  space-x-4 my-2">
-                <div className="flex-1 border-t border-gray-200"></div>
-                <span className="text-gray-500 text-xs">OR</span>
-                <div className="flex-1 border-t border-gray-200"></div>
-              </div>
-
-              {/* Google Login Button */}
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                buttonText={`Continue with Google as ${userType}`}
-                useOneTap
-                text="continue_with"
-                theme="outline"
-                size="large"
-                cookiePolicy="single_host_origin"
-              />
-
-              <div className="text-center space-y-2 ">
-                <p className="text-sm text-[#273044]">
-                  New to Skillbridge?{' '}
-                  <a href="#" onClick={()=>navigate('/register')} className="text-[#F23276] hover:text-[#1E467F] font-medium">
-                    Register
-                  </a>
-                </p>
-              </div>
-            </form>
+          <div className="my-5 flex items-center">
+            <div className="flex-1 border-t border-background-300"></div>
+            <span className="mx-4 text-text-400 text-sm">Or continue with</span>
+            <div className="flex-1 border-t border-background-300"></div>
           </div>
+
+          <div className="flex flex-col items-center space-y-4">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              theme="outline"
+              size="large"
+              shape="pill"
+              text="continue_with"
+              logo_alignment="left"
+              width="300"
+            />
+            
+            <button 
+              onClick={() => setIsForgotPasswordOpen(true)}
+              className="text-secondary-500 hover:text-primary-600 text-sm"
+            >
+              Forgot Password?
+            </button>
+          </div>
+
+          <p className="text-center mt-6 text-text-400 text-sm">
+            New to SkillBridge?{' '}
+            <button 
+              onClick={() => navigate('/register')} 
+              className="text-secondary-500 hover:text-primary-600 font-semibold"
+            >
+              Create Account
+            </button>
+          </p>
         </div>
-        <ForgotPasswordModal 
-          isOpen={isForgotPasswordOpen} 
-          onClose={() => setIsForgotPasswordOpen(false)} 
-        />
       </div>
+
+      <ForgotPasswordModal 
+        isOpen={isForgotPasswordOpen} 
+        onClose={() => setIsForgotPasswordOpen(false)} 
+      />
     </div>
   );
-}
+};
 
 export default LoginPage;

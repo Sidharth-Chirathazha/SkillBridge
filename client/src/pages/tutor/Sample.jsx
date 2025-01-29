@@ -1,4 +1,4 @@
-import React, { useEffect,useState } from 'react';
+import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import Joi from 'joi';
@@ -43,8 +43,7 @@ const schema = Joi.object({
       skills: Joi.array().items(Joi.number()).min(1).required().messages({
         'array.min': 'Select at least one skill'
       })
-    }).unknown(true).required(),
-
+    }),
     cur_job_role: Joi.string().required().messages({
       'string.empty': 'Current job role is required'
     }),
@@ -59,12 +58,8 @@ const schema = Joi.object({
       Joi.object({
         company: Joi.string().required(),
         job_role: Joi.string().required(),
-        date_of_joining: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).required().messages({
-          'string.pattern.base': 'Use YYYY-MM-DD format for date'
-        }),
-        date_of_leaving: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).required().messages({
-          'string.pattern.base': 'Use YYYY-MM-DD format for date'
-        })
+        date_of_joining: Joi.date().required(),
+        date_of_leaving: Joi.date().required()
       })
     ),
     profile_pic: Joi.any().optional(),
@@ -104,26 +99,12 @@ const TutorProfile = () => {
     }, [dispatch]);
   
     useEffect(() => {
-      if (userData) {
-        // Filter user object to only include schema-defined fields
-        const filteredUser = {
-          first_name: userData.user.first_name,
-          last_name: userData.user.last_name,
-          phone: userData.user.phone,
-          linkedin_url: userData.user.linkedin_url,
-          bio: userData.user.bio,
-          country: userData.user.country,
-          city: userData.user.city,
-          skills: userData.user.skills
-        };
-
-        reset({
-          user: filteredUser,
-          cur_job_role: userData.cur_job_role,
-          educations: userData.educations,
-          work_experiences: userData.work_experiences
-        });
-      }
+      userData && reset({
+        user: { ...userData.user, skills: userData.user.skills },
+        cur_job_role: userData.cur_job_role,
+        educations: userData.educations,
+        work_experiences: userData.work_experiences
+      });
     }, [userData, reset]);
 
   const handleFile = (e, field) => {
@@ -287,21 +268,6 @@ const TutorProfile = () => {
             )}
           />
         </Grid>
-        <Grid item xs={12}>
-          <Controller
-            name="user.linkedin_url"
-            control={control}
-            render={({ field, fieldState: { error } }) => (
-              <TextField
-                {...field}
-                fullWidth
-                label="Linkedin Profile"
-                error={!!error}
-                helperText={error?.message}
-              />
-            )}
-          />
-        </Grid>
       </Grid>
     </Paper>
   );
@@ -440,9 +406,6 @@ const TutorProfile = () => {
                     type="date"
                     label="Date of Joining"
                     InputLabelProps={{ shrink: true }}
-                    inputProps={{
-                      pattern: '\d{4}-\d{2}-\d{2}', // Ensures HTML5 date validation
-                    }}
                     error={!!error}
                     helperText={error?.message}
                     sx={{ mb: 2 }}
@@ -459,9 +422,6 @@ const TutorProfile = () => {
                     type="date"
                     label="Date of Leaving"
                     InputLabelProps={{ shrink: true }}
-                    inputProps={{
-                      pattern: '\d{4}-\d{2}-\d{2}', // Ensures HTML5 date validation
-                    }}
                     error={!!error}
                     helperText={error?.message}
                   />
@@ -571,36 +531,13 @@ const TutorProfile = () => {
     </>
   );
 
-  const onError = (errors) => {
-    console.log('Form errors:', errors);
-    toast.error('Please fix the errors in the form');
-  };
-
   const onSubmit = async (data) => {
     const formData = new FormData();
     const { profile_pic, resume, ...jsonData } = data;
-
     
-    const processedData = {
-      ...jsonData,
-      educations: jsonData.educations.map(edu => ({
-        ...edu,
-        year_of_passing: Number(edu.year_of_passing)
-      })),
-      work_experiences: jsonData.work_experiences.map(exp => ({
-        ...exp,
-        // Keep dates as strings in YYYY-MM-DD format
-        date_of_joining: exp.date_of_joining,  // Already in correct format
-        date_of_leaving: exp.date_of_leaving   // Already in correct format
-      }))
-    };
-  
     formData.append('json_data', JSON.stringify({
-      ...processedData,
-      user: { 
-        ...processedData.user, 
-        skills: processedData.user.skills.map(Number) 
-      }
+      ...jsonData,
+      user: { ...jsonData.user, skills: jsonData.user.skills.map(Number) }
     }));
     
     if (profile_pic instanceof File) {
@@ -639,7 +576,7 @@ const TutorProfile = () => {
           </Tabs>
         </Box>
 
-        <form onSubmit={handleSubmit(onSubmit, onError)}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           {activeTab === 0 && <PersonalSection />}
           {activeTab === 1 && <EducationSection />}
           {activeTab === 2 && <ExperienceSection />}

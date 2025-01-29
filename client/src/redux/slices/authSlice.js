@@ -236,12 +236,36 @@ export const updateUser = createAsyncThunk(
   }
 );
 
+//Thunk for fetching user
+export const fetchSkills = createAsyncThunk(
+  "/fetchSkills",
+  async(_, thunkAPI)=>{
+      try{
+          const response = await authService.fetchSkills();
+          return response
+          
+      }catch(error){
+        const message = 
+        (error.response && 
+         error.response.data && 
+         (error.response.data.message || // Check for general message
+          Object.values(error.response.data)[0])) || // Get first error if it's an object
+          error.message ||
+          error.toString();
+          
+          return thunkAPI.rejectWithValue(message);
+      }
+  }
+);
+
 const authSlice = createSlice({
     name: "auth",
     initialState: {
       userData: null,
+      skillsData: [],
       isLoading: false,
       isError: false,
+      isUpdateError: false,
       isSuccess: false,
       isGoogleError: false,
       isGoogleSuccess:false,
@@ -257,6 +281,7 @@ const authSlice = createSlice({
       resetState: (state) => {
         state.isLoading = false;
         state.isError = false;
+        state.isUpdateError = false;
         state.isSuccess = false;
         state.isGoogleError = false;
         state.isGoogleSuccess = false;
@@ -420,16 +445,12 @@ const authSlice = createSlice({
           state.isSuccess = true;
           state.message = "";
           state.userData = action.payload;
-          state.isAuthenticated = true
           console.log(state.userData);
           
         })
         .addCase(fetchUser.rejected, (state, action) => {
-          state.isLoading = false;
           state.isError = true;
-          state.isSuccess = false;
           state.message = action.payload || "Failed to fetch profile.";
-          state.isAuthenticated = true
         })
 
         // Handle User Profile Updation
@@ -444,8 +465,21 @@ const authSlice = createSlice({
         .addCase(updateUser.rejected, (state, action) => {
           state.isLoading = false;
           state.isError = true;
+          state.isUpdateError = true;
           state.message = action.payload;
           console.log("updateUser slice:",state.message);
+        })
+        .addCase(fetchSkills.pending, (state)=>{
+          state.isLoading = true;
+        })
+        .addCase(fetchSkills.fulfilled, (state, action)=>{
+          state.isSuccess = true;
+          state.isLoading = false;
+          state.skillsData = action.payload;
+        })
+        .addCase(fetchSkills.rejected, (state, action)=>{
+          state.isError = true;
+          state.message = action.payload;
         })
     },
   });

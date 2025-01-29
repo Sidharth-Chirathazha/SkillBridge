@@ -1,7 +1,5 @@
 from rest_framework import serializers
 from .models import StudentProfile
-from socialmedia.serializers import SocialMediaPlatformSerializer
-from socialmedia.models import SocialMediaPlatform
 from users.serializers import UserProfileSerializer
 from users.models import Skill
 

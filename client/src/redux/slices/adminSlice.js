@@ -153,6 +153,42 @@ export const updateUserActiveStatus = createAsyncThunk(
   }
 );
 
+// Thunk for adding skills
+export const addSkill = createAsyncThunk(
+  "admin/addSkills",
+  async (skillData, thunkAPI) => {
+    try {
+      return await adminService.addSkill(skillData);
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          (error.response.data.detail || Object.values(error.response.data)[0])) ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+// Thunk for deleting skills
+export const deleteSkill = createAsyncThunk(
+  "admin/deleteSkills",
+  async (id, thunkAPI) => {
+    try {
+      return await adminService.deleteSkill(id);
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          (error.response.data.detail || Object.values(error.response.data)[0])) ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
 
 const adminSlice = createSlice({
     name: "admin",
@@ -289,6 +325,34 @@ const adminSlice = createSlice({
           
         })
         .addCase(fetchAdminStudents.rejected, (state, action)=>{ 
+          state.isError = true;
+          state.message = action.payload;
+
+          //Add skill
+        })
+        .addCase(addSkill.pending, (state)=>{
+          state.isLoading = true;
+        })
+        .addCase(addSkill.fulfilled, (state, action)=>{
+          state.isSuccess = true;
+          state.isLoading = false;
+          state.message = action.payload;
+        })
+        .addCase(addSkill.rejected, (state, action)=>{
+          state.isError = true;
+          state.message = action.payload;
+        })
+
+        //Delete skill
+        .addCase(deleteSkill.pending,(state)=>{
+          state.isLoading = true;
+        })
+        .addCase(deleteSkill.fulfilled,(state,action)=>{
+          state.isSuccess = true;
+          state.isLoading = false;
+          state.message = action.payload;
+        })
+        .addCase(deleteSkill.rejected,(state,action)=>{
           state.isError = true;
           state.message = action.payload;
         })

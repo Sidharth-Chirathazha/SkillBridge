@@ -1,46 +1,92 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useForm, Controller } from 'react-hook-form';
+import Joi from 'joi';
+import { joiResolver } from '@hookform/resolvers/joi';
+import { Box, Typography, TextField, Button, Paper, Grid, Avatar, IconButton, Chip, FormHelperText } from '@mui/material';
 import { Upload, PlusCircle, Linkedin } from 'lucide-react';
 import UserLayout from '../../components/common/UserLayout';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchUser, updateUser } from '../../redux/slices/authSlice';
+import { fetchUser, updateUser, fetchSkills } from '../../redux/slices/authSlice';
 import toast from 'react-hot-toast';
 
-// Sample skills data - replace with your actual skills data
-const AVAILABLE_SKILLS = [
-  { id: 1, name: 'Python' },
-  { id: 2, name: 'JavaScript' },
-  { id: 3, name: 'Java' },
-  { id: 4, name: 'React' },
-  { id: 5, name: 'Django' }
-];
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+
+
+const schema = Joi.object({
+  user: Joi.object({
+    first_name: Joi.string().min(2).required().messages({
+      'string.min': 'First name must be at least 2 characters',
+      'string.empty': 'First name is required'
+    }),
+    last_name: Joi.string().min(1).required().messages({
+      'string.min': 'Last name is required',
+      'string.empty': 'Last name is required'
+    }),
+    phone: Joi.string().regex(/^[0-9]{10}$/).required().messages({
+      'string.pattern.base': 'Invalid phone number'
+    }),
+    linkedin_url: Joi.string().uri().optional().messages({
+      'string.uri': 'Invalid LinkedIn URL'
+    }),
+    bio: Joi.string().min(50).required().messages({
+      'string.min': 'Bio must be at least 50 characters',
+      'string.empty': 'Bio is required'
+    }),
+    country: Joi.string().required().messages({
+      'string.empty': 'Country is required'
+    }),
+    city: Joi.string().required().messages({
+      'string.empty': 'City is required'
+    }),
+    skills: Joi.array().items(Joi.number()).min(1).required().messages({
+      'array.min': 'Select at least one skill'
+    })
+  }).unknown(true),
+
+  profile_pic: Joi.any()
+    .optional()
+    .meta({ type: 'file' })
+    .custom((value, helpers) => {
+      if (value && value.size > MAX_FILE_SIZE) {
+        return helpers.error('file.size');
+      }
+      if (value && !ACCEPTED_IMAGE_TYPES.includes(value.type)) {
+        return helpers.error('file.type');
+      }
+      return value;
+    })
+    .messages({
+      'file.size': 'File size exceeds 5MB',
+      'file.type': 'Invalid image format (allowed: jpg, png, webp)'
+    })
+});
 
 const StudentProfile = () => {
   const dispatch = useDispatch();
-  const { userData } = useSelector((state) => state.auth);
-  const [profilePicPreview, setProfilePicPreview] = useState(null);
-  const [profilePicFile, setProfilePicFile] = useState(null);
-  
-  const [formData, setFormData] = useState({
-    user: {
-      first_name: '',
-      last_name: '',
-      phone: '',
-      linkedin_url:'',
-      bio: '',
-      country: '',
-      city: '',
-      skills: []
-    },
+  const { userData, skillsData, isUpdateError } = useSelector((state) => state.auth);
+  const [filePreviews, setFilePreviews] = useState({ profile_pic: null });
+
+  const { control, handleSubmit, setValue, reset } = useForm({
+    resolver: joiResolver(schema),
+    defaultValues: {
+      user: { 
+        ...userData?.user, 
+        skills: userData?.user?.skills || [] 
+      },
+      profile_pic: null
+    }
   });
 
   useEffect(() => {
     dispatch(fetchUser());
+    dispatch(fetchSkills());
   }, [dispatch]);
 
   useEffect(() => {
     if (userData) {
-  
-      setFormData({
+      reset({
         user: {
           first_name: userData.user?.first_name || '',
           last_name: userData.user?.last_name || '',
@@ -51,214 +97,255 @@ const StudentProfile = () => {
           city: userData.user?.city || '',
           skills: userData.user?.skills || []
         },
+        profile_pic: null
+      });
+      setFilePreviews({
+        profile_pic: userData?.user?.profile_pic_url || null
       });
     }
-  }, [userData]);
+  }, [userData, reset]);
 
-
-  const handleFileChange = (e) => {
+  const handleFile = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const previewUrl = URL.createObjectURL(file);
-      setProfilePicPreview(previewUrl);
-      setProfilePicFile(file);
-    }
-  };
-  
-  
-  const handleUserInputChange = (field, value) => {
-    setFormData(prev => ({
+    if (!file) return;
+
+    setValue('profile_pic', file, {shouldValidate: true});
+    setFilePreviews(prev => ({
       ...prev,
-      user: {
-        ...prev.user,
-        [field]: value
-      }
+      profile_pic: URL.createObjectURL(file)
     }));
   };
 
+  const onSubmit = async (data) => {
+    const formData = new FormData();
+    const { profile_pic, ...jsonData } = data;
 
-  const handleSkillToggle = (skillId) => {
-    const currentSkills = [...formData.user.skills];
-    const index = currentSkills.indexOf(skillId);
-    
-    if (index === -1) {
-      currentSkills.push(skillId);
-    } else {
-      currentSkills.splice(index, 1);
-    }
-    
-    handleUserInputChange('skills', currentSkills);
-  };
+    formData.append('json_data', JSON.stringify({
+      ...jsonData,
+      user: { 
+        ...jsonData.user, 
+        skills: jsonData.user.skills.map(Number) 
+      }
+    }));
 
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    const formDataToSend = new FormData();
-    
-    // Prepare data in the exact format expected by the backend
-    const dataToSend = {
-      user: {
-        ...formData.user,
-        skills: formData.user.skills.map(id => parseInt(id)) // Ensure skill IDs are numbers
-      },
-    };
-
-    formDataToSend.append('json_data', JSON.stringify(dataToSend));
-    
-    if (profilePicFile) {
-      formDataToSend.append('profile_pic', profilePicFile);
-    }
-
-    for (let [key, value] of formDataToSend.entries()) {
-      console.log("inside submit",key, value);
+    if (profile_pic instanceof File) {
+      formData.append('profile_pic', profile_pic);
     }
 
     try {
-      await dispatch(updateUser(formDataToSend));
-      toast.success("Profile updated successfully!")
+      await dispatch(updateUser(formData));
+      if(isUpdateError){
+        toast.error("Failed to update profile");
+      }
+      else{
+        dispatch(fetchUser());
+        toast.success("Profile updated successfully!");
+      }
     } catch (error) {
-      console.error('Error updating profile:', error);
-      toast.error("Failed to update profile. Please try again.")
+      toast.error("Failed to update profile");
     }
   };
 
-  console.log("User Data: ", userData);
-  
-  // console.log("Uploaded Profile Pic URL:", profilePic);
-
   return (
     <UserLayout>
-      <div className="max-w-3xl mx-auto py-8 px-4">
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold">Complete Your Profile</h2>
-          <p className="text-text-500">Please provide your details to get started as a Student</p>
-        </div>
+      <Box sx={{ maxWidth: 'lg', mx: 'auto', py: 4, px: 2 }}>
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+            Complete Your Profile
+          </Typography>
+          <Typography variant="body1" sx={{ mt: 1, color: 'text.secondary' }}>
+            Please provide your details to get started as a Student
+          </Typography>
+        </Box>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Profile Picture Section */}
-          <div className="flex justify-center mb-4">
-            <div className="relative">
-              <div className="w-24 h-24 rounded-full bg-background-200 flex items-center justify-center overflow-hidden">
-                {profilePicPreview || userData?.user?.profile_pic_url ? (
-                  <img
-                    src={profilePicPreview || userData.user.profile_pic_url}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <Upload className="w-6 h-6 text-text-400" />
-                )}
-              </div>
-              <label className="absolute bottom-0 right-0 p-1.5 bg-primary text-background-50 rounded-full hover:bg-primary-600 cursor-pointer">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                <PlusCircle className="w-4 h-4" />
-              </label>
-            </div>
-          </div>
-
-          {/* Personal Information */}
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <h3 className="text-lg font-semibold mb-4">Personal Information</h3>
-            <div className="grid grid-cols-2 gap-4">
-            <input
-              type="text"
-              value={formData.user.first_name}
-              onChange={(e) => handleUserInputChange('first_name', e.target.value)}
-              placeholder="First Name"
-              className="w-full px-3 py-2 rounded-lg border border-background-300 focus:outline-none focus:ring-2 focus:ring-primary-200"
-            />
-            <input
-              type="text"
-              value={formData.user.last_name}
-              onChange={(e) => handleUserInputChange('last_name', e.target.value)}
-              placeholder="Last Name"
-              className="w-full px-3 py-2 rounded-lg border border-background-300 focus:outline-none focus:ring-2 focus:ring-primary-200"
-            /> 
-            <input
-              type="text"
-              value={formData.user.phone}
-              onChange={(e) => handleUserInputChange('phone', e.target.value)}
-              placeholder="Phone"
-              className="w-full px-3 py-2 rounded-lg border border-background-300 focus:outline-none focus:ring-2 focus:ring-primary-200"
-            /> 
-            <input
-              type="text"
-              value={formData.user.country}
-              onChange={(e) => handleUserInputChange('country', e.target.value)}
-              placeholder="Country"
-              className="w-full px-3 py-2 rounded-lg border border-background-300 focus:outline-none focus:ring-2 focus:ring-primary-200"
-            /> 
-            <input
-              type="text"
-              value={formData.user.city}
-              onChange={(e) => handleUserInputChange('city', e.target.value)}
-              placeholder="City"
-              className="w-full px-3 py-2 rounded-lg border border-background-300 focus:outline-none focus:ring-2 focus:ring-primary-200"
-            /> 
-            <textarea
-              type="text"
-              value={formData.user.bio}
-              onChange={(e) => handleUserInputChange('bio', e.target.value)}
-              placeholder="Bio"
-              className="w-full px-3 py-2 rounded-lg border border-background-300 focus:outline-none focus:ring-2 focus:ring-primary-200"
-            /> 
-            </div>
-          </div>
-
-          {/* Skills Section */}
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <h3 className="text-lg font-semibold mb-4">Skills</h3>
-            <div className="flex flex-wrap gap-2">
-              {AVAILABLE_SKILLS.map(skill => (
-                <button
-                  key={skill.id}
-                  type="button"
-                  onClick={() => handleSkillToggle(skill.id)}
-                  className={`px-4 py-2 rounded-full border transition-colors ${
-                    formData.user.skills.includes(skill.id)
-                      ? 'bg-primary text-white border-primary'
-                      : 'border-gray-300 hover:border-primary'
-                  }`}
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <Paper elevation={1} sx={{ p: 3, mb: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
+              <Box sx={{ position: 'relative' }}>
+                <Avatar
+                  src={filePreviews.profile_pic || userData?.user?.profile_pic_url}
+                  sx={{ width: 120, height: 120, border: 3, borderColor: 'background.paper' }}
                 >
-                  {skill.name}
-                </button>
-              ))}
-            </div>
-          </div>
+                  <Upload />
+                </Avatar>
+                <IconButton
+                  component="label"
+                  sx={{
+                    position: 'absolute',
+                    bottom: 0,
+                    right: 0,
+                    bgcolor: 'primary.main',
+                    color: 'white',
+                    '&:hover': { bgcolor: 'primary.dark' }
+                  }}
+                >
+                  <input type="file" hidden accept="image/*" onChange={handleFile} />
+                  <PlusCircle />
+                </IconButton>
+              </Box>
+            </Box>
 
-          {/* Social Media Section */}
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <h3 className="text-lg font-semibold mb-4">Social Media Profiles</h3>
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Linkedin className="w-6 h-6 text-blue-600" />
-                <input
-                  type="url"
-                  value={formData.user.linkedin_url}
-                  onChange={(e) => handleUserInputChange('linkedin_url', e.target.value)}
-                  placeholder="LinkedIn Profile URL"
-                  className="flex-1 px-3 py-2 rounded-lg border"
+            <Grid container spacing={3}>
+              <Grid item xs={6}>
+                <Controller
+                  name="user.first_name"
+                  control={control}
+                  render={({ field, fieldState: { error } }) => (
+                    <TextField
+                      {...field}
+                      fullWidth
+                      label="First Name"
+                      error={!!error}
+                      helperText={error?.message}
+                    />
+                  )}
                 />
-              </div>
-            </div>
-          </div>
-          {/* Submit Button */}
-          <div className="flex justify-end">
-            <button
+              </Grid>
+              <Grid item xs={6}>
+                <Controller
+                  name="user.last_name"
+                  control={control}
+                  render={({ field, fieldState: { error } }) => (
+                    <TextField
+                      {...field}
+                      fullWidth
+                      label="Last Name"
+                      error={!!error}
+                      helperText={error?.message}
+                    />
+                  )}
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <Controller
+                  name="user.phone"
+                  control={control}
+                  render={({ field, fieldState: { error } }) => (
+                    <TextField
+                      {...field}
+                      fullWidth
+                      label="Phone"
+                      error={!!error}
+                      helperText={error?.message}
+                    />
+                  )}
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <Controller
+                  name="user.country"
+                  control={control}
+                  render={({ field, fieldState: { error } }) => (
+                    <TextField
+                      {...field}
+                      fullWidth
+                      label="Country"
+                      error={!!error}
+                      helperText={error?.message}
+                    />
+                  )}
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <Controller
+                  name="user.city"
+                  control={control}
+                  render={({ field, fieldState: { error } }) => (
+                    <TextField
+                      {...field}
+                      fullWidth
+                      label="City"
+                      error={!!error}
+                      helperText={error?.message}
+                    />
+                  )}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <Controller
+                  name="user.bio"
+                  control={control}
+                  render={({ field, fieldState: { error } }) => (
+                    <TextField
+                      {...field}
+                      fullWidth
+                      multiline
+                      rows={4}
+                      label="Bio"
+                      error={!!error}
+                      helperText={error?.message}
+                    />
+                  )}
+                />
+              </Grid>
+            </Grid>
+          </Paper>
+
+          <Paper elevation={1} sx={{ p: 3, mb: 3 }}>
+            <Typography variant="h6" sx={{ mb: 3 }}>Skills</Typography>
+            <Controller
+              name="user.skills"
+              control={control}
+              render={({ field, fieldState: { error } }) => (
+                <Box>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {skillsData.map(skill => (
+                      <Chip
+                        key={skill.id}
+                        label={skill.skill_name}
+                        onClick={() => {
+                          const newValue = field.value.includes(skill.id)
+                            ? field.value.filter(id => id !== skill.id)
+                            : [...field.value, skill.id];
+                          field.onChange(newValue);
+                        }}
+                        color={field.value.includes(skill.id) ? 'primary' : 'default'}
+                        sx={{ cursor: 'pointer' }}
+                      />
+                    ))}
+                  </Box>
+                  {error && <FormHelperText error>{error.message}</FormHelperText>}
+                </Box>
+              )}
+            />
+          </Paper>
+
+          <Paper elevation={1} sx={{ p: 3, mb: 3 }}>
+            <Typography variant="h6" sx={{ mb: 3 }}>Social Media Profiles</Typography>
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={1}>
+                <Linkedin color="#0077b5" />
+              </Grid>
+              <Grid item xs={11}>
+                <Controller
+                  name="user.linkedin_url"
+                  control={control}
+                  render={({ field, fieldState: { error } }) => (
+                    <TextField
+                      {...field}
+                      fullWidth
+                      label="LinkedIn Profile URL"
+                      error={!!error}
+                      helperText={error?.message}
+                    />
+                  )}
+                />
+              </Grid>
+            </Grid>
+          </Paper>
+
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+            <Button
               type="submit"
-              className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-600 font-semibold"
+              variant="contained"
+              size="large"
+              sx={{ px: 4, py: 1.5, fontWeight: 600 }}
             >
               Save Profile
-            </button>
-          </div>
+            </Button>
+          </Box>
         </form>
-      </div>
+      </Box>
     </UserLayout>
   );
 };
