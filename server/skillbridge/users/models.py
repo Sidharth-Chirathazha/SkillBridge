@@ -4,6 +4,7 @@ from django.db import models
 import cloudinary
 import cloudinary.uploader
 import cloudinary.models
+
 # Create your models here.
 
 # User Model
@@ -31,6 +32,7 @@ class Skill(models.Model):
         return self.skill_name
 
 class User(AbstractBaseUser):
+    
     ROLE_CHOICES = (
         ('student', 'Student'),
         ('tutor', 'Tutor'),
@@ -56,6 +58,7 @@ class User(AbstractBaseUser):
     updated_at = models.DateTimeField(auto_now=True)
     password = models.CharField(max_length=128)
 
+
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
@@ -63,6 +66,7 @@ class User(AbstractBaseUser):
 
     def __str__(self):
         return self.email
+
     
     # Add the following methods:
     def has_perm(self, perm, obj=None):

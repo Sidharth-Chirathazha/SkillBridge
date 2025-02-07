@@ -21,5 +21,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/',include('users.urls')),
     path('api/admin/',include('sbAdmin.urls')),
-    path('api/courses/',include('courses.urls'))
+    path('api/courses/',include('courses.urls')),
+    path('api/tutor/',include('tutor.urls'))
 ]

@@ -50,7 +50,7 @@ class AdminDetailsView(APIView):
             return Response({"error": "You are not authorized to access this resource."}, status=status.HTTP_403_FORBIDDEN)
         
 class AdminTutorListView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, id=None):
 

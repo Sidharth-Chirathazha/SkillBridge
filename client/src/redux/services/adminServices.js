@@ -76,7 +76,7 @@ export const addSkill = async(skillData)=>{
 //Delete Skill
 export const deleteSkill = async(id)=>{
     const response = await axiosInstance.delete(
-        `/skills/${id}`, 
+        `/skills/${id}/`, 
         {requiresAuth: true}
     );
     return response.data

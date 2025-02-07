@@ -5,6 +5,11 @@ from tutor.models import TutorProfile
 import cloudinary
 import cloudinary.uploader
 import cloudinary.models
+from django.contrib.auth import get_user_model
+from django.db.models import Avg
+
+User = get_user_model()
+
 
 
 
@@ -54,6 +59,7 @@ class Course(BaseModel):
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     is_active = models.BooleanField(default=True)
     rating = models.FloatField(default=0.0)
+    stripe_price_id = models.CharField(max_length=100, null=True, blank=True)
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -65,6 +71,10 @@ class Course(BaseModel):
                 num += 1
             self.slug = slug
         super().save(*args, **kwargs)
+    
+    def update_rating(self):
+        self.rating = self.reviews.aggregate(Avg('rating'))['rating__avg'] or 0.0
+        self.save()
 
     def __str__(self):
         return self.title
@@ -78,9 +88,9 @@ class Module(BaseModel):
     course =  models.ForeignKey(Course, on_delete=models.CASCADE, related_name='modules')
     title = models.CharField(max_length=150, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
-    video = cloudinary.models.CloudinaryField('video', null=True, blank=True)
+    video = cloudinary.models.CloudinaryField(resource_type='video', null=True, blank=True)
     duration = models.IntegerField(null=True, blank=True, default=0)
-    tasks = cloudinary.models.CloudinaryField('file', blank=True, null=True)
+    tasks = cloudinary.models.CloudinaryField(resource_type='raw', blank=True, null=True)
     is_liked = models.BooleanField(default=False)
     likes_count = models.PositiveBigIntegerField(default=0)
     views_count = models.PositiveIntegerField(default=0)
@@ -89,3 +99,32 @@ class Module(BaseModel):
         return self.title
     class Meta:
         ordering = ['id']
+
+class Purchase(BaseModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="purchases")
+    stripe_payment_intent_id = models.CharField(max_length=100, null=True, blank=True)
+    status = models.CharField(max_length=20, default='pending')
+    progress = models.FloatField(default=0.0, null=True, blank=True)  # Store progression percentage (0-100)
+    completed = models.BooleanField(default=False)  # Mark if the course is completed
+    purchased_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)  # Track purchase date
+
+    class Meta:
+         unique_together = ('user', 'course')
+
+    def __str__(self):
+
+        return f"{self.user.first_name} purchased {self.course.title}"
+    
+class Review(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reviews")
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="reviews")
+    rating = models.PositiveIntegerField(default=1, choices=[(i,i) for i in range(1,6)])
+    review = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'course')
+
+    def __str__(self):
+         return f"Review by {self.user.first_name} on {self.course.title}"

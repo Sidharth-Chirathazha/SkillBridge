@@ -1,11 +1,18 @@
 from django.urls import path,include
 from rest_framework.routers import DefaultRouter
-from .views import CategoryViewSet
+from .views import CategoryViewSet,CourseViewSet,ModuleViewSet,CreateCheckoutSession,StripeWebhookView,VerifyPurchase,PurchasedCoursesViewSet,ReviewViewSet
 
-"""Created a router and resgistered the CategoryViewSet"""
+"""Created a router and resgistered the CategoryViewSet, CourseViewSet"""
 router = DefaultRouter()
 router.register(r'categories', CategoryViewSet, basename='category')
+router.register(r'course', CourseViewSet, basename='course')
+router.register(r'modules', ModuleViewSet, basename='module')
+router.register(r'purchased-courses', PurchasedCoursesViewSet, basename='purchased-courses')
+router.register(r'reviews', ReviewViewSet, basename='reviews')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('create-checkout-session/', CreateCheckoutSession.as_view(), name='create-checkout-session'),
+    path('verify-purchase/', VerifyPurchase.as_view(), name='verify-purchase'),
+    path('webhook/', StripeWebhookView.as_view(), name='stripe-webhook'),
 ]

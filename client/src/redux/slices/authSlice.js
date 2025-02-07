@@ -258,17 +258,48 @@ export const fetchSkills = createAsyncThunk(
   }
 );
 
+
+//Thunk for posting tutor review
+export const postTutorReview = createAsyncThunk(
+  'tutor/postTutorReview',
+  async (reviewInfo, thunkAPI) => {
+    try {
+      return await authService.postTutorReview(reviewInfo);
+    } catch (error) {
+      const message = error.response?.data?.error || error.message;
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+//Thunk for fetching tutor reviews
+export const fetchTutorReviews = createAsyncThunk(
+  'tutor/fetchTutorReviews',
+  async (tutorId, thunkAPI) => {
+    try {
+      return await authService.fetchTutorReviews(tutorId);
+    } catch (error) {
+      const message = error.response?.data?.error || error.message;
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
 const authSlice = createSlice({
     name: "auth",
     initialState: {
       userData: null,
       skillsData: [],
+      tutorReviewsData:[],
       isLoading: false,
       isError: false,
       isUpdateError: false,
       isSuccess: false,
       isGoogleError: false,
       isGoogleSuccess:false,
+      isTutorReviewsLoading: false,
+      isTutorReviewsError:false,
+      isTutorReviewsSuccess:false,
       message: "",
       role:null,
       otpRequestSuccess: false,
@@ -295,6 +326,11 @@ const authSlice = createSlice({
         state.role = null;
         state.isAuthenticated = false;
       },
+      resetReviewsState: (state) => {
+        state.isTutorReviewsLoading = false;
+        state.isTutorReviewsError = null;
+        state.isTutorReviewsSuccess = null;
+      }
     },
     extraReducers: (builder) => {
       builder
@@ -479,6 +515,35 @@ const authSlice = createSlice({
         })
         .addCase(fetchSkills.rejected, (state, action)=>{
           state.isError = true;
+          state.message = action.payload;
+        })
+
+
+        //Post tutor Review
+        .addCase(postTutorReview.pending,(state)=>{
+          state.isTutorReviewsLoading = true;
+        })
+        .addCase(postTutorReview.fulfilled,(state,action)=>{
+          state.isTutorReviewsSuccess = true;
+          state.isTutorReviewsLoading = false;
+          state.message = action.payload;
+        })
+        .addCase(postTutorReview.rejected, (state, action)=>{
+          state.isTutorReviewsError = true;
+          state.message = action.payload;
+        })
+  
+        //Fethc tutor reviews
+        .addCase(fetchTutorReviews.pending, (state)=>{
+          state.isTutorReviewsLoading = true;
+        })
+        .addCase(fetchTutorReviews.fulfilled,(state,action)=>{
+          state.isTutorReviewsLoading = false;
+          state.isTutorReviewsSuccess = true;
+          state.tutorReviewsData = action.payload;
+        })
+        .addCase(fetchTutorReviews.rejected,(state)=>{
+          state.isTutorReviewsError = true;
           state.message = action.payload;
         })
     },

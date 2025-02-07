@@ -15,77 +15,73 @@ import {
   Loader 
 } from 'lucide-react';
 import AdminLayout from '../../components/admin/AdminLayout';
-import { fetchAdminStudents,updateUserActiveStatus } from '../../redux/slices/adminSlice';
+import { fetchAdminStudents, updateUserActiveStatus } from '../../redux/slices/adminSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { ConfirmDialog } from '../../components/common/ui/ConfirmDialog';
 
 const AdminStudentDetailView = () => {
+  const [loading, setLoading] = useState(true);
+  const {singleStudent} = useSelector((state)=> state.admin);
+  const {id} = useParams();
+  const dispatch = useDispatch();
 
-   const [loading, setLoading] = useState(true);
-   const {singleStudent} = useSelector((state)=> state.admin);
-   const {id} = useParams();
-   const dispatch = useDispatch();
-
-    useEffect(() => {
-         // Dispatch fetchUser and store the promise
-         const fetchData = async () => {
-           try {
-             setLoading(true);
-             await dispatch(fetchAdminStudents(id)).unwrap();
-           } catch (error) {
-             console.error('Failed to fetch user:', error);
-           }finally {
-             setLoading(false);
-           }
-         };
-         fetchData();
-       }, [dispatch, id]);
-
-    const handleBlock = async (studentId, isActive) => {
-        try {
-            await dispatch(updateUserActiveStatus({ id: studentId, is_active: isActive })).unwrap();
-            dispatch(fetchAdminStudents(id)); // Refetch updated data
-            toast.success("Student Status Updated.")
-        } catch (error) {
-            console.error("Failed to update student authorization:", error);
-        }
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        await dispatch(fetchAdminStudents(id)).unwrap();
+      } catch (error) {
+        console.error('Failed to fetch user:', error);
+      } finally {
+        setLoading(false);
+      }
     };
-   
-    
-    if (loading ||  !singleStudent) {
-        return (
-            <div className="flex justify-center items-center h-screen">
-            <Loader className="animate-spin h-10 w-10 text-primary" />
-            </div>
-        );
+    fetchData();
+  }, [dispatch, id]);
+
+  const handleBlock = async (studentId, isActive) => {
+    try {
+      await dispatch(updateUserActiveStatus({ id: studentId, is_active: isActive })).unwrap();
+      dispatch(fetchAdminStudents(id));
+      toast.success("Student Status Updated.")
+    } catch (error) {
+      console.error("Failed to update student authorization:", error);
     }
+  };
+
+  if (loading || !singleStudent) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Loader className="animate-spin h-10 w-10 text-primary" />
+      </div>
+    );
+  }
 
   return (
     <AdminLayout>
-      <div className="bg-background-100 p-8 space-y-8">
+      <div className="bg-background-100 p-4 md:p-8 space-y-6 md:space-y-8">
         {/* Top Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
           {/* Left Column: Profile Details */}
-          <div className="bg-white rounded-xl shadow-sm border border-background-200 p-6 flex flex-col items-center">
+          <div className="bg-white rounded-xl shadow-sm border border-background-200 p-4 md:p-6 flex flex-col items-center">
             <img 
               src={singleStudent.profile_pic_url} 
               alt={`${singleStudent.first_name} ${singleStudent.last_name}`}
-              className="w-48 h-48 rounded-full object-cover border-4 border-primary-100 mb-4"
+              className="w-32 h-32 md:w-48 md:h-48 rounded-full object-cover border-4 border-primary-100 mb-4"
             />
-            <h2 className="text-xl font-bold text-text-500">
+            <h2 className="text-lg md:text-xl font-bold text-text-500 text-center">
               {singleStudent.first_name} {singleStudent.last_name}
             </h2>
 
-            
-
             {/* Links */}
-            <div className="mt-6 space-y-2">
+            <div className="mt-4 md:mt-6 space-y-2 w-full">
               <a 
                 href={singleStudent.linkedin_url} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="flex items-center text-primary-500 hover:text-primary-600"
+                className="flex items-center justify-center md:justify-start text-primary-500 hover:text-primary-600 p-2 md:p-0"
               >
                 <Linkedin className="h-5 w-5 mr-2" />
                 LinkedIn Profile
@@ -94,79 +90,88 @@ const AdminStudentDetailView = () => {
           </div>
 
           {/* Right Column: About Me */}
-          <div className="md:col-span-2 bg-white rounded-xl shadow-sm border border-background-200 p-6">
-            <h3 className="text-xl font-semibold text-text-500 mb-4">About Me</h3>
-            <p className="text-text-400 leading-relaxed mb-6">
+          <div className="md:col-span-2 bg-white rounded-xl shadow-sm border border-background-200 p-4 md:p-6">
+            <h3 className="text-lg md:text-xl font-semibold text-text-500 mb-4">About Me</h3>
+            <p className="text-text-400 leading-relaxed mb-4 md:mb-6">
               {singleStudent.bio}
             </p>
 
             {/* Personal Details Section */}
-            <div className="border-t border-background-200 pt-4 space-y-4">
+            <div className="border-t border-background-200 pt-4 space-y-3 md:space-y-4">
               <div className="flex items-center space-x-3">
-                <Mail className="h-5 w-5 text-primary-500" />
-                <span className="text-text-400">{singleStudent.email}</span>
+                <Mail className="h-5 w-5 text-primary-500 flex-shrink-0" />
+                <span className="text-text-400 break-all">{singleStudent.email}</span>
               </div>
               <div className="flex items-center space-x-3">
-                <Phone className="h-5 w-5 text-primary-500" />
+                <Phone className="h-5 w-5 text-primary-500 flex-shrink-0" />
                 <span className="text-text-400">{singleStudent.phone}</span>
               </div>
               <div className="flex items-center space-x-3">
-                <MapPin className="h-5 w-5 text-primary-500" />
+                <MapPin className="h-5 w-5 text-primary-500 flex-shrink-0" />
                 <span className="text-text-400">{singleStudent.city}, {singleStudent.country}</span>
               </div>
             </div>
           </div>
-
         </div>
 
-        {/* Tabs */}
+        {/* Stats Section */}
         <div className="bg-white rounded-xl shadow-sm border border-background-200">
-          {/* Tab Content */}
-          <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-background-50 p-4 rounded-lg border border-background-200 text-center">
-                  <Book className="h-6 w-6 mx-auto mb-2 text-primary-500" />
-                  <h3 className="text-text-500 font-semibold">0</h3>
-                  <p className="text-text-400 text-sm">Total Courses</p>
-                </div>
-                <div className="bg-background-50 p-4 rounded-lg border border-background-200 text-center">
-                  <Star className="h-6 w-6 mx-auto mb-2 text-primary-500" />
-                  <h3 className="text-text-500 font-semibold">{singleStudent.rating}</h3>
-                  <p className="text-text-400 text-sm">Total Time Spent</p>
-                </div>
+          <div className="p-4 md:p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="bg-background-50 p-4 rounded-lg border border-background-200 text-center">
+                <Book className="h-6 w-6 mx-auto mb-2 text-primary-500" />
+                <h3 className="text-text-500 font-semibold">0</h3>
+                <p className="text-text-400 text-sm">Total Courses</p>
               </div>
+              <div className="bg-background-50 p-4 rounded-lg border border-background-200 text-center">
+                <Star className="h-6 w-6 mx-auto mb-2 text-primary-500" />
+                <h3 className="text-text-500 font-semibold">{singleStudent.rating}</h3>
+                <p className="text-text-400 text-sm">Total Time Spent</p>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-end space-x-4">
-
-          {/* Block/Unblock Button */}
-          <button 
-            className={`flex items-center px-6 py-3 rounded-lg transition-colors font-semibold ${
-              singleStudent.is_active 
-                ? "bg-secondary-50 text-secondary-700 hover:bg-secondary-100" 
-                : "bg-text-50 text-text-700 hover:bg-text-100"
-            }`}
-            onClick={() => handleBlock(singleStudent.id, !singleStudent.is_active)}
-          >
-            {singleStudent.is_active ? (
-              <>
-                <Ban className="h-5 w-5 mr-2" />
-                Block
-              </>
-            ) : (
-              <>
-                <Check className="h-5 w-5 mr-2" />
-                Unblock
-              </>
-            )}
-          </button>
+        <div className="flex flex-col md:flex-row md:justify-end space-y-3 md:space-y-0 md:space-x-4">
+          <ConfirmDialog
+             trigger={(open)=>(
+              <button 
+                className={`flex items-center justify-center px-6 py-3 rounded-lg transition-colors font-semibold w-full md:w-auto ${
+                  singleStudent.is_active 
+                    ? "bg-secondary-50 text-secondary-700 hover:bg-secondary-100" 
+                    : "bg-text-50 text-text-700 hover:bg-text-100"
+                }`}
+                onClick={open}
+              >
+                {singleStudent.is_active ? (
+                  <>
+                    <Ban className="h-5 w-5 mr-2" />
+                    Block
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-5 w-5 mr-2" />
+                    Unblock
+                  </>
+                )}
+              </button>
+             )}
+             onConfirm={()=> handleBlock(singleStudent.id, !singleStudent.is_active)}
+             title={singleStudent.is_active? "Block Student": "Unblock Student"}
+             confirmText={singleStudent.is_active? "Block": "Unblock"}
+             destructive={singleStudent.is_active && true}
+             description={
+              singleStudent.is_active
+                ? `Are you sure you want to block "${singleStudent.first_name}"?`
+                : `Are you sure you want to unblock "${singleStudent.first_name}"?`
+            }
+             variant='admin'
+          />
         </div>
-
       </div>
     </AdminLayout>
-  )
-}
+  );
+};
 
-export default AdminStudentDetailView
+export default AdminStudentDetailView;

@@ -84,4 +84,21 @@ export const fetchSkills = async()=>{
     return response.data
 }
 
+
+//Post Tutor review
+export const postTutorReview = async(reviewInfo)=>{
+    const response = await axiosInstance.post(
+        "/tutor/tutor-reviews/",
+        reviewInfo,
+        { requiresAuth:true }
+    );
+    return response.data;
+}
+
+//Fetch Tutor Review
+export const fetchTutorReviews = async(tutorId)=>{
+    const response = await axiosInstance.get( `/tutor/tutor-reviews/?tutor_id=${tutorId}`);
+    return response.data;
+}
+
   

@@ -3,11 +3,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import Joi from 'joi';
 import { joiResolver } from '@hookform/resolvers/joi';
-import { Box, Typography, TextField, Button, Tabs, Tab, Paper, Grid, Avatar, IconButton, Chip, Card, CardContent, FormHelperText } from '@mui/material';
-import { Upload, PlusCircle, X, FileText } from 'lucide-react';
+import { Upload, PlusCircle, Trash2, FileText, Edit, ChevronLeft, ChevronRight, Loader2} from 'lucide-react';
 import UserLayout from '../../components/common/UserLayout';
 import { fetchSkills, fetchUser, updateUser } from '../../redux/slices/authSlice';
 import toast from 'react-hot-toast';
+import FormInput from '../../components/common/ui/FormInput';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
@@ -50,13 +50,25 @@ const schema = Joi.object({
     }),
     educations: Joi.array().items(
       Joi.object({
+        id: Joi.number().allow(null).optional(),
         university: Joi.string().required(),
         degree: Joi.string().required(),
-        year_of_passing: Joi.number().required()
+        year_of_passing: Joi.number().integer()
+        .min(1900)
+        .max(new Date().getFullYear())
+        .required()
+        .messages({
+          'number.base': 'Year must be a number',
+          'number.integer': 'Year must be a whole number',
+          'number.min': 'Year must be 1900 or later',
+          'number.max': `Year cannot be in the future`,
+          'any.required': 'Year of passing is required'
+        })
       })
     ),
     work_experiences: Joi.array().items(
       Joi.object({
+        id: Joi.number().allow(null).optional(),
         company: Joi.string().required(),
         job_role: Joi.string().required(),
         date_of_joining: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).required().messages({
@@ -74,18 +86,20 @@ const schema = Joi.object({
 
 const TutorProfile = () => {
     const [activeTab, setActiveTab] = useState(0);
+    const [isEditMode, setIsEditMode] = useState(false);
     const [filePreviews, setFilePreviews] = useState({ profile_pic: null, resume: null });
-    const { userData, skillsData } = useSelector((state) => state.auth);
+    const { userData, skillsData , isLoading } = useSelector((state) => state.auth);
     const dispatch = useDispatch();
   
-    const { control, handleSubmit, setValue, reset } = useForm({
+    const { control, handleSubmit, setValue, reset, formState: { errors } } = useForm({
       resolver: joiResolver(schema),
       defaultValues: {
         user: { ...userData?.user, skills: userData?.user?.skills || [] },
         cur_job_role: userData?.cur_job_role || '',
         educations: userData?.educations || [],
         work_experiences: userData?.work_experiences || []
-      }
+      },
+      shouldUnregister: false
     });
   
     const { fields: educationFields, append: appendEducation, remove: removeEducation } = useFieldArray({
@@ -104,7 +118,7 @@ const TutorProfile = () => {
     }, [dispatch]);
   
     useEffect(() => {
-      if (userData) {
+      if (userData && !isEditMode) {
         // Filter user object to only include schema-defined fields
         const filteredUser = {
           first_name: userData.user.first_name,
@@ -120,11 +134,23 @@ const TutorProfile = () => {
         reset({
           user: filteredUser,
           cur_job_role: userData.cur_job_role,
-          educations: userData.educations,
-          work_experiences: userData.work_experiences
+          educations: userData.educations.map(edu =>({
+            ...(edu.id ? { id: edu.id } : {}),
+            university: edu.university,
+            degree: edu.degree,
+            year_of_passing: edu.year_of_passing
+
+          })),
+          work_experiences: userData.work_experiences.map(exp =>({
+            ...(exp.id ? { id: exp.id } : {}),
+            company: exp.company,
+            job_role: exp.job_role,
+            date_of_joining: exp.date_of_joining,
+            date_of_leaving: exp.date_of_leaving
+          }))
         });
       }
-    }, [userData, reset]);
+    }, [userData, reset, isEditMode]);
 
   const handleFile = (e, field) => {
     const file = e.target.files[0];
@@ -147,428 +173,438 @@ const TutorProfile = () => {
     }));
   };
 
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
-  };
+  const handleRemoveEducation = (index)=>{
+    removeEducation(index);
+  }
+
+  const handleRemoveWork = (index)=>{
+    removeWork(index);
+  }
+
+  const toggleEditMode = () => setIsEditMode(!isEditMode);
 
 
-  const PersonalSection = () => (
-    <Paper elevation={1} sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
-        <Box sx={{ position: 'relative' }}>
-          <Avatar
-            src={filePreviews.profile_pic || userData?.user?.profile_pic_url}
-            sx={{ width: 120, height: 120, border: 3, borderColor: 'background.paper' }}
-          >
-            <Upload />
-          </Avatar>
-          <IconButton
-            component="label"
-            sx={{
-              position: 'absolute',
-              bottom: 0,
-              right: 0,
-              bgcolor: 'primary.main',
-              color: 'white',
-              '&:hover': { bgcolor: 'primary.dark' }
-            }}
-          >
-            <input type="file" hidden accept="image/*" onChange={(e) => handleFile(e, 'profile_pic')} />
-            <PlusCircle />
-          </IconButton>
-        </Box>
-      </Box>
+const PersonalSection = ({errors}) => (
+  <div className="space-y-4">
+      <div className="flex justify-center mb-4">
+          <div className="relative">
+              <img
+                  src={filePreviews.profile_pic || userData?.user?.profile_pic_url}
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-white"
+                  alt="Profile"
+              />
+              {isEditMode && (
+                  <label className="absolute bottom-0 right-0 bg-primary-500 text-white p-1 rounded-full cursor-pointer hover:bg-primary-600">
+                      <PlusCircle size={16} />
+                      <input
+                          type="file"
+                          hidden
+                          accept="image/*"
+                          onChange={(e) => handleFile(e, 'profile_pic')}
+                      />
+                  </label>
+              )}
+          </div>
+      </div>
 
-      <Grid container spacing={3}>
-        <Grid item xs={6}>
-          <Controller
-            name="user.first_name"
-            control={control}
-            render={({ field, fieldState: { error } }) => (
-              <TextField
-                {...field}
-                fullWidth
-                label="First Name"
-                error={!!error}
-                helperText={error?.message}
-              />
-            )}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <FormInput
+              label="First Name"
+              name="user.first_name"
+              control={control}
+              error={errors.user?.first_name}
+              isEditMode={isEditMode}
           />
-        </Grid>
-        <Grid item xs={6}>
-          <Controller
-            name="user.last_name"
-            control={control}
-            render={({ field, fieldState: { error } }) => (
-              <TextField
-                {...field}
-                fullWidth
-                label="Last Name"
-                error={!!error}
-                helperText={error?.message}
-              />
-            )}
+          <FormInput
+              label="Last Name"
+              name="user.last_name"
+              control={control}
+              error={errors.user?.last_name}
+              isEditMode={isEditMode}
           />
-        </Grid>
-        <Grid item xs={6}>
-          <Controller
-            name="user.phone"
-            control={control}
-            render={({ field, fieldState: { error } }) => (
-              <TextField
-                {...field}
-                fullWidth
-                label="Phone"
-                error={!!error}
-                helperText={error?.message}
-              />
-            )}
+          <FormInput
+              label="Phone"
+              name="user.phone"
+              control={control}
+              error={errors.user?.phone}
+              isEditMode={isEditMode}
           />
-        </Grid>
-        <Grid item xs={6}>
-          <Controller
-            name="cur_job_role"
-            control={control}
-            render={({ field, fieldState: { error } }) => (
-              <TextField
-                {...field}
-                fullWidth
-                label="Current Job Role"
-                error={!!error}
-                helperText={error?.message}
-              />
-            )}
+          <FormInput
+              label="Current Job Role"
+              name="cur_job_role"
+              control={control}
+              error={errors.cur_job_role}
+              isEditMode={isEditMode}
           />
-        </Grid>
-        <Grid item xs={6}>
-          <Controller
-            name="user.country"
-            control={control}
-            render={({ field, fieldState: { error } }) => (
-              <TextField
-                {...field}
-                fullWidth
-                label="Country"
-                error={!!error}
-                helperText={error?.message}
-              />
-            )}
+          <FormInput
+              label="Country"
+              name="user.country"
+              control={control}
+              error={errors.user?.country}
+              isEditMode={isEditMode}
           />
-        </Grid>
-        <Grid item xs={6}>
-          <Controller
-            name="user.city"
-            control={control}
-            render={({ field, fieldState: { error } }) => (
-              <TextField
-                {...field}
-                fullWidth
-                label="City"
-                error={!!error}
-                helperText={error?.message}
-              />
-            )}
+          <FormInput
+              label="City"
+              name="user.city"
+              control={control}
+              error={errors.user?.city}
+              isEditMode={isEditMode}
           />
-        </Grid>
-        <Grid item xs={12}>
+
+        <div className="col-span-full">
           <Controller
             name="user.bio"
             control={control}
             render={({ field, fieldState: { error } }) => (
-              <TextField
-                {...field}
-                fullWidth
-                multiline
-                rows={4}
-                label="Bio"
-                error={!!error}
-                helperText={error?.message}
-              />
+              <div className="relative">
+                <label className={`text-xs text-gray-600 ${error ? 'text-red-500' : ''}`}>
+                  Bio
+                </label>
+                <textarea
+                  {...field}
+                  disabled={!isEditMode}
+                  className={`w-full px-3 py-2 rounded-lg border text-sm ${
+                    error ? 'border-red-500' : 'border-text-200'
+                  } focus:outline-none focus:ring-1 focus:ring-primary-500 ${
+                    !isEditMode ? 'bg-text-50 text-text-400' : ''
+                  }`}
+                  rows={3}
+                  placeholder=" "
+                />
+                {error && (
+                  <span className="text-red-500 text-xs mt-1">{error.message}</span>
+                )}
+              </div>
             )}
           />
-        </Grid>
-        <Grid item xs={12}>
-          <Controller
-            name="user.linkedin_url"
-            control={control}
-            render={({ field, fieldState: { error } }) => (
-              <TextField
-                {...field}
-                fullWidth
-                label="Linkedin Profile"
-                error={!!error}
-                helperText={error?.message}
-              />
-            )}
+        </div>
+      </div>
+      <div className='mt-4 col-span-full'>
+        <h2 className="text-sm sm:text-base font-semibold">Linkedin Profile</h2>
+        <FormInput
+              label="Profile URL"
+              name="user.linkedin_url"
+              control={control}
+              error={errors.user?.linkedin_url}
+              isEditMode={isEditMode}
           />
-        </Grid>
-      </Grid>
-    </Paper>
-  );
+      </div>
+  </div>
+);
 
-  const EducationSection = () => (
-    <Paper elevation={1} sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h6">Education</Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => appendEducation({ university: '', degree: '', year_of_passing: '' })}
-        >
-          Add Education
-        </Button>
-      </Box>
-
-      {educationFields.map((field, index) => (
-        <Card key={field.id} sx={{ mb: 2, position: 'relative' }}>
-          <CardContent>
-            <IconButton
-              size="small"
-              sx={{ position: 'absolute', top: 8, right: 8 }}
-              onClick={() => removeEducation(index)}
+  const EducationSection = ({errors, control}) => (
+    <div className="space-y-4">
+      {/* Education Section */}
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+          <h2 className="text-sm sm:text-base font-semibold">Education</h2>
+          {isEditMode && (
+            <button
+              type="button"
+              onClick={() => appendEducation({ id: null, university: '', degree: '', year_of_passing: '' })}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-3 py-1.5 bg-primary-500 text-white rounded-lg hover:bg-primary-600 text-xs sm:text-sm"
             >
-              <X />
-            </IconButton>
-            <Controller
-              name={`educations.${index}.university`}
-              control={control}
-              render={({ field, fieldState: { error } }) => (
-                <TextField
-                  {...field}
-                  fullWidth
-                  label="University"
-                  error={!!error}
-                  helperText={error?.message}
-                  sx={{ mb: 2 }}
+              <PlusCircle size={16} />
+              Add Education
+            </button>
+          )}
+        </div>
+  
+        <div className="space-y-4">
+          {educationFields.map((field, index) => (
+            <div key={field.id} className="border rounded-lg p-4 relative">
+               {/* Hidden input for ID */}
+               <Controller
+                  name={`educations.${index}.id`}
+                  control={control}
+                  render={({ field }) => (
+                    <input 
+                      type="hidden" 
+                      {...field} 
+                    />
+                  )}
                 />
+              {isEditMode && (
+                <button
+                  type="button"
+                  onClick={() => handleRemoveEducation(index)}
+                  className="absolute top-2 right-2 text-red-500 hover:text-red-600"
+                >
+                  <Trash2 size={18} />
+                </button>
               )}
-            />
-            <Controller
-              name={`educations.${index}.degree`}
-              control={control}
-              render={({ field, fieldState: { error } }) => (
-                <TextField
-                  {...field}
-                  fullWidth
-                  label="Degree"
-                  error={!!error}
-                  helperText={error?.message}
-                  sx={{ mb: 2 }}
+              
+              <FormInput
+                label="University"
+                name={`educations.${index}.university`}
+                control={control}
+                error={errors.educations?.[index]?.university}
+                disabled={!isEditMode}
+                isEditMode={isEditMode}
+              />
+              
+              <FormInput
+                label="Degree"
+                name={`educations.${index}.degree`}
+                control={control}
+                error={errors.educations?.[index]?.degree}
+                disabled={!isEditMode}
+                isEditMode={isEditMode}
+              />
+
+            <div className="col-span-full">
+                <Controller
+                  name={`educations.${index}.year_of_passing`}
+                  control={control}
+                  render={({ field, fieldState:{error} }) => (
+                  <div className="relative">
+                    <label className={`text-xs text-gray-600 ${error ? 'text-red-500' : ''}`}>
+                      Year of Passing
+                    </label>
+                    <input
+                      {...field}
+                      type="number"
+                      min="1900"
+                      max={new Date().getFullYear()}
+                      step="1"
+                      disabled={!isEditMode}
+                      className={`w-full px-3 py-2 rounded-lg border text-sm${
+                        errors.educations?.[index]?.year_of_passing ? 'border-red-500' : 'border-text-200'
+                      } focus:outline-none focus:ring-1 focus:ring-primary-500 ${
+                        !isEditMode ? 'bg-text-50 text-text-400' : ''
+                      }`}
+                      placeholder=" "
+                      onChange={(e) => {
+                        const year = parseInt(e.target.value);
+                        field.onChange(isNaN(year) ? '' : year);
+                      }}
+                    />
+                  </div>
+                  )}
                 />
-              )}
-            />
-            <Controller
-              name={`educations.${index}.year_of_passing`}
-              control={control}
-              render={({ field, fieldState: { error } }) => (
-                <TextField
-                  {...field}
-                  fullWidth
-                  type="number"
-                  label="Year of Passing"
-                  error={!!error}
-                  helperText={error?.message}
-                  onChange={(e) => field.onChange(parseInt(e.target.value))}
-                />
-              )}
-            />
-          </CardContent>
-        </Card>
-      ))}
-    </Paper>
+                {errors.educations?.[index]?.year_of_passing && (
+                  <span className="text-red-500 text-xs mt-1">
+                    {errors.educations[index].year_of_passing.message}
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+    // </div>
   );
 
-  const ExperienceSection = () => (
-    <>
-      <Paper elevation={1} sx={{ p: 3, mb: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-          <Typography variant="h6">Work Experience</Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => appendWork({ company: '', job_role: '', date_of_joining: '', date_of_leaving: '' })}
-          >
-            Add Work Experience
-          </Button>
-        </Box>
+  const ExperienceSection = ({errors, control}) => (
+    <div className="space-y-4">
+      {/* Work Experience Section */}
 
-        {workFields.map((field, index) => (
-          <Card key={field.id} sx={{ mb: 2, position: 'relative' }}>
-            <CardContent>
-              <IconButton
-                size="small"
-                sx={{ position: 'absolute', top: 8, right: 8 }}
-                onClick={() => removeWork(index)}
-              >
-                <X />
-              </IconButton>
-              <Controller
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+          <h2 className="text-sm sm:text-base font-semibold">Work Experience</h2>
+          {isEditMode && (
+            <button
+              type="button"
+              onClick={() => appendWork({ id: null, company: '', job_role: '', date_of_joining: '', date_of_leaving: '' })}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-3 py-1.5 bg-secondary-500 text-white rounded-lg hover:bg-secondary-600 text-xs sm:text-sm"
+            >
+              <PlusCircle size={16} />
+              Add Experience
+            </button>
+          )}
+        </div>
+  
+        <div className="space-y-4">
+          {workFields.map((field, index) => (
+            <div key={field.id} className="border rounded-lg p-4 relative">
+               {/* Hidden input for ID */}
+               <Controller
+                  name={`work_experiences.${index}.id`}
+                  control={control}
+                  render={({ field }) => (
+                    <input 
+                      type="hidden" 
+                      {...field} 
+                    />
+                  )}
+                />
+              {isEditMode && (
+                <button
+                  type="button"
+                  onClick={() => handleRemoveWork(index)}
+                  className="absolute top-2 right-2 text-red-500 hover:text-red-600"
+                >
+                  <Trash2 size={18} />
+                </button>
+              )}
+              
+              <FormInput
+                label="Company Name"
                 name={`work_experiences.${index}.company`}
                 control={control}
-                render={({ field, fieldState: { error } }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    label="Company"
-                    error={!!error}
-                    helperText={error?.message}
-                    sx={{ mb: 2 }}
-                  />
-                )}
+                error={errors.work_experiences?.[index]?.company}
+                disabled={!isEditMode}
+                isEditMode={isEditMode}
               />
-              <Controller
+              
+              <FormInput
+                label="Job Role"
                 name={`work_experiences.${index}.job_role`}
                 control={control}
-                render={({ field, fieldState: { error } }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    label="Job Role"
-                    error={!!error}
-                    helperText={error?.message}
-                    sx={{ mb: 2 }}
-                  />
-                )}
+                error={errors.work_experiences?.[index]?.job_role}
+                disabled={!isEditMode}
+                isEditMode={isEditMode}
               />
-              <Controller
-                name={`work_experiences.${index}.date_of_joining`}
-                control={control}
-                render={({ field, fieldState: { error } }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    type="date"
-                    label="Date of Joining"
-                    InputLabelProps={{ shrink: true }}
-                    inputProps={{
-                      pattern: '\d{4}-\d{2}-\d{2}', // Ensures HTML5 date validation
-                    }}
-                    error={!!error}
-                    helperText={error?.message}
-                    sx={{ mb: 2 }}
-                  />
-                )}
-              />
-              <Controller
-                name={`work_experiences.${index}.date_of_leaving`}
-                control={control}
-                render={({ field, fieldState: { error } }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    type="date"
-                    label="Date of Leaving"
-                    InputLabelProps={{ shrink: true }}
-                    inputProps={{
-                      pattern: '\d{4}-\d{2}-\d{2}', // Ensures HTML5 date validation
-                    }}
-                    error={!!error}
-                    helperText={error?.message}
-                  />
-                )}
-              />
-            </CardContent>
-          </Card>
-        ))}
-      </Paper>
 
-      <Paper elevation={1} sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" sx={{ mb: 3 }}>Skills</Typography>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="relative">
+                    <Controller
+                      name={`work_experiences.${index}.date_of_joining`}
+                      control={control}
+                      render={({ field, fieldState:{error} }) => (
+                      <div className="relative">
+                        <label className={`text-xs text-gray-600 ${error ? 'text-red-500' : ''}`}>
+                          Date of Joining
+                        </label>
+                        <input
+                          {...field}
+                          type="date"
+                          disabled={!isEditMode}
+                          className={`w-full px-3 py-2 rounded-lg border text-sm ${
+                            errors.work_experiences?.[index]?.date_of_joining ? 'border-red-500' : 'border-text-200'
+                          } focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                            !isEditMode ? 'bg-text-50 text-text-400' : ''
+                          }`}
+                        />
+                      </div>
+                      )}
+                    />
+                    {errors.work_experiences?.[index]?.date_of_joining && (
+                      <span className="text-red-500 text-xs mt-1">
+                        {errors.work_experiences[index].date_of_joining.message}
+                      </span>
+                    )}
+                  </div>
+                  
+    
+                  <div className="relative">
+                    <Controller
+                      name={`work_experiences.${index}.date_of_leaving`}
+                      control={control}
+                      render={({ field, fieldState:{error} }) => (
+                        <div className='relative'>
+                        <label className={`text-xs text-gray-600 ${error ? 'text-red-500' : ''}`}>
+                          Date of Leaving
+                        </label>
+                        <input
+                          {...field}
+                          type="date"
+                          disabled={!isEditMode}
+                          className={`w-full px-3 py-2 rounded-lg border text-sm ${
+                            errors.work_experiences?.[index]?.date_of_leaving ? 'border-red-500' : 'border-text-200'
+                          } focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                            !isEditMode ? 'bg-text-50 text-text-400' : ''
+                          }`}
+                        />
+                        </div>
+                      )}
+                    />
+                    {errors.work_experiences?.[index]?.date_of_leaving && (
+                      <span className="text-red-500 text-xs mt-1">
+                        {errors.work_experiences[index].date_of_leaving.message}
+                      </span>
+                    )}
+                  </div>
+              </div>
+            </div>
+          ))}
+        </div>
+  
+      {/* Skills Section */}
+      <div className='mt-4'>
+        <h2 className="text-sm sm:text-base font-semibold mb-2">Skills</h2>
         <Controller
           name="user.skills"
           control={control}
-          render={({ field, fieldState: { error } }) => (
-            <Box>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {skillsData.map(skill => (
-                  <Chip
-                    key={skill.id}
-                    label={skill.skill_name}
-                    onClick={() => {
-                      const newValue = field.value.includes(skill.id)
-                        ? field.value.filter(id => id !== skill.id)
-                        : [...field.value, skill.id];
-                      field.onChange(newValue);
-                    }}
-                    color={field.value.includes(skill.id) ? 'primary' : 'default'}
-                    sx={{ '&:hover': { cursor: 'pointer' } }}
-                  />
-                ))}
-              </Box>
-              {error && (
-                <FormHelperText error>{error.message}</FormHelperText>
+          render={({ field }) => (
+            <div className="flex flex-wrap gap-2">
+              {skillsData.map(skill => (
+                <button
+                  type="button"
+                  key={skill.id}
+                  onClick={() => {
+                    if (!isEditMode) return;
+                    const newValue = field.value.includes(skill.id)
+                      ? field.value.filter(id => id !== skill.id)
+                      : [...field.value, skill.id];
+                    field.onChange(newValue);
+                  }}
+                  className={`px-2 py-1 rounded-full text-xs sm:text-sm ${
+                    field.value.includes(skill.id)
+                    ? isEditMode
+                      ? 'bg-primary-500 text-white hover:bg-primary-600' 
+                      : 'bg-primary-500 text-white' 
+                    : 'bg-text-100 text-primary-500 hover:bg-primary-600 hover:text-white' 
+                  } ${
+                    isEditMode ? 'cursor-pointer' : 'cursor-default'
+                  }`}
+                >
+                  {skill.skill_name}
+                </button>
+              ))}
+              {errors.user?.skills && (
+                <span className="text-red-500 text-xs mt-1 block">
+                  {errors.user.skills.message}
+                </span>
               )}
-            </Box>
-          )}
-        />
-      </Paper>
-
-      <Paper elevation={1} sx={{ p: 3 }}>
-        <Typography variant="h6" sx={{ mb: 3 }}>Upload Resume</Typography>
-        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-          <Box sx={{ position: 'relative' }}>
-            <Box
-              sx={{
-                width: 256,
-                height: 128,
-                borderRadius: 2,
-                bgcolor: 'background.default',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '2px dashed',
-                borderColor: 'divider',
-                '&:hover': { borderColor: 'primary.main' }
-              }}
-            >
-              {filePreviews.resume || userData?.resume_url ? (
-                <Box sx={{ p: 2, textAlign: 'center' }}>
-                  <FileText sx={{ width: 32, height: 32, color: 'primary.main', mb: 1 }} />
-                  {filePreviews.resume || (
-                    <Typography
-                      component="a"
-                      href={userData.resume_url}
+            </div>
+           )}
+         />
+        </div>
+  
+      {/* Resume Upload Section */}
+      <div className='mt-4'>
+        <h2 className="text-sm sm:text-base font-semibold">Resume</h2>
+        <div className='w-full'>
+          <div className="flex justify-center">
+            <div className="relative w-full max-w-xs">
+              <div className={`border-2 border-dashed rounded-lg p-4 text-center ${
+                isEditMode ? 'border-primary-200 hover:border-primary-300' : 'border-gray-200'
+              }`}>
+                {filePreviews.resume || userData?.resume_url ? (
+                  <div className="space-y-2">
+                    <FileText className="mx-auto text-primary-500" size={22} />
+                    <a
+                      href={userData?.resume_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      sx={{ color: 'primary.main', textDecoration: 'underline' }}
+                      className="text-primary-500 text-sm sm:text-base hover:underline"
                     >
-                      View Resume
-                    </Typography>
-                  )}
-                </Box>
-              ) : (
-                <>
-                  <FileText sx={{ width: 32, height: 32, color: 'text.secondary', mb: 1 }} />
-                  <Typography variant="body2" color="text.secondary">
-                    Upload your resume
-                  </Typography>
-                </>
-              )}
-            </Box>
-            <IconButton
-              component="label"
-              sx={{
-                position: 'absolute',
-                bottom: 0,
-                right: 0,
-                bgcolor: 'primary.main',
-                color: 'white',
-                '&:hover': { bgcolor: 'primary.dark' }
-              }}
-            >
-              <input
-                type="file"
-                hidden
-                accept=".pdf,.doc,.docx"
-                onChange={(e) => handleFile(e, 'resume')}
-              />
-              <PlusCircle />
-            </IconButton>
-          </Box>
-        </Box>
-      </Paper>
-    </>
+                      View Current Resume
+                    </a>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <FileText className="mx-auto text-gray-400" size={22} />
+                    <p className="text-gray-500 text-sm sm:text-base">Upload your resume</p>
+                  </div>
+                )}
+                
+                {isEditMode && (
+                  <label className="absolute inset-0 cursor-pointer">
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept=".pdf,.doc,.docx"
+                      onChange={(e) => handleFile(e, 'resume')}
+                    />
+                  </label>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 
   const onError = (errors) => {
@@ -584,11 +620,15 @@ const TutorProfile = () => {
     const processedData = {
       ...jsonData,
       educations: jsonData.educations.map(edu => ({
-        ...edu,
+        ...(edu.id ? {id:edu.id}:{}),
+        university: edu.university,
+        degree: edu.degree,
         year_of_passing: Number(edu.year_of_passing)
       })),
       work_experiences: jsonData.work_experiences.map(exp => ({
-        ...exp,
+        ...(exp.id ? {id:exp.id}:{}),
+        company: exp.company,
+        job_role: exp.job_role,
         // Keep dates as strings in YYYY-MM-DD format
         date_of_joining: exp.date_of_joining,  // Already in correct format
         date_of_leaving: exp.date_of_leaving   // Already in correct format
@@ -612,6 +652,8 @@ const TutorProfile = () => {
 
     try {
       await dispatch(updateUser(formData));
+      setIsEditMode(false);
+      setActiveTab(0)
       dispatch(fetchUser());
       toast.success("Profile updated successfully!");
     } catch (error) {
@@ -621,43 +663,97 @@ const TutorProfile = () => {
 
   return (
     <UserLayout>
-      <Box sx={{ maxWidth: 'lg', mx: 'auto', py: 4, px: 2 }}>
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" sx={{ color: 'text.primary', fontWeight: 'bold' }}>
-            Complete Your Profile
-          </Typography>
-          <Typography variant="body1" sx={{ color: 'text.secondary', mt: 1 }}>
-            Please provide your details to get started as a tutor
-          </Typography>
-        </Box>
+        <div className="max-w-4xl mx-auto p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+                <div>
+                    <h1 className="text-lg sm:text-xl font-bold text-gray-800">
+                        {isEditMode ? 'Edit Profile' : 'My Profile'}
+                    </h1>
+                    <p className="text-gray-600 text-xs sm:text-sm mt-1">
+                        {isEditMode ? 'Update your profile information' : 'View your profile information'}
+                    </p>
+                </div>
+                <button
+                    onClick={toggleEditMode}
+                    className={`w-full sm:w-auto px-4 py-2 text-sm rounded-lg border-2 ${
+                        isEditMode 
+                            ? 'bg-text-50 text-text-600 rounded-lg hover:bg-text-100'
+                            : 'bg-secondary-500 text-white rounded-lg hover:bg-secondary-600'
+                    }`}
+                >
+                    {isEditMode ? 'Cancel Editing' : 'Edit Profile'}
+                </button>
+            </div>
 
-        <Box sx={{ mb: 3 }}>
-          <Tabs value={activeTab} onChange={handleTabChange}>
-            <Tab label="Personal Information" value={0} />
-            <Tab label="Education" value={1} />
-            <Tab label="Experience & Skills" value={2} />
-          </Tabs>
-        </Box>
+            <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4">
+              <div className="grid grid-cols-3 gap-2 mb-4 sm:flex sm:gap-4 sm:border-b sm:border-gray-200">
+                  {[0, 1, 2].map((tabIndex) => (
+                      <button
+                          key={tabIndex}
+                          onClick={() => setActiveTab(tabIndex)}
+                          className={`text-center py-2 px-1 sm:px-3 text-xs sm:text-sm ${
+                              activeTab === tabIndex
+                                  ? 'border-b-2 border-secondary-500 text-secondary-600 font-semibold'
+                                  : 'text-gray-500 hover:text-gray-700 sm:border-b-0'
+                          }`}
+                      >
+                          {['Personal', 'Education', 'Experience & Skills'][tabIndex]}
+                      </button>
+                  ))}
+              </div>
+            
 
-        <form onSubmit={handleSubmit(onSubmit, onError)}>
-          {activeTab === 0 && <PersonalSection />}
-          {activeTab === 1 && <EducationSection />}
-          {activeTab === 2 && <ExperienceSection />}
+            <form onSubmit={handleSubmit(onSubmit, onError)}>
+                {activeTab === 0 && <PersonalSection errors={errors} />}
+                {activeTab === 1 && <EducationSection errors={errors} control={control}/>}
+                {activeTab === 2 && <ExperienceSection errors={errors} control={control}/>}
 
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
-            <Button
-              type="submit"
-              variant="contained"
-              size="large"
-              sx={{ px: 4, py: 1.5, fontWeight: 600 }}
-            >
-              Save Profile
-            </Button>
-          </Box>
-        </form>
-      </Box>
+                <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-4 mt-6">
+                    <div className="w-full sm:w-auto">
+                        {activeTab > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab(activeTab - 1)}
+                                className="w-full px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 flex items-center justify-center gap-2 text-sm"
+                            >
+                                <ChevronLeft size={18} />
+                                Previous
+                            </button>
+                        )}
+                    </div>
+                    
+                    <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-2">
+                        {activeTab < 2 && (
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab(activeTab + 1)}
+                                className="w-full px-4 py-2 bg-secondary-500 text-white rounded-lg hover:bg-secondary-600 flex items-center justify-center gap-2 text-sm"
+                            >
+                                Next
+                                <ChevronRight size={18} />
+                            </button>
+                        )}
+                        
+                        {activeTab === 2 && isEditMode && (
+                            <button
+                              type="submit"
+                              className="w-full px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 text-sm transition-colors duration-200"
+                              disabled={isLoading}
+                            >
+                              {isLoading ? (
+                                <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                              ) : (
+                                "Save Profile"
+                              )}
+                          </button>
+                        )}
+                    </div>
+                </div>
+            </form>
+            </div>
+        </div>
     </UserLayout>
-  );
+);
 };
 
 export default TutorProfile;

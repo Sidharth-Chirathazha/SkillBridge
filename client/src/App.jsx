@@ -20,14 +20,15 @@ function App() {
         <BrowserRouter>
           {/* Toaster configuration */}
           <Toaster
-              position="bottom-right"
+              position="top-right"
               toastOptions={{
-                duration: 3000,
+                duration: 2000,
                 style: {
                   background: '#333',
                   color: '#fff',
-                  padding: '16px',
-                  borderRadius: '8px',
+                  padding: '10px', // Reduced padding
+                  borderRadius: '6px', // Smaller border radius
+                  fontSize: '14px', // Slightly smaller text
                 },
                 success: {
                   style: {
@@ -46,6 +47,14 @@ function App() {
                     background: '#3B82F6',
                   },
                 },
+              }}
+              containerStyle={{
+                top: 10, // Adjusted for better positioning
+                right: 10,
+              }}
+              transition={{
+                enter: { opacity: 0, transform: 'translateX(20px)', transition: 'all 200ms ease-in-out' },
+                leave: { opacity: 0, transform: 'translateX(-20px)', transition: 'all 200ms ease-in-out' },
               }}
             />
             <Routes>

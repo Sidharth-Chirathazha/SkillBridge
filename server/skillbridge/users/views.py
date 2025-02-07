@@ -110,7 +110,9 @@ class UserProfileView(APIView):
         
         # Include file data if available
         if 'resume' in request.FILES:
+            print("Inside if of resume in put",request.FILES['resume'])
             json_data['resume_url'] = request.FILES['resume']
+            print(json_data['resume_url'])
 
         if user.role == 'tutor':
             serializer = TutorProfileSerializer(user.tutor_profile, data=json_data, partial=True, context={'request': request})

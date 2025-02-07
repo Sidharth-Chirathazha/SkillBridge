@@ -32,6 +32,7 @@ class AdminTutorSerializer(serializers.ModelSerializer):
     profile_pic_url = serializers.CharField(source="profile_pic_url.url", allow_null=True)
 
     # Fields from TutorProfile
+    tutor_id = serializers.IntegerField(source="tutor_profile.id")
     resume_url = serializers.CharField(source="tutor_profile.resume_url.url", allow_null=True)
     rating = serializers.FloatField(source="tutor_profile.rating")
     is_verified = serializers.BooleanField(source="tutor_profile.is_verified")
@@ -45,6 +46,7 @@ class AdminTutorSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             "id",
+            "tutor_id",
             "first_name",
             "last_name",
             "email",

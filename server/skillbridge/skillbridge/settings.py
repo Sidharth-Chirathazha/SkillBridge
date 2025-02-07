@@ -51,11 +51,10 @@ REST_FRAMEWORK = {
     'DEFAULT_PARSER_CLASSES': [
         'rest_framework.parsers.JSONParser',
     ],
-    # Add throttling, pagination, etc., if needed
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),  # Customize as needed
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),  # Customize as needed
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),    # Customize as needed
     'ROTATE_REFRESH_TOKENS': False,                # Optional: Set True to use rotating refresh tokens
     'BLACKLIST_AFTER_ROTATION': True,              # Required for blacklist functionality
@@ -97,6 +96,8 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'dj_rest_auth.registration',
 ]
+
+AUTH_USER_MODEL = 'users.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -201,8 +202,6 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',  # Frontend URL
 ]
 
-AUTH_USER_MODEL = 'users.User'
-
 SITE_ID = 1
 
 SOCIALACCOUNT_PROVIDERS = {
@@ -226,7 +225,11 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_CALLBACK_URL = 'http://127.0.0.1:8000/accounts/google/
 # This setting is needed if you're using the allauth views for login/logout
 ACCOUNT_AUTHENTICATED_REDIRECT_URL = '/'  # URL to redirect after successful login
 
+STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY')
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
+STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
 
+AUTH_USER_MODEL = 'users.User'
 
 
 cloudinary.config(
@@ -234,3 +237,5 @@ cloudinary.config(
     api_key=os.getenv('CLOUDINARY_API_KEY'),       # Replace with your Cloudinary API key
     api_secret=os.getenv('CLOUDINARY_API_SECRET')  # Replace with your Cloudinary API secret
 )
+
+ 
