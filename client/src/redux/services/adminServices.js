@@ -26,8 +26,14 @@ export const fetchAdmin = async()=>{
 }
 
 //Fetch Admin Tutors
-export const fetchAdminTutors = async(id=null)=>{
-    const endpoint = id ? `/admin/tutors/${id}/` : "/admin/tutors/";
+export const fetchAdminTutors = async(page=1, pageSize=10, id=null)=>{
+    let endpoint = id ? `/admin/tutors/${id}/` : `/admin/tutors/`;
+    if (!id) {
+        const params = new URLSearchParams();
+        if (page) params.append("page", page);
+        if (pageSize) params.append("page_size", pageSize);
+        endpoint += `?${params.toString()}`;
+    }
     const response = await axiosInstance.get(
         endpoint, 
         {requiresAuth: true}
@@ -45,8 +51,14 @@ export const updateTutorAuthorization = async (id, is_verified)=>{
 }
 
 //Fetch Admin Students
-export const fetchAdminStudents = async(id=null)=>{
-    const endpoint = id ? `/admin/students/${id}/` : "/admin/students/";
+export const fetchAdminStudents = async(page=1, pageSize=10, id=null)=>{
+    let endpoint = id ? `/admin/students/${id}/` : "/admin/students/";
+    if (!id) {
+        const params = new URLSearchParams();
+        if (page) params.append("page", page);
+        if (pageSize) params.append("page_size", pageSize);
+        endpoint += `?${params.toString()}`;
+    }
     const response = await axiosInstance.get(
         endpoint, 
         {requiresAuth: true}

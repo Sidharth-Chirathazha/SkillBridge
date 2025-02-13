@@ -3,9 +3,7 @@ import UserLayout from '../../components/common/UserLayout'
 
 const StudentDashboard = () => {
   return (
-    <UserLayout>
       <div>StudentDashboard</div>
-    </UserLayout>
   )
 }
 

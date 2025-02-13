@@ -3,14 +3,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import ManagementCourseCard from '../../components/common/ui/ManagementCourseCard';
 import Pagination from '../../components/common/ui/Pagination';
 import { deleteCourse, fetchTutorCourses } from '../../redux/slices/courseSlice';
-import UserLayout from '../../components/common/UserLayout';
 import { useNavigate } from 'react-router-dom';
 import { Loader } from 'lucide-react';
 import toast from 'react-hot-toast';
 import TutorVerificationMessage from '../../components/tutor/TutorVerificationMessage';
 
 
-const TutorCourses = () => {
+const TutorTeaching = () => {
 
   // const [isCoursesAvailable, setIsCoursesAvailable] = useState(false);
   const dispatch = useDispatch();
@@ -18,7 +17,7 @@ const TutorCourses = () => {
   const [page, setPage] = useState(1);
   const pageSize = 8;
   
-  const { coursesData, currentPage, totalPages, isCourseLoading, isCourseError } = useSelector(
+  const { tutorCoursesData, currentPage, totalPages, isCourseLoading, isCourseError } = useSelector(
     (state) => state.course
   );
   const {userData} = useSelector( (state)=> state.auth)
@@ -44,7 +43,7 @@ const TutorCourses = () => {
   }, [dispatch, page, tutorId]);
 
   const handleEdit = (courseId) => {
-    navigate(`/tutor/courses/edit/${courseId}`)
+    navigate(`/tutor/teaching/edit/${courseId}`)
   };
   const handleDelete = async (courseId)=>{
     try{
@@ -57,7 +56,7 @@ const TutorCourses = () => {
   }
 
   return (
-    <UserLayout>
+    <>
       {userData?.is_verified === false ?(
         <TutorVerificationMessage/>
       ):(
@@ -76,7 +75,7 @@ const TutorCourses = () => {
           ) : (
               <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                      {coursesData?.map((course) => (
+                      {tutorCoursesData?.map((course) => (
                       <ManagementCourseCard
                         key={course.id}
                         course={course}
@@ -97,8 +96,8 @@ const TutorCourses = () => {
           )}
         </div>
       )}
-    </UserLayout>
+    </>
   );
 };
 
-export default TutorCourses;
+export default TutorTeaching;

@@ -103,7 +103,7 @@ const AdminContentManagement = () => {
   }
 
   return (
-    <AdminLayout>
+    <>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <h1 className="text-xl sm:text-2xl font-bold text-text-500 mb-8">Content Management</h1>
 
@@ -236,7 +236,7 @@ const AdminContentManagement = () => {
           </div>
         </div>
       </div>
-    </AdminLayout>
+    </>
   );
 };
 

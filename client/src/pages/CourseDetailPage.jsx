@@ -1,19 +1,21 @@
 import React, { useEffect, useState } from 'react'
-import UserLayout from '../../components/common/UserLayout'
-import CourseDetail from '../../components/common/CourseDetail'
+import UserLayout from '../components/common/UserLayout'
+import CourseDetail from '../components/common/CourseDetail'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate, useParams } from 'react-router-dom'
-import { fetchSingleCourse, initiateCheckout, resetCheckout } from '../../redux/slices/courseSlice'
+import { fetchSingleCourse, initiateCheckout, resetCheckout } from '../redux/slices/courseSlice'
 import { Loader } from 'lucide-react'
 import {loadStripe} from '@stripe/stripe-js'
+import TutorVerificationMessage from '../components/tutor/TutorVerificationMessage';
 
 const stripePromise = loadStripe('pk_test_51Qp6mdRZhgmNkKQoW8Hp4xmJjjpuuC9iwjD0s1utEDyqLsByg7yXK81XadWBK751vQE8nbAMV5RmL11nw25aQrFh00zV21sORj')
 
-const StudentCourseDetailView = () => {
+const CourseDetailPage = () => {
     const [loading, setLoading] = useState(true);
     const dispatch = useDispatch();
     const {singleCourse, isCourseLoading, isCheckoutLoading, checkoutError, checkoutSession} = useSelector((state)=>state.course);
     const {id} = useParams();
+    const {role, userData} = useSelector((state)=>state.auth)
 
     useEffect(() => {
     const fetchData = async () => {
@@ -70,15 +72,18 @@ const StudentCourseDetailView = () => {
 
 
   return (
-    <UserLayout>
+    <>
+     { role === "tutor" && userData?.is_verified === false ? (
+        <TutorVerificationMessage/>
+      ) :(
         <CourseDetail
             course={singleCourse}
-            variant="student"
+            variant={role}
             onAction={handleStudentAction}      
         />
-
-    </UserLayout>
+      )}
+    </>
   )
 }
 
-export default StudentCourseDetailView
+export default CourseDetailPage

@@ -78,9 +78,9 @@ export const fetchAdmin = createAsyncThunk(
 //Thunk for Fetching tutots from admin
 export const fetchAdminTutors = createAsyncThunk(
   "/fetchAdminTutors",
-  async(id = null,thunkAPI)=>{
+  async({page=null, pageSize=null, id=null},thunkAPI)=>{
       try{
-          return await adminService.fetchAdminTutors(id);
+          return await adminService.fetchAdminTutors(page, pageSize, id);
         
       }catch(error){
         const message = 
@@ -99,9 +99,9 @@ export const fetchAdminTutors = createAsyncThunk(
 //Thunk for Fetching students from admin
 export const fetchAdminStudents = createAsyncThunk(
   "/fetchAdminStudents",
-  async(id = null,thunkAPI)=>{
+  async({page=null, pageSize=null, id=null},thunkAPI)=>{
       try{
-          return await adminService.fetchAdminStudents(id);
+          return await adminService.fetchAdminStudents(page, pageSize, id);
         
       }catch(error){
         const message = 
@@ -203,6 +203,8 @@ const adminSlice = createSlice({
       isSuccess: false,
       message: "",
       isAdminAuthenticated : false,
+      currentPage: 1,
+      totalPages: 1,
 
     },
     reducers: {
@@ -270,12 +272,13 @@ const adminSlice = createSlice({
         .addCase(fetchAdminTutors.fulfilled, (state, action)=>{
           state.isSuccess = true;
           state.isLoading = false;
-          if(Array.isArray(action.payload)){
-            state.adminTutorsData = action.payload;
+          if(action.payload.results){
+            state.adminTutorsData = action.payload.results;
           }else{
             state.singleTutor = action.payload;
           }
-          
+          state.currentPage =  action.payload.current_page || 1;
+          state.totalPages = action.payload.total_pages
         })
         .addCase(fetchAdminTutors.rejected, (state, action)=>{ 
           state.isError = true;
@@ -317,11 +320,13 @@ const adminSlice = createSlice({
         .addCase(fetchAdminStudents.fulfilled, (state, action)=>{
           state.isSuccess = true;
           state.isLoading = false;
-          if(Array.isArray(action.payload)){
-            state.adminStudentsData = action.payload;
+          if(action.payload.results){
+            state.adminStudentsData = action.payload.results;
           }else{
             state.singleStudent = action.payload;
           }
+          state.currentPage =  action.payload.current_page || 1;
+          state.totalPages = action.payload.total_pages
           
         })
         .addCase(fetchAdminStudents.rejected, (state, action)=>{ 

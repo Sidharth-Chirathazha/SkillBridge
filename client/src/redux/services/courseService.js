@@ -59,9 +59,7 @@ export const fetchCourses = async(page, pageSize, status=null, user=null)=>{
         url = `/courses/course/?page=${page}&page_size=${pageSize}&status=${status}`;
     }
     const config = user ? {
-        headers: {
-            Authorization: `Bearer ${user.token}`  // Assuming user object contains a token property
-        }
+       requiresAuth:true
     } : {};
 
     const response = await axiosInstance.get(url,config);
@@ -69,14 +67,18 @@ export const fetchCourses = async(page, pageSize, status=null, user=null)=>{
 }
 
 //Fetch tutor courses
-export const fetchTutorCourses = async(tutorId, page, pageSize, status=null)=>{
+export const fetchTutorCourses = async(tutorId, page=null, pageSize=null, status=null)=>{
     console.log(tutorId);
     
-    let url = `/courses/course/?page=${page}&page_size=${pageSize}&tutor_id=${tutorId}`;
+    let params = new URLSearchParams();
+    params.append("tutor_id", tutorId);
 
-    if (status){
-        url = `/courses/course/?page=${page}&page_size=${pageSize}&tutor_id=${tutorId}&status=${status}`;
-    }
+    if (page) params.append("page", page);
+    if (pageSize) params.append("page_size", pageSize);
+    if (status) params.append("status", status);
+
+    const url = `/courses/course/?${params.toString()}`;
+    
     const response = await axiosInstance.get(url);
     return response.data;
 }
@@ -128,7 +130,7 @@ export const addModule = async(moduleInfo)=>{
 
     const config = {
         requiresAuth: true,
-        headers: {} // Let Axios set the Content-Type for FormData
+        headers: {} 
       };
     const response = await axiosInstance.post(
         "/courses/modules/",
@@ -151,7 +153,7 @@ export const updateModule = async(id, updateData)=>{
 
     const config = {
         requiresAuth: true,
-        headers: {} // Let Axios set the Content-Type for FormData
+        headers: {} 
       };
     const response = await axiosInstance.patch(
         `/courses/modules/${id}/`,
@@ -173,6 +175,8 @@ export const deleteModule = async(id)=>{
 
 //Stripe Checkout
 export const createCheckoutSession = async(courseId)=>{
+    console.log(courseId);
+    
     const response = await axiosInstance.post("/courses/create-checkout-session/",
         {course_id: courseId},
         {requiresAuth:true}
@@ -203,4 +207,60 @@ export const postReview = async(reviewInfo)=>{
 export const fetchReviews = async(courseSlug)=>{
     const response = await axiosInstance.get( `/courses/reviews/?course_slug=${courseSlug}`);
     return response.data;
+}
+
+
+//Post review
+export const postComment = async(courseId, newComment, parentId)=>{
+    const requestData = { course: courseId, content: newComment };
+    if (parentId) {
+        requestData.parent = parentId;  // Only include if it's a reply
+    }
+    const response = await axiosInstance.post(
+        "/courses/comments/",
+        requestData,
+        { requiresAuth:true }
+    );
+    return response.data;
+}
+
+//Fetch Comments
+export const fetchComments = async(courseId)=>{
+    const response = await axiosInstance.get( `/courses/comments/?course=${courseId}`,
+        { requiresAuth:true }
+    );
+    return response.data;
+}
+
+//Sending Trade Request
+export const sendTradeRequest = async(requestData)=>{
+    const response = await axiosInstance.post("/courses/course-trades/",
+        requestData,
+        {requiresAuth:true}
+    );
+    return response.data
+}
+
+//Sending Trade Request
+export const updateTradeRequest = async(tradeId,action)=>{
+    let url = `/courses/course-trades/${tradeId}`
+    if(action === 'accept'){
+        url = `/courses/course-trades/${tradeId}/accept_trade/`
+    }
+    if(action === 'decline'){
+        url = `/courses/course-trades/${tradeId}/decline_trade/`
+    }
+    const response = await axiosInstance.post(url,
+        {requiresAuth:true}
+    );
+    return response.data
+}
+
+
+//Fetch Trade Requests
+export const fetchTradeRequests = async()=>{
+    const response = await axiosInstance.get("/courses/course-trades/",
+        {requiresAuth:true}
+    );
+    return response.data
 }

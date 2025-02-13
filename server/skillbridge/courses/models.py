@@ -128,3 +128,33 @@ class Review(models.Model):
 
     def __str__(self):
          return f"Review by {self.user.first_name} on {self.course.title}"
+    
+
+class Comment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments")
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="comments")
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, related_name="replies", null=True, blank=True)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Comment by {self.user.first_name} on {self.course.title}"
+    
+
+class CourseTradeModel(models.Model):
+
+    STATUS_CHOICES = (
+        ('Accepted', 'approved'),
+        ('Declined', 'declined'),
+        ('Pending', 'pending'),
+    )
+    requester = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sent_trade_requests")
+    requested_course = models.ForeignKey(Course,on_delete=models.CASCADE, related_name="trade_requests" )
+    offered_course = models.ForeignKey(Course,on_delete=models.CASCADE, related_name="offered_trades")
+    accepter = models.ForeignKey(User, on_delete=models.CASCADE, related_name="received_trade_requests")
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="pending",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)

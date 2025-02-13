@@ -14,7 +14,6 @@ import {
   Ban,
   Loader 
 } from 'lucide-react';
-import AdminLayout from '../../components/admin/AdminLayout';
 import { fetchAdminStudents, updateUserActiveStatus } from '../../redux/slices/adminSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
@@ -31,7 +30,7 @@ const AdminStudentDetailView = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        await dispatch(fetchAdminStudents(id)).unwrap();
+        await dispatch(fetchAdminStudents({id})).unwrap();
       } catch (error) {
         console.error('Failed to fetch user:', error);
       } finally {
@@ -44,7 +43,7 @@ const AdminStudentDetailView = () => {
   const handleBlock = async (studentId, isActive) => {
     try {
       await dispatch(updateUserActiveStatus({ id: studentId, is_active: isActive })).unwrap();
-      dispatch(fetchAdminStudents(id));
+      dispatch(fetchAdminStudents({id}));
       toast.success("Student Status Updated.")
     } catch (error) {
       console.error("Failed to update student authorization:", error);
@@ -60,7 +59,7 @@ const AdminStudentDetailView = () => {
   }
 
   return (
-    <AdminLayout>
+    <>
       <div className="bg-background-100 p-4 md:p-8 space-y-6 md:space-y-8">
         {/* Top Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
@@ -170,7 +169,7 @@ const AdminStudentDetailView = () => {
           />
         </div>
       </div>
-    </AdminLayout>
+    </>
   );
 };
 

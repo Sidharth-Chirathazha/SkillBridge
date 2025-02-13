@@ -14,7 +14,6 @@ import {
   Ban,
   Loader 
 } from 'lucide-react';
-import AdminLayout from '../../components/admin/AdminLayout';
 import { fetchAdminTutors, updateTutorAuthorization, updateUserActiveStatus } from '../../redux/slices/adminSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
@@ -32,7 +31,7 @@ const AdminTutorDetailView = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        await dispatch(fetchAdminTutors(id)).unwrap();
+        await dispatch(fetchAdminTutors({id})).unwrap();
       } catch (error) {
         console.error('Failed to fetch user:', error);
       } finally {
@@ -45,7 +44,7 @@ const AdminTutorDetailView = () => {
   const handleAuthorize = async (tutorId, isVerified) => {
     try {
       await dispatch(updateTutorAuthorization({ id: tutorId, is_verified: isVerified })).unwrap();
-      dispatch(fetchAdminTutors(id));
+      dispatch(fetchAdminTutors({id}));
       toast.success("Tutor Authorization Status Updated.")
     } catch (error) {
       console.error("Failed to update tutor authorization:", error);
@@ -55,7 +54,7 @@ const AdminTutorDetailView = () => {
   const handleBlock = async (tutorId, isActive) => {
     try {
       await dispatch(updateUserActiveStatus({ id: tutorId, is_active: isActive })).unwrap();
-      dispatch(fetchAdminTutors(id));
+      dispatch(fetchAdminTutors({id}));
       toast.success("Tutor Status Updated.")
     } catch (error) {
       console.error("Failed to update tutor authorization:", error);
@@ -71,7 +70,7 @@ const AdminTutorDetailView = () => {
   }
 
   return (
-    <AdminLayout>
+    <>
       <div className="bg-background-100 p-4 md:p-8 space-y-6 md:space-y-8">
         {/* Top Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
@@ -304,7 +303,7 @@ const AdminTutorDetailView = () => {
           />
         </div>
       </div>
-    </AdminLayout>
+    </>
   );
 };
 

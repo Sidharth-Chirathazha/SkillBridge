@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, HomeIcon, Users, GraduationCap, Book, MessageSquare, Star, UserRoundPen, LogOut, PlusCircle, ChevronDown, Loader, Menu, X, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { Search, HomeIcon, Users, GraduationCap, Book, MessageSquare, Star, UserRoundPen, LogOut, PlusCircle, 
+ BookCopy, ChevronDown, Loader, Menu, X, ChevronsLeft, ChevronsRight, User, Wallet,Library } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import { fetchUser, logoutUser } from '../../redux/slices/authSlice';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@mui/material";
+import { Outlet } from 'react-router-dom';
 
-const UserLayout = ({ children }) => {
+const UserLayout = () => {
   const [activePage, setActivePage] = useState('Dashboard');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
@@ -20,8 +22,9 @@ const UserLayout = ({ children }) => {
 
   const tutorNavItems = [
     { name: 'Dashboard', icon: HomeIcon, path: '/tutor/dashboard/' },
-    { name: 'Teaching', icon: Book, path: '/tutor/teaching/' },
-    { name: 'Courses', icon: GraduationCap, path: '/tutor/dashboard/' },
+    { name: 'Teaching', icon: BookCopy, path: '/tutor/teaching/' },
+    { name: 'Courses', icon: GraduationCap, path: '/tutor/courses/' },
+    { name: 'Learning', icon: Library, path: '/tutor/learning/' },
     { name: 'Community', icon: Users, path: '/tutor/dashboard/' },
     { name: 'Messages', icon: MessageSquare, path: '/tutor/dashboard/' },
     { name: 'Reviews', icon: Star, path: '/tutor/dashboard/' },
@@ -229,23 +232,35 @@ const UserLayout = ({ children }) => {
           {/* Search Bar */}
           <div className="flex-1 max-w-2xl lg:ml-0">
             <div className="relative ml-10">
-              <input
+            <input
                 type="text"
                 placeholder="Search..."
-                className="w-full pl-10 pr-4 py-2 rounded-lg border border-background-200 focus:outline-none focus:border-primary-300"
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-background-200 
+                focus-visible:outline-none  focus:ring-1 
+                focus:ring-primary-500 
+                placeholder:text-text-300"
               />
-              <Search className="absolute left-3 top-2.5 h-5 w-5 text-text-300" />
+              <Search className="absolute left-3 top-2.5 h-5 w-5 text-text-300 
+                group-focus-within:text-primary-500 transition-colors duration-300" />
             </div>
           </div>
 
           <div className="flex items-center gap-4 sm:gap-4 ml-2">
+            {/* Wallet Button */}
+            {/* <button
+              className="p-2 rounded-full hover:bg-background-100 
+              text-text-500 hover:text-primary-500 transition-colors duration-300"
+              onClick={() => navigate('/wallet')}
+            >
+              <Wallet className="h-5 w-5" />
+            </button> */}
             {userData.user.role === "tutor" && (
               <Button
                 startIcon={<PlusCircle className="h-5 w-5" />}
                 variant="contained"
                 color={userData?.is_verified ? "primary" : "inherit"}
                 disabled={!userData?.is_verified}
-                onClick={() => userData?.is_verified && navigate("/tutor/courses/new")}
+                onClick={() => userData?.is_verified && navigate("/tutor/teaching/new")}
                 sx={{
                   minWidth: 'auto',
                   "&.Mui-disabled": {
@@ -262,7 +277,7 @@ const UserLayout = ({ children }) => {
 
             {/* Profile Dropdown */}
             <div className="relative" ref={dropdownRef}>
-              <button
+            <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
                 className="flex items-center space-x-2 focus:outline-none"
               >
@@ -284,29 +299,38 @@ const UserLayout = ({ children }) => {
               </button>
 
               {/* Dropdown Menu */}
+              {/* Simplified Dropdown Menu */}
               {isProfileOpen && (
                 <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-background-50 ring-1 ring-black ring-opacity-5 origin-top-right">
                   <div className="py-1" role="menu">
                     <button
-                      className="w-full text-left px-4 py-2 text-sm text-text-500 hover:bg-background-100"
+                      className="w-full text-left px-4 py-2.5 text-sm text-text-500 hover:bg-background-100 flex items-center space-x-2"
                       role="menuitem"
                       onClick={() => navigate(`/${userData?.user?.role}/profile`)}
                     >
-                      Profile Settings
+                      <User className="h-4 w-4" />
+                      <span>Profile</span>
                     </button>
                     <button
-                      className="w-full text-left px-4 py-2 text-sm text-text-500 hover:bg-background-100"
+                      className="w-full text-left px-4 py-2.5 text-sm text-text-500 hover:bg-background-100 flex items-center space-x-2"
                       role="menuitem"
+                      onClick={() =>{
+                        if(userData?.user?.role === 'tutor'){
+                          navigate('/tutor/wallet')
+                        }
+                      }}
                     >
-                      Account Settings
+                      <Wallet className="h-4 w-4" />
+                      <span>Wallet</span>
                     </button>
-                    <div className="border-t border-background-200"></div>
+                    <div className="border-t border-background-200 my-1"></div>
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-sm text-secondary-500 hover:bg-background-100"
+                      className="w-full text-left px-4 py-2.5 text-sm text-secondary-500 hover:bg-background-100 flex items-center space-x-2"
                       role="menuitem"
                     >
-                      Sign out
+                      <LogOut className="h-4 w-4" />
+                      <span>Sign out</span>
                     </button>
                   </div>
                 </div>
@@ -316,8 +340,8 @@ const UserLayout = ({ children }) => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto p-4 sm:p-6 bg-background-500">
-          {children}
+        <main className='flex-1 overflow-auto p-4 sm:p-6 bg-background-500'>
+            <Outlet />  {/* This renders the current page */}
         </main>
       </div>
       {/* Overlay for mobile when sidebar is open */}

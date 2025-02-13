@@ -1,13 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   BookOpen, Clock, User, Star, Heart, 
   ShoppingCart, Video, FileText, Lock, 
-  Unlock, Award, ThumbsUp 
+  Unlock, Award, ThumbsUp , Repeat
 } from 'lucide-react';
 import { ConfirmDialog } from './ui/ConfirmDialog';
+import TradeModal from '../tutor/TradeModal';
+
 
 const CourseDetail = ({ course, variant = 'student', onAction }) => {
   const isAdmin = variant === 'admin';
+  const isTutor = variant === 'tutor';
+
+  const [isTradeModalOpen, setIsTradeModalOpen] = useState(false);
 
   const StatusBadge = ({ status }) => (
     <span className={`px-3 py-1 rounded-full text-sm ${
@@ -26,10 +31,12 @@ const CourseDetail = ({ course, variant = 'student', onAction }) => {
     </div>
   );
 
+  
+
   return (
     <div className="min-h-screen bg-background-100">
       {/* Course Header Banner */}
-      <div className="w-full bg-primary-500 text-white">
+      <div className={`w-full ${isAdmin ? 'bg-text-500' : 'bg-primary-500'} text-white`}>
         <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
           <div className="flex flex-col md:flex-row gap-8">
             {/* Thumbnail */}
@@ -133,15 +140,36 @@ const CourseDetail = ({ course, variant = 'student', onAction }) => {
                   </div>
                 ) : (
                   <div className="flex items-center gap-4">
-                    <span className="text-xl font-bold">₹{course.price}</span>
+                  <span className="text-xl font-bold">₹{course.price}</span>
+                  {course.is_under_trade ? (
                     <button
-                      onClick={() => onAction('enroll')}
-                      className="bg-secondary-500 text-white px-6 py-2 rounded hover:bg-secondary-600 flex items-center gap-2"
+                      disabled
+                      className="bg-gray-400 text-white px-6 py-2 rounded cursor-not-allowed flex items-center gap-2"
                     >
-                      <ShoppingCart size={18} />
-                      Enroll Now
+                      <Repeat size={18} />
+                      Under Trade
                     </button>
-                  </div>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => onAction('enroll')}
+                        className="bg-secondary-500 text-white px-6 py-2 rounded hover:bg-secondary-600 flex items-center gap-2"
+                      >
+                        <ShoppingCart size={18} />
+                        Enroll Now
+                      </button>
+                      {isTutor && (
+                        <button
+                          onClick={() => setIsTradeModalOpen(true)}
+                          className="bg-secondary-500 text-white px-6 py-2 rounded hover:bg-secondary-600 flex items-center gap-2"
+                        >
+                          <Repeat size={18} />
+                          Trade
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
                 )}
               </div>
             </div>
@@ -225,6 +253,12 @@ const CourseDetail = ({ course, variant = 'student', onAction }) => {
           </div>
         </div>
       </div>
+      {/* Trade Modal */}
+      <TradeModal
+        isOpen={isTradeModalOpen}
+        closeModal={() => setIsTradeModalOpen(false)}
+        requestedCourseData={course}
+      />
     </div>
   );
 };

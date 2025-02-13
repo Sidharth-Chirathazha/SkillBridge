@@ -1,30 +1,58 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import CourseCard from '../../components/common/ui/CourseCard';
-import Pagination from '../../components/common/ui/Pagination';
-import { fetchCourses, initiateCheckout, resetCheckout } from '../../redux/slices/courseSlice';
+import CourseCard from '../components/common/ui/CourseCard';
+import Pagination from '../components/common/ui/Pagination';
+import { fetchCourses, initiateCheckout, resetCheckout, fetchTutorCourses } from '../redux/slices/courseSlice';
 import { Loader } from 'lucide-react';
-import UserLayout from '../../components/common/UserLayout';
 import {loadStripe} from '@stripe/stripe-js'
-import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import TutorVerificationMessage from '../components/tutor/TutorVerificationMessage';
 
 const stripePromise = loadStripe('pk_test_51Qp6mdRZhgmNkKQoW8Hp4xmJjjpuuC9iwjD0s1utEDyqLsByg7yXK81XadWBK751vQE8nbAMV5RmL11nw25aQrFh00zV21sORj')
 
-const StudentCourses = () => {
+const CourseList = () => {
   const dispatch = useDispatch();
   const [page, setPage] = useState(1);
   const pageSize = 8;
-  const navigate = useNavigate();
   
   const { coursesData, currentPage, totalPages, 
     isCourseLoading, isCourseError, isCheckoutLoading, checkoutError, checkoutSession } = useSelector(
     (state) => state.course
   );
 
+  const {role, userData} = useSelector((state)=>state.auth)
+
+  const tutorId = userData?.id || null;
 
   useEffect(() => {
-    dispatch(fetchCourses({ page, pageSize, status :'Approved', user:true }));
+    if (!tutorId) return;
+    console.log(tutorId);
+
+    const fetchData = async()=>{
+      try{
+        await dispatch(fetchTutorCourses({ tutorId, statues:"Approved" }));
+        console.log("Courses Fetched Successfully");
+        
+      }catch(error){
+       console.log("Failed to fetch Courses");
+       
+      }
+    }
+    fetchData();
+
+  }, [dispatch,tutorId]);
+
+
+  useEffect(() => {
+    const fetchData = async () => {
+        try {
+          await dispatch(fetchCourses({ page, pageSize, status :'Approved', user:true })).unwrap();
+        } catch (error) {
+          console.error('Failed to fetch Course:', error);
+        } 
+    };
+    fetchData();
+    
   }, [dispatch, page]);
 
   useEffect(() => {
@@ -54,6 +82,8 @@ const StudentCourses = () => {
   };
 
   const handleBuy = async (courseId) => {
+    console.log("Inside handle buy",courseId);
+    
     try{
       await dispatch(initiateCheckout(courseId));
     }catch(error){
@@ -64,14 +94,21 @@ const StudentCourses = () => {
   console.log(coursesData);
   
   return (
-    <UserLayout>
+    <>
+    { role === "tutor" && userData?.is_verified === false ? (
+        <TutorVerificationMessage/>
+      ) :(
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
-            Discover Your Next Learning Adventure
+          {role === "student"
+            ? "Discover Your Next Learning Adventure"
+            : "Expand Your Expertise with New Courses"}
           </h1>
           <p className="text-gray-600 text-sm sm:text-base mt-1">
-            Browse through diverse courses and enhance your skills today!
+          {role === "student"
+            ? "Browse through diverse courses and enhance your skills today!"
+            : "Find valuable courses to strengthen your knowledge and teaching skills!"}
           </p>
         </div>
 
@@ -80,8 +117,6 @@ const StudentCourses = () => {
             <div className="flex justify-center items-center h-screen">
             <Loader className="animate-spin h-10 w-10 text-primary" />
                 </div>
-        ) : isCourseError ? (
-            <div>Error occured</div>
         ) : checkoutError?(
               <div className="text-red-500 mb-4">
               Error: {checkoutError}
@@ -95,6 +130,7 @@ const StudentCourses = () => {
                     course={course}
                     onLike={() => handleLike(course.id)}
                     onBuy={() => handleBuy(course.id)}
+                    role={role}
                 />
                 ))}
             </div>
@@ -108,8 +144,9 @@ const StudentCourses = () => {
             </>
         )}
         </div>
-    </UserLayout>
+      )}
+      </>
   );
 };
 
-export default StudentCourses;
+export default CourseList;

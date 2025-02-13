@@ -35,7 +35,7 @@ const StudentTutorDetailView = () => {
       const fetchData = async () => {
         try {
           setLoading(true);
-          await dispatch(fetchAdminTutors(id)).unwrap();
+          await dispatch(fetchAdminTutors({id})).unwrap();
         } catch (error) {
           console.error('Failed to fetch user:', error);
         } finally {
@@ -86,7 +86,6 @@ const StudentTutorDetailView = () => {
   }
 
   return (
-    <UserLayout>
     <div className="bg-background-100 p-4 md:p-8 space-y-6 md:space-y-8">
       {/* Top Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
@@ -328,7 +327,6 @@ const StudentTutorDetailView = () => {
         </div>
       </Dialog>
     </div>
-    </UserLayout>
   );
 };
 

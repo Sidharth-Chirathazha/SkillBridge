@@ -14,11 +14,12 @@ import {
   GraduationCap,
   Loader,
   Menu,
-  X
+  X, 
+  Wallet
 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { adminLogout, fetchAdmin } from '../../redux/slices/adminSlice';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 // import admin_avatar from '../../assets/images/admin.jpg';
 
@@ -229,9 +230,12 @@ const AdminLayout = ({ children }) => {
               <input
                 type="text"
                 placeholder="Search..."
-                className="w-full pl-10 pr-4 py-2 rounded-lg border border-background-200 focus:outline-none focus:border-primary-300 bg-background-100"
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-background-200 focus:outline-none focus:border-primary-300
+                focus:ring-2  focus:ring-primary-200 transition-all duration-300 
+                placeholder:text-text-300 bg-background-100"
               />
-              <Search className="absolute left-3 top-2.5 h-5 w-5 text-text-300" />
+              <Search className="absolute left-3 top-2.5 h-5 w-5 text-text-300
+                              group-focus-within:text-text-500 transition-colors duration-300" />
             </div>
           </div>
 
@@ -261,14 +265,16 @@ const AdminLayout = ({ children }) => {
               {isProfileOpen && (
                 <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-background-50 ring-1 ring-black ring-opacity-5 origin-top-right">
                   <div className="py-1" role="menu">
-                    <button className="w-full text-left px-4 py-2 text-sm text-text-500 hover:bg-background-100">
-                      Profile Settings
-                    </button>
-                    <button className="w-full text-left px-4 py-2 text-sm text-text-500 hover:bg-background-100">
-                      Security
+                    <button
+                      className="w-full text-left px-4 py-2.5 text-sm text-text-500 hover:bg-background-100 flex items-center space-x-2"
+                      role="menuitem"
+                      onClick={() => navigate('/admin/wallet')}
+                    >
+                      <Wallet className="h-4 w-4" />
+                      <span>Wallet</span>
                     </button>
                     <div className="border-t border-background-200"></div>
-                    <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-secondary-500 hover:bg-background-100">
+                    <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 text-sm text-secondary-500 hover:bg-background-100 flex items-center space-x-2">
                       Sign out
                     </button>
                   </div>
@@ -280,7 +286,7 @@ const AdminLayout = ({ children }) => {
 
         {/* Page Content */}
         <main className="flex-1 overflow-auto p-4 sm:p-6 bg-background-100">
-          {children}
+          <Outlet/>
         </main>
       </div>
       {/* Overlay for mobile when sidebar is open */}

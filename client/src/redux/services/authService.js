@@ -101,4 +101,20 @@ export const fetchTutorReviews = async(tutorId)=>{
     return response.data;
 }
 
+//Fetch User Wallet
+export const fetchWallet = async()=>{
+    const response = await axiosInstance.get("/wallet/user-wallet/",
+        {requiresAuth:true}
+    );
+    return response.data;
+}
+
+//Fetch user transactions
+export const fetchTransactions = async(page, pageSize)=>{
+    const response = await axiosInstance.get(`/wallet/transactions/?page=${page}&page_size=${pageSize}`,
+        {requiresAuth:true}
+    );
+    return response.data;
+}
+
   

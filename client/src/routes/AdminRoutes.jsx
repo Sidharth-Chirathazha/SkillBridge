@@ -10,20 +10,25 @@ import AdminStudentDetailView from '../pages/admin/AdminStudentDetailView'
 import AdminContentManagement from '../pages/admin/AdminContentManagement'
 import AdminCourseManagement from '../pages/admin/AdminCourseManagement'
 import AdminCourseDetailView from '../pages/admin/AdminCourseDetailView'
+import AdminWallet from '../pages/admin/AdminWallet'
+import AdminLayout from '../components/admin/AdminLayout'
 
 const AdminRoutes = () => {
   return (
     <Routes>
         <Route path="login" element={<AdminLoginPage/>}/>
         <Route element={<AdminPrivateRoute/>} >
-          <Route path="dashboard" element={<AdminDashboard/>}/>
-          <Route path="tutors" element={<AdminTutorsManagement/>}/>
-          <Route path="/tutors/:id" element={<AdminTutorDetailView/>}/>
-          <Route path="students" element={<AdminStudentManagement/>}/>
-          <Route path="/students/:id" element={<AdminStudentDetailView/>}/>
-          <Route path="/contentManagement/" element={<AdminContentManagement/>}/>
-          <Route path="courses" element={<AdminCourseManagement/>}/>
-          <Route path="/courses/:id" element={<AdminCourseDetailView/>}/>
+          <Route element={<AdminLayout/>}>
+            <Route path="dashboard" element={<AdminDashboard/>}/>
+            <Route path="tutors" element={<AdminTutorsManagement/>}/>
+            <Route path="/tutors/:id" element={<AdminTutorDetailView/>}/>
+            <Route path="students" element={<AdminStudentManagement/>}/>
+            <Route path="/students/:id" element={<AdminStudentDetailView/>}/>
+            <Route path="/contentManagement/" element={<AdminContentManagement/>}/>
+            <Route path="courses" element={<AdminCourseManagement/>}/>
+            <Route path="/courses/:id" element={<AdminCourseDetailView/>}/>
+            <Route path="wallet" element={<AdminWallet/>}/>
+          </Route>
         </Route>
     </Routes>
   )

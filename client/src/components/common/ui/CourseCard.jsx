@@ -1,14 +1,31 @@
-import { Star, ShoppingCart, Clock, User, Heart, BookOpen, PlayCircle } from 'lucide-react';
+import { Star, ShoppingCart, Clock, User, Heart, BookOpen, PlayCircle, Repeat } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import ProgressBar from './ProgressBar';
+import { useEffect, useState } from 'react';
+import TradeModal from '../../tutor/TradeModal';
+import { useSelector } from 'react-redux';
 
-const CourseCard = ({ course, onLike, onBuy, isPurchased = false }) => {
+
+const CourseCard = ({ course, onLike, onBuy, onTrade, isPurchased = false, role }) => {
   const navigate = useNavigate();
+  const [isTradeModalOpen, setIsTradeModalOpen] = useState(false);
+
+
+
 
   const handleCardClick = () => {
     if (!isPurchased) {
-      navigate(`/student/courses/${course.id}`);
+      navigate(`/${role}/courses/${course.id}`);
     }
+  };
+
+  const openTradeModal = (e) => {
+    e.stopPropagation();
+    setIsTradeModalOpen(true);
+  };
+
+  const closeTradeModal = () => {
+    setIsTradeModalOpen(false);
   };
 
   return (
@@ -76,7 +93,7 @@ const CourseCard = ({ course, onLike, onBuy, isPurchased = false }) => {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                navigate(`/student/learning/${course.id}`);
+                navigate(`/${role}/learning/${course.id}`);
               }}
               className="w-full flex items-center justify-center bg-primary-500 hover:bg-primary-700 text-white px-4 py-2 rounded-md transition-colors"
             >
@@ -103,8 +120,8 @@ const CourseCard = ({ course, onLike, onBuy, isPurchased = false }) => {
             </div>
 
             {/* Price and Action */}
-            <div className="mt-auto flex items-center justify-between">
-              <div className="flex items-baseline">
+            <div className="mt-auto">
+              <div className="flex items-baseline mb-2">
                 <span className="text-lg font-bold text-secondary-500">₹{course.price || '0'}</span>
                 {course.originalPrice && (
                   <span className="ml-2 text-sm text-gray-400 line-through">
@@ -112,16 +129,52 @@ const CourseCard = ({ course, onLike, onBuy, isPurchased = false }) => {
                   </span>
                 )}
               </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onBuy(course.id);
-                }}
-                className="flex items-center bg-primary-500 hover:bg-primary-700 text-white px-3 py-2 rounded-md transition-colors"
-              >
-                <ShoppingCart size={18} className="mr-2" />
-                <span className="text-sm">Enroll Now</span>
-              </button>
+              <div className="flex gap-2">
+                {course.is_under_trade ? (
+                  // Single "Under Trade" button when course is under trade
+                  <button
+                    disabled
+                    className="flex-1 flex items-center justify-center px-3 py-2 rounded-md transition-colors bg-gray-400 cursor-not-allowed"
+                  >
+                    <Repeat size={18} className="mr-2" />
+                    <span className="text-sm">Under Trade</span>
+                  </button>
+                ) : (
+                  // Regular buttons when course is not under trade
+                  <>
+                    {/* Enroll Button */}
+                    <button
+                      onClick={(e) => { 
+                        e.stopPropagation();
+                        onBuy(course.id);
+                      }}
+                      className="flex-1 flex items-center justify-center px-3 py-2 rounded-md transition-colors bg-primary-500 hover:bg-primary-700 text-white"
+                    >
+                      <ShoppingCart size={18} className="mr-2" />
+                      <span className="text-sm">Enroll</span>
+                    </button>
+
+                    {/* Trade Button (Only for Tutors) */}
+                    {role === 'tutor' && (
+                      <button
+                        onClick={openTradeModal}
+                        className="flex-1 flex items-center justify-center px-3 py-2 rounded-md transition-colors bg-secondary-500 hover:bg-secondary-700 text-white"
+                      >
+                        <Repeat size={18} className="mr-2" />
+                        <span className="text-sm">Trade</span>
+                      </button>
+                    )}
+
+                    {/* Trade Modal Component */}
+                    <TradeModal
+                      isOpen={isTradeModalOpen}
+                      closeModal={closeTradeModal}
+                      requestedCourseData={course}
+                    />
+                  </>
+                )}
+              </div>
+
             </div>
           </>
         )}

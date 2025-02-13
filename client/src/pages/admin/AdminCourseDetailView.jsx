@@ -61,14 +61,14 @@ const AdminCourseDetailView = () => {
 
 
   return (
-    <AdminLayout>
+    <>
         <CourseDetail
             course={singleCourse}
             variant="admin"
             onAction={handleAdminAction}      
         />
 
-    </AdminLayout>
+    </>
   )
 }
 

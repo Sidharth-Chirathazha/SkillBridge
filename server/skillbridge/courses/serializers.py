@@ -1,7 +1,9 @@
 from rest_framework import serializers
-from .models import Module,Course,Category, Review
+from .models import Module,Course,Category, Review, Comment, CourseTradeModel
 from tutor.models import TutorProfile
 from django.contrib.auth import get_user_model
+from cloudinary.utils import cloudinary_url
+from django.db.models import Q
 
 User = get_user_model()
 
@@ -42,12 +44,23 @@ class CourseSerializer(serializers.ModelSerializer):
     total_modules = serializers.IntegerField(read_only=True)
     total_duration = serializers.IntegerField(read_only=True)
     total_purchases = serializers.IntegerField(read_only=True)
+    is_under_trade = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Course
         fields = ['id', 'tutor', 'category', 'slug', 'title', 'description', 'thumbnail', 
                   'total_enrollment', 'status', 'skill_level', 'price', 'is_active', 
-                  'rating', 'modules', 'total_modules', 'total_duration', 'total_purchases']
+                  'rating', 'modules', 'total_modules', 'total_duration', 'total_purchases', "is_under_trade"]
+        
+    def get_is_under_trade(self, obj):
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return False
+        return CourseTradeModel.objects.filter(
+            Q(requested_course=obj) | Q(offered_course=obj),
+            Q(accepter=request.user) | Q(requester=request.user),
+            status = "pending"
+        ).exists()
 
     
     
@@ -80,3 +93,111 @@ class ReviewSerializer(serializers.ModelSerializer):
         course.update_rating()
 
         return review
+    
+
+"""Serializer for comments"""
+class CommentSerializer(serializers.ModelSerializer):
+    replies = serializers.SerializerMethodField()
+    user_name = serializers.CharField(source="user.first_name", read_only=True)
+    profile_pic = serializers.ImageField(source="user.profile_pic_url", read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = ["id", "user", "user_name", "profile_pic", "course", "parent", "content", "created_at", "replies"]
+        read_only_fields = ["user", "created_at"]  # User should be set automatically from the request
+
+
+    def get_replies(self, obj):
+        """Fetch Replies For a given comment"""
+        replies = obj.replies.all()
+        return CommentSerializer(replies, many=True).data
+    
+    def validate(self, data):
+        """Ensuring if a parent comment is given, It belongs to the same course"""
+        parent = data.get("parent")
+        if parent and parent.course != data["course"]:
+            raise serializers.ValidationError("The parent comment must belong to the same course.")
+        return data
+    
+class CourseTradeRequestSerializer(serializers.ModelSerializer):
+    requester = serializers.SerializerMethodField()
+    accepter =  serializers.SerializerMethodField()
+    requested_course = serializers.SerializerMethodField()
+    offered_course = serializers.SerializerMethodField()
+    status = serializers.ChoiceField(choices=CourseTradeModel.STATUS_CHOICES , read_only=True)
+
+    class Meta:
+        model = CourseTradeModel
+        fields = ["id", "requester", "requested_course", "offered_course", "accepter", "status", "created_at"]
+
+    def get_requested_course(self, obj):
+        return{
+            "id": obj.requested_course.id,
+            "title": obj.requested_course.title,
+            "price": obj.requested_course.price
+        }
+    
+    def get_offered_course(self, obj):
+        return{
+            "id": obj.offered_course.id,
+            "title": obj.offered_course.title,
+            "price": obj.offered_course.price
+        }
+    
+    def get_requester(self, obj):
+        return{
+            "name":obj.requester.first_name + " " + obj.requester.last_name,
+            "profile_pic": self.get_profile_pic_url(obj.requester.profile_pic_url)
+        }
+    
+    def get_accepter(self, obj):
+        return{
+            "name":obj.accepter.first_name + " " + obj.accepter.last_name,
+            "profile_pic": self.get_profile_pic_url(obj.accepter.profile_pic_url)
+        }
+    
+    def get_profile_pic_url(self, profile_pic):
+        if profile_pic:
+            return profile_pic.url
+        
+        return "/default-avatar.jpg"
+
+class CourseTradeCreateSerializer(serializers.ModelSerializer):
+
+    requested_course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all())
+    offered_course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all())
+
+    class Meta:
+        model = CourseTradeModel
+        fields = ["requested_course", "offered_course"]
+
+    def validate(self, data):
+        requester = self.context["request"].user
+        offered_course = data["offered_course"]
+        requested_course = data["requested_course"]
+
+        if offered_course.tutor.user != requester:
+            raise serializers.ValidationError("You can only offer a course that you own.")
+        
+        if requested_course.tutor.user == requester:
+            raise serializers.ValidationError("You cannot trade for your own course.")
+        
+        existing_request = CourseTradeModel.objects.filter(
+            requester=requester,
+            requested_course=requested_course,
+            offered_course=offered_course,
+            status="pending"
+        ).exists()
+
+        if existing_request:
+            raise serializers.ValidationError("You have already sent a trade request for this course.")
+        
+        if requested_course.price != offered_course.price:
+            raise serializers.ValidationError("The requested course price must be equal to the offered course price.")
+
+        return data
+    
+    def create(self, validated_data):
+
+        trade_request = CourseTradeModel.objects.create(**validated_data)
+        return trade_request

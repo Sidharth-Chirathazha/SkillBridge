@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchUser } from "../../redux/slices/authSlice";
-import UserLayout from "../../components/common/UserLayout";
 import { Link } from "react-router-dom";
 import TutorVerificationMessage from "../../components/tutor/TutorVerificationMessage";
 
@@ -14,7 +13,7 @@ const TutorDashboard = () => {
   }, [dispatch]);
 
   return (
-    <UserLayout>
+    <>
       {userData?.is_verified === false ? (
         <TutorVerificationMessage/>
       ) : (
@@ -23,7 +22,7 @@ const TutorDashboard = () => {
           {/* Add more dashboard content here */}
         </div>
       )}
-    </UserLayout>
+    </>
   );
 };
 

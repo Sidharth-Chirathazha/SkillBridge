@@ -3,13 +3,13 @@ import { useForm, Controller } from 'react-hook-form';
 import { joiResolver } from '@hookform/resolvers/joi';
 import Joi, { object } from 'joi';
 import { Upload, PlusCircle, Loader } from 'lucide-react';
-import UserLayout from '../../components/common/UserLayout';
 import { useDispatch, useSelector } from 'react-redux';
 import { addCourse, addModule, fetchCategories, fetchModules, 
   fetchSingleCourse, updateCourse, updateModule, deleteModule } from '../../redux/slices/courseSlice';
 import toast from 'react-hot-toast';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ConfirmDialog } from '../../components/common/ui/ConfirmDialog';
+import TutorVerificationMessage from '../../components/tutor/TutorVerificationMessage';
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 const MAX_VIDEO_SIZE = 10 * 1024 * 1024; // 10MB
@@ -23,6 +23,7 @@ const CourseCreation = () => {
   const [isEditing, setIsEditing] = useState(!isEditMode); // Enabled by default in create mode
   const [isEditingModule, setIsEditingModule] = useState(false);
   const { categoriesData, singleCourse, modulesData, isCourseLoading, isModuleLoading } = useSelector((state) => state.course);
+  const {userData} = useSelector((state)=>state.auth)
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -280,7 +281,10 @@ const CourseCreation = () => {
   );
 
   return (
-    <UserLayout>
+    <>
+    {userData?.is_verified === false ? (
+        <TutorVerificationMessage/>
+      ) :(
       <div className="max-w-4xl mx-auto p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
           <div className="mb-2 sm:mb-0">
@@ -686,7 +690,8 @@ const CourseCreation = () => {
           )}
         </div>
       </div>
-    </UserLayout>
+      )}
+    </>
   );
 };
 

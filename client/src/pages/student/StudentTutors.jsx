@@ -14,14 +14,16 @@ const StudentTutors = () => {
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const {adminTutorsData} = useSelector((state)=>state.admin);
+  const [page, setPage] = useState(1);
+  const pageSize = 5;
+  const {adminTutorsData, currentPage, totalPages} = useSelector((state)=>state.admin);
   
   useEffect(() => {
     // Dispatch fetchUser and store the promise
     const fetchData = async () => {
         try {
         setLoading(true);
-        await dispatch(fetchAdminTutors()).unwrap();
+        await dispatch(fetchAdminTutors({page, pageSize})).unwrap();
         } catch (error) {
         
         toast.error("Failed to fetch Tutor")
@@ -32,10 +34,9 @@ const StudentTutors = () => {
     };
 
     fetchData();
-    }, [dispatch]);
+    }, [dispatch,page]);
 
   return (
-    <UserLayout>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
@@ -61,17 +62,16 @@ const StudentTutors = () => {
                 />
                 ))}
             </div>
-            {/* <div className='w-full mt-10'>
+            {<div className='w-full mt-10'>
               <Pagination
                   currentPage={currentPage}
                   totalPages={totalPages}
                   onPageChange={setPage}
               />
-            </div> */}
+            </div> }
             </>
         )}
         </div>
-    </UserLayout>
   )
 }
 

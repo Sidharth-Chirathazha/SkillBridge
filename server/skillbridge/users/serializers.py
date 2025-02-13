@@ -8,6 +8,7 @@ from .models import Skill
 from .utils import generate_email_otp
 from cloudinary.utils import cloudinary_url
 from cloudinary.uploader import upload as cloudinary_upload
+from wallet.models import Wallet
 
 User = get_user_model()
 
@@ -57,6 +58,7 @@ class UserCreationSerializer(serializers.Serializer):
 
         if otp and role and password: # Case 1: User creation after OTP verification
             user = User.objects.create_user(email=email, password=password, role=role)
+            Wallet.objects.create(user=user)
             if role == 'student':
                 StudentProfile.objects.create(user=user)
                 print("Student created")
@@ -126,7 +128,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'email', 'first_name', 'last_name', 'phone', 'profile_pic_url','linkedin_url', 'bio', 
-            'country', 'city', 'skills', 'wallet_balance', 'role'
+            'country', 'city', 'skills', 'role'
         ]
         read_only_fields = ['wallet_balance', 'role']
 

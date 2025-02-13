@@ -26,7 +26,7 @@ const AdminCourseManagement = () => {
   };
   
   return (
-    <AdminLayout>
+    <>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <h1 className="text-2xl font-bold text-gray-800 mb-6">Manage Courses</h1>
         
@@ -60,7 +60,7 @@ const AdminCourseManagement = () => {
         )}
         </div>
     
-    </AdminLayout>
+    </>
   );
 };
 

@@ -1,6 +1,18 @@
 import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
 import * as authService from '../services/authService';
 
+
+const handleApiError = (error, thunkAPI)=>{
+  const message =
+    error.response?.data?.message || // General message
+    error.response?.data?.email ||  // Specific email error
+    Object.values(error.response?.data || {})[0] || // First error if object
+    error.message ||
+    error.toString();
+
+return thunkAPI.rejectWithValue(message);
+}
+
 //Thunk for user registration
 export const registerUser = createAsyncThunk(
     "/registerUser",
@@ -8,16 +20,7 @@ export const registerUser = createAsyncThunk(
         try{
             return await authService.registerUser(userData);
         }catch(error){
-          const message = 
-          (error.response && 
-           error.response.data && 
-           (error.response.data.email || // Check for field-specific error
-            error.response.data.message || // Check for general message
-            Object.values(error.response.data)[0])) || // Get first error if it's an object
-            error.message ||
-            error.toString();
-            
-            return thunkAPI.rejectWithValue(message);
+          return handleApiError(error, thunkAPI);
         }
     }
 );
@@ -29,15 +32,7 @@ export const verifyOtp = createAsyncThunk(
      try {
         return await authService.verifyOtp(otpData);
      } catch (error) {
-      const message = 
-      (error.response && 
-       error.response.data && 
-       (error.response.data.otp || // Check for OTP-specific error
-        error.response.data.message ||
-        Object.values(error.response.data)[0])) ||
-        error.message ||
-        error.toString();
-      return thunkAPI.rejectWithValue(message); 
+      return handleApiError(error, thunkAPI);
      }   
     }
 );
@@ -59,16 +54,7 @@ export const loginUser = createAsyncThunk(
           }
           return response;
       }catch(error){
-        const message = 
-        (error.response && 
-         error.response.data && 
-         (error.response.data.email || // Check for field-specific error
-          error.response.data.message || // Check for general message
-          Object.values(error.response.data)[0])) || // Get first error if it's an object
-          error.message ||
-          error.toString();
-          
-          return thunkAPI.rejectWithValue(message);
+        return handleApiError(error, thunkAPI);
       }
   }
 );
@@ -89,16 +75,7 @@ export const googleLogin = createAsyncThunk(
           }
           return response;
       }catch(error){
-        const message = 
-        (error.response && 
-         error.response.data && 
-         (error.response.data.email || // Check for field-specific error
-          error.response.data.message || // Check for general message
-          Object.values(error.response.data)[0])) || // Get first error if it's an object
-          error.message ||
-          error.toString();
-          
-          return thunkAPI.rejectWithValue(message);
+        return handleApiError(error, thunkAPI);
       }
   }
 );
@@ -111,15 +88,7 @@ export const logoutUser = createAsyncThunk(
           return await authService.logoutUser(tokenData);
         
       }catch(error){
-        const message = 
-        (error.response && 
-         error.response.data && 
-        (error.response.data.message || // Check for general message
-          Object.values(error.response.data)[0])) || // Get first error if it's an object
-          error.message ||
-          error.toString();
-          
-          return thunkAPI.rejectWithValue(message);
+        return handleApiError(error, thunkAPI);
       }
   }
 );
@@ -131,16 +100,7 @@ export const requestResetPasswordOtp = createAsyncThunk(
       try{
           return await authService.requestResetPasswordOtp(emailData);
       }catch(error){
-        const message = 
-        (error.response && 
-         error.response.data && 
-         (error.response.data.email || // Check for field-specific error
-          error.response.data.message || // Check for general message
-          Object.values(error.response.data)[0])) || // Get first error if it's an object
-          error.message ||
-          error.toString();
-          
-          return thunkAPI.rejectWithValue(message);
+        return handleApiError(error, thunkAPI);
       }
   }
 );
@@ -152,16 +112,7 @@ export const verifyResetPasswordOtp = createAsyncThunk(
       try{
           return await authService.verifyResetPasswordOtp(otpData);
       }catch(error){
-        const message = 
-        (error.response && 
-         error.response.data && 
-         (error.response.data.otp || // Check for field-specific error
-          error.response.data.message || // Check for general message
-          Object.values(error.response.data)[0])) || // Get first error if it's an object
-          error.message ||
-          error.toString();
-          
-          return thunkAPI.rejectWithValue(message);
+        return handleApiError(error, thunkAPI);
       }
   }
 );
@@ -173,16 +124,7 @@ export const resetPassword = createAsyncThunk(
       try{
           return await authService.resetPassword(resetData);
       }catch(error){
-        const message = 
-        (error.response && 
-         error.response.data && 
-         (error.response.data.password || // Check for field-specific error
-          error.response.data.message || // Check for general message
-          Object.values(error.response.data)[0])) || // Get first error if it's an object
-          error.message ||
-          error.toString();
-          
-          return thunkAPI.rejectWithValue(message);
+        return handleApiError(error, thunkAPI);
       }
   }
 );
@@ -196,15 +138,7 @@ export const fetchUser = createAsyncThunk(
           return response
           
       }catch(error){
-        const message = 
-        (error.response && 
-         error.response.data && 
-         (error.response.data.message || // Check for general message
-          Object.values(error.response.data)[0])) || // Get first error if it's an object
-          error.message ||
-          error.toString();
-          
-          return thunkAPI.rejectWithValue(message);
+        return handleApiError(error, thunkAPI);
       }
   }
 );
@@ -223,15 +157,7 @@ export const updateUser = createAsyncThunk(
         return response.data
           
       }catch(error){
-        const message = 
-        (error.response && 
-         error.response.data && 
-         (error.response.data.message || // Check for general message
-          Object.values(error.response.data)[0])) || // Get first error if it's an object
-          error.message ||
-          error.toString();
-          
-          return thunkAPI.rejectWithValue(message);
+        return handleApiError(error, thunkAPI);
       }
   }
 );
@@ -245,15 +171,7 @@ export const fetchSkills = createAsyncThunk(
           return response
           
       }catch(error){
-        const message = 
-        (error.response && 
-         error.response.data && 
-         (error.response.data.message || // Check for general message
-          Object.values(error.response.data)[0])) || // Get first error if it's an object
-          error.message ||
-          error.toString();
-          
-          return thunkAPI.rejectWithValue(message);
+        return handleApiError(error, thunkAPI);
       }
   }
 );
@@ -266,8 +184,7 @@ export const postTutorReview = createAsyncThunk(
     try {
       return await authService.postTutorReview(reviewInfo);
     } catch (error) {
-      const message = error.response?.data?.error || error.message;
-      return thunkAPI.rejectWithValue(message);
+      return handleApiError(error, thunkAPI);
     }
   }
 );
@@ -279,8 +196,32 @@ export const fetchTutorReviews = createAsyncThunk(
     try {
       return await authService.fetchTutorReviews(tutorId);
     } catch (error) {
-      const message = error.response?.data?.error || error.message;
-      return thunkAPI.rejectWithValue(message);
+      return handleApiError(error, thunkAPI);
+    }
+  }
+);
+
+
+//Thunk for fetching user wallet
+export const fetchWallet = createAsyncThunk(
+  'tutor/wallet',
+  async (_, thunkAPI) => {
+    try {
+      return await authService.fetchWallet();
+    } catch (error) {
+      return handleApiError(error, thunkAPI);
+    }
+  }
+);
+
+//Thunk for fetching user wallet
+export const fetchTransactions = createAsyncThunk(
+  'tutor/transactions',
+  async ({page, pageSize}, thunkAPI) => {
+    try {
+      return await authService.fetchTransactions(page, pageSize);
+    } catch (error) {
+      return handleApiError(error, thunkAPI);
     }
   }
 );
@@ -291,6 +232,8 @@ const authSlice = createSlice({
       userData: null,
       skillsData: [],
       tutorReviewsData:[],
+      walletData:null,
+      transactionsData:[],
       isLoading: false,
       isError: false,
       isUpdateError: false,
@@ -300,12 +243,20 @@ const authSlice = createSlice({
       isTutorReviewsLoading: false,
       isTutorReviewsError:false,
       isTutorReviewsSuccess:false,
+      isWalletLoading : false,
+      isWalletSuccess: false,
+      isWalletError: false,
+      isTransactionsLoading: false,
+      isTransactionsError: false,
+      isTransactionsSuccess: false,
       message: "",
       role:null,
       otpRequestSuccess: false,
       otpVerifySuccess: false,
       passwordResetSuccess: false,
       isAuthenticated : localStorage.getItem('isAuthenticated') === 'true',
+      currentPage:1,
+      totalPages:1
 
     },
     reducers: {
@@ -328,9 +279,9 @@ const authSlice = createSlice({
       },
       resetReviewsState: (state) => {
         state.isTutorReviewsLoading = false;
-        state.isTutorReviewsError = null;
-        state.isTutorReviewsSuccess = null;
-      }
+        state.isTutorReviewsError = false;
+        state.isTutorReviewsSuccess = false;
+      },
     },
     extraReducers: (builder) => {
       builder
@@ -372,8 +323,7 @@ const authSlice = createSlice({
         .addCase(loginUser.fulfilled,(state,action)=>{
           state.isLoading = false;
           state.isSuccess = true;
-          state.role = action.payload.role;
-          state.message = action.payload.message;
+          state.role = action.payload?.role || null;
           state.isAuthenticated = true;
           localStorage.setItem('isAuthenticated', 'true');
         })
@@ -544,6 +494,36 @@ const authSlice = createSlice({
         })
         .addCase(fetchTutorReviews.rejected,(state)=>{
           state.isTutorReviewsError = true;
+          state.message = action.payload;
+        })
+
+        //Fethc user wallet
+        .addCase(fetchWallet.pending, (state)=>{
+          state.isWalletLoading = true;
+        })
+        .addCase(fetchWallet.fulfilled,(state,action)=>{
+          state.isWalletLoading = false;
+          state.isWalletSuccess = true;
+          state.walletData = action.payload;
+        })
+        .addCase(fetchWallet.rejected,(state)=>{
+          state.isWalletError = true;
+          state.message = action.payload;
+        })
+
+        //Fethc user transactions
+        .addCase(fetchTransactions.pending, (state)=>{
+          state.isTransactionsLoading = true;
+        })
+        .addCase(fetchTransactions.fulfilled,(state,action)=>{
+          state.isTransactionsLoading = false;
+          state.isTransactionsSuccess = true;
+          state.transactionsData = action.payload.results;
+          state.currentPage = action.payload.current_page || 1;
+          state.totalPages = action.payload.total_pages
+        })
+        .addCase(fetchTransactions.rejected,(state)=>{
+          state.isTransactionsError = true;
           state.message = action.payload;
         })
     },

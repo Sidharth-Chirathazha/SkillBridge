@@ -85,6 +85,7 @@ INSTALLED_APPS = [
     'socialmedia',
     'sbAdmin',
     'courses',
+    'wallet',
     'rest_framework',
     'corsheaders',
     'rest_framework_simplejwt',

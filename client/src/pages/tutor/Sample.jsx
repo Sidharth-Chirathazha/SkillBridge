@@ -161,22 +161,48 @@ className="flex-1 flex items-center justify-center bg-secondary-100 text-seconda
 //   Delete
 // </button>
 
- <ConfirmDialog
-      trigger={(open) =>(
-        <button
-          onClick={open}
-          className={`bg-secondary-100 text-secondary-700 px-4 py-2 rounded hover:bg-secondary-200 ${
-            course.status === "Approved" ? "opacity-50 cursor-not-allowed" : ""
-          }`}
-          disabled={course.status === "Approved"}
-        >
-          Approve
-        </button>
-      )}
-      title="Decline Course"
-      description={`Are you sure you want to decline the course "${course.title}?"`}
-      confirmText='Decline'
-      destructive
-      onConfirm={() => onAction('Decline')}
-      variant='admin' 
-/>
+//  <ConfirmDialog
+//       trigger={(open) =>(
+//         <button
+//           onClick={open}
+//           className="px-4 py-1.5 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors flex items-center gap-2"
+//         >
+//          <CheckCircle size={16} />
+//          Accept
+//         </button>
+//       )}
+//       title="Accept Course Trade"
+//       description={`Are you sure you want to trade your course with "${request.offered_course.title}?"`}
+//       confirmText='Accept'
+//       onConfirm={() => handleTradeAction(request.id, 'accept')}
+//       variant='user' 
+// />
+
+// <ConfirmDialog
+//   trigger={(open) =>(
+//     <button
+//       onClick={open}
+//       className="px-4 py-2 bg-secondary-500 text-white rounded-lg hover:bg-secondary-600 transition-colors flex items-center gap-2"
+//     >
+//       <XCircle size={16} />
+//       Decline
+//     </button>
+//   )}
+//   title="Decline Course Trade"
+//   description={`Are you sure you want decline the trade offer of "${request.offered_course.title}?"`}
+//   confirmText='Decline'
+//   destructive
+//   onConfirm={() => handleTradeAction(request.id, 'decline')}
+//   variant='user' 
+// />
+
+
+
+
+// <button
+//   onClick={() => handleTradeAction(request.id, 'accept')}
+//   className="px-4 py-1.5 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors flex items-center gap-2"
+//   >
+//   <CheckCircle size={16} />
+//   Accept
+// </button>

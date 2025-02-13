@@ -5,6 +5,7 @@ import cloudinary
 import cloudinary.uploader
 import cloudinary.models
 
+
 # Create your models here.
 
 # User Model
@@ -52,7 +53,6 @@ class User(AbstractBaseUser):
     bio = models.TextField(blank=True, null=True)
     country = models.CharField(max_length=100,null=True, blank=True)
     city = models.CharField(max_length=100,null=True, blank=True)
-    wallet_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, validators=[MinValueValidator(0)], null=True, blank=True)
     skills = models.ManyToManyField(Skill, related_name="users_skills", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -76,3 +76,5 @@ class User(AbstractBaseUser):
     def has_module_perms(self, app_label):
         """Does the user have permissions to view the app 'app_label'?"""
         return self.is_superuser
+
+

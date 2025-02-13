@@ -1,6 +1,12 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import * as courseService from '../services/courseService';
 
+
+const handleApiError = (error, thunkAPI)=>{
+  const message = error.response?.data?.detail || error.response?.data?.error || error.message;
+  return thunkAPI.rejectWithValue(message);
+}
+
 // Thunk for fetching categories
 export const fetchCategories = createAsyncThunk(
   "/course/fetchCategories",
@@ -8,13 +14,7 @@ export const fetchCategories = createAsyncThunk(
     try {
       return await courseService.fetchCategories();
     } catch (error) {
-      const message =
-        (error.response &&
-          error.response.data &&
-          (error.response.data.detail || Object.values(error.response.data)[0])) ||
-        error.message ||
-        error.toString();
-      return thunkAPI.rejectWithValue(message);
+      return handleApiError(error, thunkAPI);
     }
   }
 );
@@ -26,13 +26,7 @@ export const addCategory = createAsyncThunk(
       try {
         return await courseService.addCategory(categoryInfo);
       } catch (error) {
-        const message =
-          (error.response &&
-            error.response.data &&
-            (error.response.data.detail || Object.values(error.response.data)[0])) ||
-          error.message ||
-          error.toString();
-        return thunkAPI.rejectWithValue(message);
+        return handleApiError(error, thunkAPI);
       }
     }
   );
@@ -44,13 +38,7 @@ export const updateCategory = createAsyncThunk(
       try {
         return await courseService.updateCategory(id,updateData);
       } catch (error) {
-        const message =
-          (error.response &&
-            error.response.data &&
-            (error.response.data.detail || Object.values(error.response.data)[0])) ||
-          error.message ||
-          error.toString();
-        return thunkAPI.rejectWithValue(message);
+        return handleApiError(error, thunkAPI);
       }
     }
   );
@@ -62,13 +50,7 @@ export const deleteCategory = createAsyncThunk(
       try {
         return await courseService.deleteCategory(id);
       } catch (error) {
-        const message =
-          (error.response &&
-            error.response.data &&
-            (error.response.data.detail || Object.values(error.response.data)[0])) ||
-          error.message ||
-          error.toString();
-        return thunkAPI.rejectWithValue(message);
+        return handleApiError(error, thunkAPI);
       }
     }
   );
@@ -81,13 +63,7 @@ export const addCourse = createAsyncThunk(
     try {
       return await courseService.addCourse(courseInfo);
     } catch (error) {
-      const message =
-        (error.response &&
-          error.response.data &&
-          (error.response.data.detail || Object.values(error.response.data)[0])) ||
-        error.message ||
-        error.toString();
-      return thunkAPI.rejectWithValue(message);
+      return handleApiError(error, thunkAPI);
     }
   }
 );
@@ -99,13 +75,7 @@ export const fetchCourses = createAsyncThunk(
     try {
       return await courseService.fetchCourses(page, pageSize,status,user);
     } catch (error) {
-      const message =
-        (error.response &&
-          error.response.data &&
-          (error.response.data.detail || Object.values(error.response.data)[0])) ||
-        error.message ||
-        error.toString();
-      return thunkAPI.rejectWithValue(message);
+      return handleApiError(error, thunkAPI);
     }
   }
 );
@@ -117,13 +87,7 @@ export const fetchPurchasedCourses = createAsyncThunk(
     try {
       return await courseService.fetchPurchasedCourses(page, pageSize);
     } catch (error) {
-      const message =
-        (error.response &&
-          error.response.data &&
-          (error.response.data.detail || Object.values(error.response.data)[0])) ||
-        error.message ||
-        error.toString();
-      return thunkAPI.rejectWithValue(message);
+      return handleApiError(error, thunkAPI);
     }
   }
 );
@@ -135,13 +99,7 @@ export const fetchTutorCourses = createAsyncThunk(
     try {
       return await courseService.fetchTutorCourses(tutorId, page, pageSize, status);
     } catch (error) {
-      const message =
-        (error.response &&
-          error.response.data &&
-          (error.response.data.detail || Object.values(error.response.data)[0])) ||
-        error.message ||
-        error.toString();
-      return thunkAPI.rejectWithValue(message);
+      return handleApiError(error, thunkAPI);
     }
   }
 );
@@ -155,13 +113,7 @@ export const updateCourse = createAsyncThunk(
     try {
       return await courseService.updateCourse(id,updateData);
     } catch (error) {
-      const message =
-        (error.response &&
-          error.response.data &&
-          (error.response.data.detail || Object.values(error.response.data)[0])) ||
-        error.message ||
-        error.toString();
-      return thunkAPI.rejectWithValue(message);
+      return handleApiError(error, thunkAPI);
     }
   }
 );
@@ -174,13 +126,7 @@ export const deleteCourse = createAsyncThunk(
     try {
       return await courseService.deleteCourse(id);
     } catch (error) {
-      const message =
-        (error.response &&
-          error.response.data &&
-          (error.response.data.detail || Object.values(error.response.data)[0])) ||
-        error.message ||
-        error.toString();
-      return thunkAPI.rejectWithValue(message);
+      return handleApiError(error, thunkAPI);
     }
   }
 );
@@ -192,13 +138,7 @@ export const addModule = createAsyncThunk(
     try {
       return await courseService.addModule(moduleInfo);
     } catch (error) {
-      const message =
-        (error.response &&
-          error.response.data &&
-          (error.response.data.detail || Object.values(error.response.data)[0])) ||
-        error.message ||
-        error.toString();
-      return thunkAPI.rejectWithValue(message);
+      return handleApiError(error, thunkAPI);
     }
   }
 );
@@ -210,13 +150,7 @@ export const fetchModules = createAsyncThunk(
     try {
       return await courseService.fetchModules(courseId);
     } catch (error) {
-      const message =
-        (error.response &&
-          error.response.data &&
-          (error.response.data.detail || Object.values(error.response.data)[0])) ||
-        error.message ||
-        error.toString();
-      return thunkAPI.rejectWithValue(message);
+      return handleApiError(error, thunkAPI);
     }
   }
 );
@@ -228,13 +162,7 @@ export const updateModule = createAsyncThunk(
     try {
       return await courseService.updateModule(id,updateData);
     } catch (error) {
-      const message =
-        (error.response &&
-          error.response.data &&
-          (error.response.data.detail || Object.values(error.response.data)[0])) ||
-        error.message ||
-        error.toString();
-      return thunkAPI.rejectWithValue(message);
+      return handleApiError(error, thunkAPI);
     }
   }
 );
@@ -246,13 +174,7 @@ export const deleteModule = createAsyncThunk(
     try {
       return await courseService.deleteModule(id);
     } catch (error) {
-      const message =
-        (error.response &&
-          error.response.data &&
-          (error.response.data.detail || Object.values(error.response.data)[0])) ||
-        error.message ||
-        error.toString();
-      return thunkAPI.rejectWithValue(message);
+      return handleApiError(error, thunkAPI);
     }
   }
 );
@@ -266,13 +188,7 @@ export const deleteModule = createAsyncThunk(
     try {
       return await courseService.fetchSingleCourse(id);
     } catch (error) {
-      const message =
-        (error.response &&
-          error.response.data &&
-          (error.response.data.detail || Object.values(error.response.data)[0])) ||
-        error.message ||
-        error.toString();
-      return thunkAPI.rejectWithValue(message);
+      return handleApiError(error, thunkAPI);
     }
   }
 );
@@ -284,8 +200,7 @@ export const initiateCheckout = createAsyncThunk(
     try {
       return await courseService.createCheckoutSession(courseId);
     } catch (error) {
-      const message = error.response?.data?.error || error.message;
-      return thunkAPI.rejectWithValue(message);
+      return handleApiError(error, thunkAPI);
     }
   }
 );
@@ -297,8 +212,7 @@ export const verifyPurchaseStatus = createAsyncThunk(
     try {
       return await courseService.verifyPurchase(sessionId);
     } catch (error) {
-      const message = error.response?.data?.error || error.message;
-      return thunkAPI.rejectWithValue(message);
+      return handleApiError(error, thunkAPI);
     }
   }
 );
@@ -311,8 +225,7 @@ export const postReview = createAsyncThunk(
     try {
       return await courseService.postReview(reviewInfo);
     } catch (error) {
-      const message = error.response?.data?.error || error.message;
-      return thunkAPI.rejectWithValue(message);
+      return handleApiError(error, thunkAPI);
     }
   }
 );
@@ -324,8 +237,67 @@ export const fetchReviews = createAsyncThunk(
     try {
       return await courseService.fetchReviews(courseSlug);
     } catch (error) {
-      const message = error.response?.data?.error || error.message;
-      return thunkAPI.rejectWithValue(message);
+      return handleApiError(error, thunkAPI);
+    }
+  }
+);
+
+//Thunk for posting comments
+export const postComment = createAsyncThunk(
+  'courses/postComment',
+  async ({courseId, newComment, parentId}, thunkAPI) => {
+    try {
+      return await courseService.postComment(courseId, newComment, parentId);
+    } catch (error) {
+      return handleApiError(error, thunkAPI);
+    }
+  }
+);
+
+//Thunk for fetching Comments
+export const fetchComments = createAsyncThunk(
+  'courses/fetchComments',
+  async (courseId, thunkAPI) => {
+    try {
+      return await courseService.fetchComments(courseId);
+    } catch (error) {
+      return handleApiError(error, thunkAPI);
+    }
+  }
+);
+
+//Thunk for sending trade request 
+export const sendTradeRequest = createAsyncThunk(
+  'courses/requestTrade',
+  async (requestData, thunkAPI) => {
+    try {
+      return await courseService.sendTradeRequest(requestData);
+    } catch (error) {
+      return handleApiError(error, thunkAPI);
+    }
+  }
+);
+
+//Thunk for fetching Comments
+export const fetchTradeRequests = createAsyncThunk(
+  'courses/fetchTradeRequests',
+  async (_, thunkAPI) => {
+    try {
+      return await courseService.fetchTradeRequests();
+    } catch (error) {
+      return handleApiError(error, thunkAPI);
+    }
+  }
+);
+
+//Thunk for updating trade request 
+export const updateTradeRequest = createAsyncThunk(
+  'courses/updateTradeRequest',
+  async ({tradeId,action}, thunkAPI) => {
+    try {
+      return await courseService.updateTradeRequest(tradeId, action);
+    } catch (error) {
+      return handleApiError(error, thunkAPI);
     }
   }
 );
@@ -336,9 +308,13 @@ const courseSlice = createSlice({
     initialState: {
       categoriesData : [],
       coursesData:[],
+      tutorCoursesData:[],
       modulesData:[],
       singleCourse:null,
       reviewsData:[],
+      commentsData:[],
+      requestedTrades: [],
+      receivedTrades: [],
       isCategoryLoading: false,
       isCategoryError: false,
       isCategorySuccess: false,
@@ -351,7 +327,12 @@ const courseSlice = createSlice({
       isReviewsLoading: false,
       isReviewsError:false,
       isReviewsSuccess:false,
+      isCommentsLoading:false,
+      isCommentsSuccess:false,
+      isCommentsError:false,
       isCheckoutLoading: false,
+      isTradeLoading:false,
+      tradeError:null,
       checkoutError: null,
       checkoutSession: null,
       currentPage: 1,
@@ -497,7 +478,7 @@ const courseSlice = createSlice({
       .addCase(fetchTutorCourses.fulfilled,(state,action)=>{
         state.isCourseLoading = false;
         state.isCourseSuccess = true;
-        state.coursesData = action.payload.results;
+        state.tutorCoursesData = action.payload.results;
         state.currentPage = action.payload.current_page || 1;
         state.totalPages = action.payload.total_pages
         
@@ -558,7 +539,7 @@ const courseSlice = createSlice({
         state.isCourseSuccess = true;
         state.singleCourse = action.payload;
       })
-      .addCase(fetchSingleCourse.rejected,(state)=>{
+      .addCase(fetchSingleCourse.rejected,(state, action)=>{
         state.isCourseError = true;
         state.message = action.payload;
       })
@@ -613,6 +594,8 @@ const courseSlice = createSlice({
       .addCase(initiateCheckout.fulfilled, (state, action) => {
         state.isCheckoutLoading = false;
         state.checkoutSession = action.payload;
+        console.log(state.checkoutSession);
+        
       })
       .addCase(initiateCheckout.rejected, (state, action) => {
         state.isCheckoutLoading = false;
@@ -639,7 +622,7 @@ const courseSlice = createSlice({
         state.message = action.payload;
       })
 
-      //Fethc reviews
+      //Fetch reviews
       .addCase(fetchReviews.pending, (state)=>{
         state.isReviewsLoading = true;
       })
@@ -653,6 +636,60 @@ const courseSlice = createSlice({
         state.message = action.payload;
       })
 
+      //Post Comment
+      .addCase(postComment.pending,(state)=>{
+        state.isCommentsLoading = true;
+      })
+      .addCase(postComment.fulfilled,(state,action)=>{
+        state.isCommentsSuccess = true;
+        state.isCommentsLoading = false;
+        state.message = action.payload;
+      })
+      .addCase(postComment.rejected, (state, action)=>{
+        state.isCommentsError = true;
+        state.message = action.payload;
+      })
+
+      //Fetch comments
+      .addCase(fetchComments.pending, (state)=>{
+        state.isCommentsLoading = true;
+      })
+      .addCase(fetchComments.fulfilled,(state,action)=>{
+        state.isCommentsLoading = false;
+        state.isCommentsSuccess = true;
+        state.commentsData = action.payload;
+      })
+      .addCase(fetchComments.rejected,(state)=>{
+        state.isCommentsError = true;
+        state.message = action.payload;
+      })
+
+      //Fetching trade requests
+      .addCase(fetchTradeRequests.pending, (state)=>{
+        state.isTradeLoading = true;
+      })
+      .addCase(fetchTradeRequests.fulfilled,(state,action)=>{
+        state.isTradeLoading = false;
+        state.requestedTrades = action.payload.requested_trade_requests;
+        state.receivedTrades = action.payload.received_trade_requests;
+      })
+      .addCase(fetchTradeRequests.rejected,(state)=>{
+        state.tradeError = action.payload
+        state.isTradeLoading = false;
+      })
+
+      //Fetching trade requests
+      .addCase(updateTradeRequest.pending, (state)=>{
+        state.isTradeLoading = true;
+      })
+      .addCase(updateTradeRequest.fulfilled,(state,action)=>{
+        state.isTradeLoading = false;
+        state.message = action.payload
+      })
+      .addCase(updateTradeRequest.rejected,(state, action)=>{
+        state.tradeError = action.payload
+        state.isTradeLoading = false;
+      })
        
     },
   });

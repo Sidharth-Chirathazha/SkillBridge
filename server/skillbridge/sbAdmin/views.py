@@ -8,6 +8,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from users.models import User
+from rest_framework.viewsets import ModelViewSet
+from base.custom_pagination import CustomPagination
+from django.shortcuts import get_object_or_404
 
 
 # Create your views here.
@@ -49,55 +52,44 @@ class AdminDetailsView(APIView):
         else:
             return Response({"error": "You are not authorized to access this resource."}, status=status.HTTP_403_FORBIDDEN)
         
-class AdminTutorListView(APIView):
+class AdminTutorViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
+    queryset = User.objects.filter(role="tutor").order_by("-created_at")
+    serializer_class = AdminTutorSerializer
+    pagination_class = CustomPagination
 
-    def get(self, request, id=None):
-
-        if id:
-            try:
-                tutor = User.objects.get(id=id, role="tutor")
-                serializer = AdminTutorSerializer(tutor)
-                return Response(serializer.data)
-            except User.DoesNotExist:
-                return Response({"detail": "Tutor not found."}, status=404)
-        else:
-            tutors = User.objects.filter(role="tutor")
-            serializer = AdminTutorSerializer(tutors, many=True)
-            return Response(serializer.data)
-        
-    def patch(self, request, id=None):
-        if not id:
-            return Response({"detail": "Tutor ID is required."}, status=400)
-        
-        try:
-            tutor = User.objects.get(id=id, role="tutor")
-        except:
-            return Response({"detail": "Tutor not found."}, status=404)
-        
+    def retrieve(self, request, pk=None):
+        tutor = get_object_or_404(User, id=pk, role="tutor")
+        serializer = self.get_serializer(tutor)
+        return Response(serializer.data)
+    
+    def partial_update(self, request, pk=None):
+        """Handles partial updates (PATCH) for tutor verification"""
+        tutor = get_object_or_404(User, id=pk, role="tutor")
         is_verified = request.data.get("is_verified")
+
         if is_verified is not None:
             tutor.tutor_profile.is_verified = is_verified
             tutor.tutor_profile.save()
             return Response({"detail": f"Tutor {'authorized' if is_verified else 'unauthorized'} successfully."})
+
         return Response({"detail": "Invalid data."}, status=400)
-    
-class AdminStudentListView(APIView):
+        
+
+
+
+class AdminStudentViewSet(ModelViewSet):
     permission_classes = [IsAdminUser]
+    queryset = User.objects.filter(role="student").order_by("-created_at")
+    serializer_class = AdminStudentSerializer
+    pagination_class = CustomPagination
 
-    def get(self, request, id=None):
+    def retrieve(self, request, pk=None):
+        student = get_object_or_404(User, id=pk, role="student")
+        serializer = self.get_serializer(student)
+        return Response(serializer.data)
 
-        if id:
-            try:
-                student = User.objects.get(id=id, role="student")
-                serializer = AdminStudentSerializer(student)
-                return Response(serializer.data)
-            except User.DoesNotExist:
-                return Response({"detail": "Student not found."}, status=404)
-        else:
-            students = User.objects.filter(role="student")
-            serializer = AdminStudentSerializer(students, many=True)
-            return Response(serializer.data)
+    
     
 class UpdateUserStatusView(APIView):
     permission_classes = [IsAdminUser]
