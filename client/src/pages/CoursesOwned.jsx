@@ -17,7 +17,7 @@ const CoursesOwned = ({ variant = 'student' }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { coursesData, currentPage, totalPages, isCourseLoading, isCourseError, requestedTrades, receivedTrades, tradeError } = useSelector((state) => state.course);
+  const { purchasedCoursesData, currentPage, totalPages, isCourseLoading, isCourseError, requestedTrades, receivedTrades, tradeError } = useSelector((state) => state.course);
 
   const {role, userData} = useSelector((state)=>state.auth)
 
@@ -50,6 +50,7 @@ const CoursesOwned = ({ variant = 'student' }) => {
         try{
             console.log("Dispatching trade action:", { tradeId, action });
             await dispatch(updateTradeRequest({tradeId, action})).unwrap();
+            await dispatch(fetchTradeRequests()).unwrap();
             toast.success("Course traded successfully");
         }catch(error){
             console.log("Trade action error:", error);
@@ -178,7 +179,7 @@ const CoursesOwned = ({ variant = 'student' }) => {
             <div className="flex gap-3 mb-8">
             <TabButton
                 label="Purchased Courses"
-                count={coursesData?.length}
+                count={purchasedCoursesData?.length}
                 isActive={activeTab === 'purchased'}
                 onClick={() => setActiveTab('purchased')}
             />
@@ -209,14 +210,14 @@ const CoursesOwned = ({ variant = 'student' }) => {
                 <div className="flex justify-center items-center h-screen">
                 <Loader className="animate-spin h-10 w-10 text-primary" />
                 </div>
-            ) : !coursesData ? (
+            ) : !purchasedCoursesData ? (
               <div className="flex justify-center items-center h-96">
                 <h1 className='text-lg text-text-600'>You haven't purchased any courses yet.</h1>
               </div>
             ) : (
                 <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-8">
-                    {coursesData?.map((course) => (
+                    {purchasedCoursesData?.map((course) => (
                     <CourseCard
                         key={course.id}
                         course={course}

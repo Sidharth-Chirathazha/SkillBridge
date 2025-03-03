@@ -1,4 +1,4 @@
-from .serializers import UserCreationSerializer,UserLoginSerializer, SkillSerializer
+from .serializers import UserCreationSerializer,UserLoginSerializer, SkillSerializer, NotificationSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -13,9 +13,11 @@ from rest_framework.parsers import MultiPartParser,FormParser,JSONParser
 import json
 from student.models import StudentProfile
 from tutor.models import TutorProfile
-from users.models import User, Skill
+from users.models import User, Skill, Notification
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.decorators import action
 
 # Create your views here.
 
@@ -207,4 +209,17 @@ class SkillListHandleView(APIView):
             return Response({"error": "Skill not found."}, status=status.HTTP_404_NOT_FOUND)
 
 
-   
+
+class NotificationViewSet(ModelViewSet):
+    serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = Notification.objects.all()
+
+    def get_queryset(self):
+        return self.queryset.filter(user=self.request.user).order_by("-created_at")
+    
+    
+    @action(detail=False, methods=["POST"])
+    def mark_as_read(self, request):
+        Notification.objects.filter(user=self.request.user, is_read=False).update(is_read=True)
+        return Response({"message": "Notifications marked as read"}, status=status.HTTP_200_OK)

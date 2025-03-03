@@ -1,21 +1,38 @@
-import { Star, ShoppingCart, Clock, User, Heart, BookOpen, PlayCircle, Repeat } from 'lucide-react';
+import { Star, LayoutGrid, Clock, User, Heart, BookOpen, PlayCircle, Repeat, Users } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import ProgressBar from './ProgressBar';
 import { useEffect, useState } from 'react';
 import TradeModal from '../../tutor/TradeModal';
-import { useSelector } from 'react-redux';
 
-
-const CourseCard = ({ course, onLike, onBuy, onTrade, isPurchased = false, role }) => {
+const CourseCard = ({ 
+  course, 
+  onLike, 
+  onBuy, 
+  onTrade, 
+  isPurchased = false, 
+  role,
+  isPublicView = false
+}) => {
   const navigate = useNavigate();
   const [isTradeModalOpen, setIsTradeModalOpen] = useState(false);
 
-
-
+  // console.log("Course details in card:", course);
+  
 
   const handleCardClick = () => {
-    if (!isPurchased) {
+    if (isPublicView) {
+      navigate('/login');
+    } else if (!isPurchased) {
       navigate(`/${role}/courses/${course.id}`);
+    }
+  };
+
+  const handleEnrollClick = (e) => {
+    e.stopPropagation();
+    if (isPublicView) {
+      navigate('/login');
+    } else {
+      onBuy(course.id);
     }
   };
 
@@ -30,56 +47,61 @@ const CourseCard = ({ course, onLike, onBuy, onTrade, isPurchased = false, role 
 
   return (
     <div
-      className={`bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col border border-gray-100 overflow-hidden ${
-        !isPurchased ? 'cursor-pointer' : ''
+      className={`bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 flex flex-col group ${
+        !isPurchased || isPublicView ? 'cursor-pointer' : ''
       }`}
       onClick={handleCardClick}
     >
       {/* Thumbnail Section */}
       <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         <img
-          src={course.thumbnail || '/default-thumbnail.jpg'}
+          src={course.thumbnail || "/api/placeholder/400/250"}
           alt={course.title}
-          className="w-full h-48 object-cover"
+          className="w-full aspect-video object-cover"
         />
         {!isPurchased && (
           <>
-            <div className="absolute top-2 left-2 bg-primary-400 text-white px-3 py-1 rounded-full text-xs font-medium">
-              {course.skill_level}
-            </div>
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onLike(course.id);
+                if (!isPublicView) onLike(course.id);
+                else navigate('/login');
               }}
-              className="absolute top-2 right-2 p-2 rounded-full bg-white/90 hover:bg-gray-100 transition-colors"
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/90 hover:bg-white transition-colors z-20"
             >
-              <Heart
-                size={20}
-                className={course.isLiked ? 'text-secondary-500 fill-secondary-500' : 'text-text-600'}
+              <Heart 
+                className={`w-4 h-4 ${course.isLiked ? 'text-secondary fill-secondary' : 'text-gray-600 hover:text-secondary'} transition-colors`} 
               />
             </button>
+            <div className="absolute top-4 left-4 px-3 py-1 bg-secondary/90 text-white text-xs font-medium rounded-full z-20">
+              {course.skill_level}
+            </div>
           </>
         )}
+        <div className="absolute -bottom-4 left-4 z-20">
+          <div className="w-10 h-10 rounded-full border-2 border-white overflow-hidden bg-primary">
+            <img
+              src={course.tutor?.profile_pic || "/api/placeholder/400/250"}
+              alt="Tutor"
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Course Content */}
-      <div className="p-4 flex flex-col flex-grow">
-        {/* Title and Tutor */}
-        <h3 className="font-bold text-text-900 text-lg mb-2 truncate">{course.title}</h3>
-
-        <div className="flex items-center mb-4">
-          <img
-            src={course.tutor?.profile_pic || '/default-avatar.jpg'}
-            alt={course.tutor?.first_name}
-            className="w-8 h-8 rounded-full border-2 border-white shadow-sm"
-          />
-          <span className="ml-2 text-sm text-text-400 truncate">
-            {course.tutor?.first_name && course.tutor?.last_name
-              ? `${course.tutor.first_name} ${course.tutor.last_name}`
-              : 'Unknown Tutor'}
-          </span>
+      <div className="p-5 pt-8 flex-1 flex flex-col">
+        {/* Category */}
+        <div className="flex items-center gap-2 text-secondary text-sm font-medium mb-2">
+          <LayoutGrid className="w-4 h-4" />
+          <span>{course.category?.name || "Uncategorized"}</span>
         </div>
+
+        {/* Title */}
+        <h3 className="font-semibold text-lg mb-3 text-text line-clamp-2 group-hover:text-primary transition-colors">
+          {course.title}
+        </h3>
 
         {/* Conditionally render based on isPurchased */}
         {isPurchased ? (
@@ -95,7 +117,7 @@ const CourseCard = ({ course, onLike, onBuy, onTrade, isPurchased = false, role 
                 e.stopPropagation();
                 navigate(`/${role}/learning/${course.id}`);
               }}
-              className="w-full flex items-center justify-center bg-primary-500 hover:bg-primary-700 text-white px-4 py-2 rounded-md transition-colors"
+              className="w-full flex items-center justify-center bg-primary text-white px-4 py-2 rounded-full transition-colors hover:bg-secondary"
             >
               <PlayCircle size={18} className="mr-2" />
               <span className="text-sm">Go to Course</span>
@@ -103,82 +125,94 @@ const CourseCard = ({ course, onLike, onBuy, onTrade, isPurchased = false, role 
           </>
         ) : (
           <>
-            {/* Metrics Grid */}
-            <div className="grid grid-cols-3 gap-2 mb-4">
-              <div className="flex items-center justify-center p-2 bg-gray-50 rounded-lg">
-                <Star size={16} className="text-yellow-500 mr-1" />
-                <span className="text-sm font-medium text-text-500">{course.rating || '4.5'}</span>
+            {/* Metrics */}
+            <div className="flex items-center gap-4 text-sm text-text-400 mb-4">
+              <div className="flex items-center gap-1">
+                <Users className="w-4 h-4" />
+                <span>{course.total_purchases || 0}</span>
               </div>
-              <div className="flex items-center justify-center p-2 bg-gray-50 rounded-lg">
-                <Clock size={16} className="text-text-500 mr-1" />
-                <span className="text-sm">{course.total_duration || '0'}min</span>
+              <div className="flex items-center gap-1">
+                <Clock className="w-4 h-4" />
+                <span>{course.total_duration || 0}min</span>
               </div>
-              <div className="flex items-center justify-center p-2 bg-gray-50 rounded-lg">
-                <BookOpen size={16} className="text-text-500 mr-1" />
-                <span className="text-sm">{course.total_modules || '0'}</span>
+              <div className="flex items-center gap-1">
+                <BookOpen className="w-4 h-4" />
+                <span>{course.total_modules || 0}</span>
               </div>
             </div>
 
+            {/* Rating */}
+            <div className="flex items-center gap-1 mb-4">
+              <div className="flex">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star 
+                    key={star} 
+                    className={`w-4 h-4 ${star <= (course.rating || 0) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
+                  />
+                ))}
+              </div>
+              <span className="text-sm font-medium ml-1">{course.rating || 0}</span>
+              <span className="text-xs text-text-400 ml-1">({course.total_reviews || 0})</span>
+            </div>
+
             {/* Price and Action */}
-            <div className="mt-auto">
-              <div className="flex items-baseline mb-2">
-                <span className="text-lg font-bold text-secondary-500">₹{course.price || '0'}</span>
+            <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
+              <div className="flex items-baseline gap-2">
+                <span className="text-lg font-bold text-secondary">
+                  ₹{course.price || 0}
+                </span>
                 {course.originalPrice && (
-                  <span className="ml-2 text-sm text-gray-400 line-through">
+                  <span className="text-sm text-text-400 line-through">
                     ₹{course.originalPrice}
                   </span>
                 )}
               </div>
-              <div className="flex gap-2">
-                {course.is_under_trade ? (
-                  // Single "Under Trade" button when course is under trade
+
+              {course.is_under_trade ? (
+                // "Under Trade" button
+                <button
+                  disabled
+                  className="px-4 py-1.5 bg-gray-400 text-white text-sm rounded-full cursor-not-allowed"
+                >
+                  Under Trade
+                </button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  {/* Enroll Button */}
                   <button
-                    disabled
-                    className="flex-1 flex items-center justify-center px-3 py-2 rounded-md transition-colors bg-gray-400 cursor-not-allowed"
+                    onClick={handleEnrollClick}
+                    className={`px-4 py-1.5 bg-primary text-white text-sm rounded-full hover:bg-primary-600 transition-colors ${
+                      role === 'tutor' && !isPublicView ? 'w-20' : ''
+                    }`}
                   >
-                    <Repeat size={18} className="mr-2" />
-                    <span className="text-sm">Under Trade</span>
+                    {role === 'tutor' && !isPublicView ? 'Enroll' : 'Enroll Now'}
                   </button>
-                ) : (
-                  // Regular buttons when course is not under trade
-                  <>
-                    {/* Enroll Button */}
+
+                  {/* Trade Button (Only for Tutors and not public view) */}
+                  {role === 'tutor' && !isPublicView && (
                     <button
-                      onClick={(e) => { 
-                        e.stopPropagation();
-                        onBuy(course.id);
-                      }}
-                      className="flex-1 flex items-center justify-center px-3 py-2 rounded-md transition-colors bg-primary-500 hover:bg-primary-700 text-white"
+                      onClick={openTradeModal}
+                      className="w-20 py-1.5 bg-secondary text-white text-sm rounded-full hover:bg-secondary-600 transition-colors flex items-center justify-center"
                     >
-                      <ShoppingCart size={18} className="mr-2" />
-                      <span className="text-sm">Enroll</span>
+                      <Repeat size={14} className="mr-1" />
+                      <span>Trade</span>
                     </button>
-
-                    {/* Trade Button (Only for Tutors) */}
-                    {role === 'tutor' && (
-                      <button
-                        onClick={openTradeModal}
-                        className="flex-1 flex items-center justify-center px-3 py-2 rounded-md transition-colors bg-secondary-500 hover:bg-secondary-700 text-white"
-                      >
-                        <Repeat size={18} className="mr-2" />
-                        <span className="text-sm">Trade</span>
-                      </button>
-                    )}
-
-                    {/* Trade Modal Component */}
-                    <TradeModal
-                      isOpen={isTradeModalOpen}
-                      closeModal={closeTradeModal}
-                      requestedCourseData={course}
-                    />
-                  </>
-                )}
-              </div>
-
+                  )}
+                </div>
+              )}
             </div>
           </>
         )}
       </div>
+
+      {/* Trade Modal (only render if not public view) */}
+      {!isPublicView && role === 'tutor' && (
+        <TradeModal
+          isOpen={isTradeModalOpen}
+          closeModal={closeTradeModal}
+          requestedCourseData={course}
+        />
+      )}
     </div>
   );
 };

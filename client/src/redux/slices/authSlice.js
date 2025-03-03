@@ -1,5 +1,6 @@
 import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
 import * as authService from '../services/authService';
+import { resetCourseState } from './courseSlice';
 
 
 const handleApiError = (error, thunkAPI)=>{
@@ -83,12 +84,12 @@ export const googleLogin = createAsyncThunk(
 //Thunk for User Logout
 export const logoutUser = createAsyncThunk(
   "/logoutUser",
-  async(tokenData, thunkAPI)=>{
+  async(_, {dispatch, rejectWithValue})=>{
       try{
-          return await authService.logoutUser(tokenData);
-        
+          dispatch(resetCourseState());
+          return { success: true };
       }catch(error){
-        return handleApiError(error, thunkAPI);
+        return  rejectWithValue("Logout failed");
       }
   }
 );

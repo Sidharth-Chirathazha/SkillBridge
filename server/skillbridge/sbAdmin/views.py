@@ -53,10 +53,29 @@ class AdminDetailsView(APIView):
             return Response({"error": "You are not authorized to access this resource."}, status=status.HTTP_403_FORBIDDEN)
         
 class AdminTutorViewSet(ModelViewSet):
-    permission_classes = [IsAuthenticated]
-    queryset = User.objects.filter(role="tutor").order_by("-created_at")
     serializer_class = AdminTutorSerializer
     pagination_class = CustomPagination
+
+    def get_permissions(self):
+        if self.action in ["list", "retrieve"]:
+            return[AllowAny()]
+        return [IsAdminUser()]
+    
+    def get_queryset(self):
+        queryset = User.objects.filter(role="tutor").select_related("tutor_profile").order_by("-created_at")
+
+        active_status = self.request.query_params.get("active_status")
+        verified_status = self.request.query_params.get("verified_status")
+
+        filters = {}
+
+        if active_status is not None:
+            filters["is_active"] = active_status.lower() == "true"
+
+        if verified_status is not None:
+            filters["tutor_profile__is_verified"] = verified_status.lower() == "true"
+
+        return queryset.filter(**filters)
 
     def retrieve(self, request, pk=None):
         tutor = get_object_or_404(User, id=pk, role="tutor")

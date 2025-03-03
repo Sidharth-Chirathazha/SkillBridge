@@ -116,8 +116,12 @@ const CourseCreation = () => {
   }, [dispatch]);
 
   useEffect(()=>{
+    console.log("Inside use effect");
+    
     if(urlCourseId){
       dispatch(fetchSingleCourse(urlCourseId));
+      console.log("Fetched single course:", singleCourse);
+      
       dispatch(fetchModules(urlCourseId));
     }
   },[urlCourseId])
@@ -185,7 +189,9 @@ const CourseCreation = () => {
         toast.success('Course updated successfully!');
       }else{
         const response = await dispatch(addCourse(formData)).unwrap();
-        navigate(`/tutor/courses/edit/${response.id}`)
+        console.log("Inside course createtion tesing response:", response);
+        
+        navigate(`/tutor/teaching/edit/${response.id}`)
         toast.success('Course created successfully!');
       }
     }catch(error){

@@ -12,6 +12,8 @@ import CourseDetailPage from '../pages/CourseDetailPage';
 import CoursesOwned from '../pages/CoursesOwned';
 import CoursePlayer from '../pages/CoursePlayer';
 import SuccessPage from '../pages/SuccessPage';
+import CommunitiesList from '../pages/CommunitiesList';
+import CommunityChatPage from '../pages/CommunityChatPage';
 
 
 const TutorRoutes = () => {
@@ -29,6 +31,8 @@ const TutorRoutes = () => {
           <Route path="/teaching/edit/:courseId" element={<CourseCreation/>}/>
           <Route path="teaching" element={<TutorTeaching/>}/>
           <Route path="wallet" element={<TutorWallet/>}/>
+          <Route path="communities" element={<CommunitiesList/>}/>
+          <Route path="/communities/:communityId/chat" element={<CommunityChatPage/>}/>
         </Route>
         <Route path="/courses/success" element={<SuccessPage/>}/>
       </Route>

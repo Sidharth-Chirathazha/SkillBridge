@@ -2,7 +2,7 @@ import React, { useState, Fragment, useEffect } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { XCircle } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
-import { sendTradeRequest } from '../../redux/slices/courseSlice';
+import { sendTradeRequest, fetchCourses } from '../../redux/slices/courseSlice';
 import toast from 'react-hot-toast';
 
 
@@ -27,6 +27,7 @@ const TradeModal = ({ isOpen, closeModal, requestedCourseData }) => {
     
     try{
       await dispatch(sendTradeRequest({requested_course:requestedCourseData?.id, offered_course:selectedCourse}));
+      await dispatch(fetchCourses({ page:1, pageSize:8, status :'Approved', user:true })).unwrap();
       toast.success("Trade request sent successfully")
     }catch(error){
       toast.error("An Error Occured")
@@ -85,30 +86,31 @@ const TradeModal = ({ isOpen, closeModal, requestedCourseData }) => {
                   </div>
 
                   <form onSubmit={handleSubmit}>
-                    <div className="mb-6">
-                      <label htmlFor="course" className="block text-sm font-medium text-gray-700 mb-2">
-                        Select Course to Trade
-                      </label>
-                      <select
-                        id="course"
-                        value={selectedCourse}
-                        onChange={(e) => setSelectedCourse(e.target.value)}
-                        className="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                        required
-                      >
-                        <option value="">Select a course</option>
-                        {tutorCoursesData?.map((course) => (
-                          course.price === requestedCourseData?.price && (
-                            <option key={course.id} value={course.id}>
-                              {course.title} - ₹{course.price}
-                            </option>
-                          )
+                  <div className="mb-6">
+                    <label htmlFor="course" className="block text-sm font-medium text-gray-700 mb-2">
+                      Select Course to Trade
+                    </label>
+                    <select
+                      id="course"
+                      value={selectedCourse}
+                      onChange={(e) => setSelectedCourse(e.target.value)}
+                      className="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                      required
+                    >
+                      <option value="">Select a course</option>
+                      {tutorCoursesData
+                        ?.filter((course) => course.status==="Approved") // ✅ Only include verified courses
+                        .map((course) => (
+                          <option key={course.id} value={course.id}>
+                            {course.title} - ₹{course.price}
+                          </option>
                         ))}
-                      </select>
-                      <p className="mt-2 text-sm text-gray-500">
-                        Note: Only courses with matching prices can be traded
-                      </p>
-                    </div>
+                    </select>
+                    <p className="mt-2 text-sm text-gray-500">
+                      Note: Only courses with matching prices can be traded
+                    </p>
+                  </div>
+
 
                     <div className="flex justify-end gap-3">
                       <button

@@ -11,6 +11,9 @@ import UserLayout from '../components/common/UserLayout';
 import CourseList from '../pages/CourseList';
 import CourseDetailPage from '../pages/CourseDetailPage';
 import CoursesOwned from '../pages/CoursesOwned';
+import CommunitiesList from '../pages/CommunitiesList';
+import CommunityChatPage from '../pages/CommunityChatPage';
+
 
 const StudentRoutes = () => {
   return (
@@ -25,6 +28,8 @@ const StudentRoutes = () => {
           <Route path="/learning/:id" element={<CoursePlayer/>}/>
           <Route path="tutors" element={<StudentTutors/>}/>
           <Route path="/tutors/:id" element={<StudentTutorDetailView/>}/>
+          <Route path="communities" element={<CommunitiesList/>}/>
+          <Route path="/communities/:communityId/chat" element={<CommunityChatPage/>}/>
         </Route>
         <Route path="/courses/success" element={<SuccessPage/>}/>
       </Route>

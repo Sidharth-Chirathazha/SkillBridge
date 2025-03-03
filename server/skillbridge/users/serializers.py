@@ -4,7 +4,7 @@ from student.models import StudentProfile
 from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from .models import Skill
+from .models import Skill,Notification
 from .utils import generate_email_otp
 from cloudinary.utils import cloudinary_url
 from cloudinary.uploader import upload as cloudinary_upload
@@ -127,10 +127,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'email', 'first_name', 'last_name', 'phone', 'profile_pic_url','linkedin_url', 'bio', 
+            'id','email', 'first_name', 'last_name', 'phone', 'profile_pic_url','linkedin_url', 'bio', 
             'country', 'city', 'skills', 'role'
         ]
-        read_only_fields = ['wallet_balance', 'role']
+        read_only_fields = ['wallet_balance', 'role', 'id']
 
     
     def validate_phone(self, value):
@@ -175,5 +175,10 @@ class SkillSerializer(serializers.ModelSerializer):
     class Meta:
         model = Skill
         fields = ['id', 'skill_name']
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ['id', 'user', "notification_type", "message", "is_read", "created_at"]
 
     

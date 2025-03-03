@@ -1,9 +1,11 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import * as courseService from '../services/courseService';
+import toast from "react-hot-toast";
 
 
 const handleApiError = (error, thunkAPI)=>{
   const message = error.response?.data?.detail || error.response?.data?.error || error.message;
+  toast.error(message)
   return thunkAPI.rejectWithValue(message);
 }
 
@@ -71,9 +73,9 @@ export const addCourse = createAsyncThunk(
 // Thunk for fetching courses
 export const fetchCourses = createAsyncThunk(
   "/course/fetchCourses",
-  async ({page, pageSize, status, user }, thunkAPI) => {
+  async ({page, pageSize, status, user, categoryId, limit }, thunkAPI) => {
     try {
-      return await courseService.fetchCourses(page, pageSize,status,user);
+      return await courseService.fetchCourses(page, pageSize,status,user,categoryId,limit);
     } catch (error) {
       return handleApiError(error, thunkAPI);
     }
@@ -182,11 +184,11 @@ export const deleteModule = createAsyncThunk(
  // Thunk for fetching single course
  export const fetchSingleCourse = createAsyncThunk(
   "/course/fetchSingleCourse",
-  async (id, thunkAPI) => {
+  async ({id,user}, thunkAPI) => {
     console.log(id);
     
     try {
-      return await courseService.fetchSingleCourse(id);
+      return await courseService.fetchSingleCourse(id,user);
     } catch (error) {
       return handleApiError(error, thunkAPI);
     }
@@ -266,6 +268,18 @@ export const fetchComments = createAsyncThunk(
   }
 );
 
+//Thunk for deleting Comments
+export const deleteComment = createAsyncThunk(
+  'courses/deleteComment',
+  async (commentId, thunkAPI) => {
+    try {
+      return await courseService.deleteComment(commentId);
+    } catch (error) {
+      return handleApiError(error, thunkAPI);
+    }
+  }
+);
+
 //Thunk for sending trade request 
 export const sendTradeRequest = createAsyncThunk(
   'courses/requestTrade',
@@ -308,6 +322,7 @@ const courseSlice = createSlice({
     initialState: {
       categoriesData : [],
       coursesData:[],
+      purchasedCoursesData:[],
       tutorCoursesData:[],
       modulesData:[],
       singleCourse:null,
@@ -351,6 +366,15 @@ const courseSlice = createSlice({
         state.isModuleLoading = false;
         state.isModuleSuccess = false;
         state.message = "";
+        state.coursesData = [],
+        state.tutorCoursesData = [],
+        state.purchasedCoursesData = [],
+        state.modulesData = [],
+        state.singleCourse= null,
+        state.reviewsData= [],
+        state.commentsData= [],
+        state.requestedTrades= [],
+        state.receivedTrades= []
       },
       resetCheckout: (state) => {
         state.isCheckoutLoading = false;
@@ -461,7 +485,7 @@ const courseSlice = createSlice({
       .addCase(fetchPurchasedCourses.fulfilled,(state,action)=>{
         state.isCourseLoading = false;
         state.isCourseSuccess = true;
-        state.coursesData = action.payload.results;
+        state.purchasedCoursesData = action.payload.results;
         state.currentPage = action.payload.current_page || 1;
         state.totalPages = action.payload.total_pages
         

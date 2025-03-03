@@ -1,64 +1,83 @@
-import React from 'react'
-import hero_img from '../../assets/images/hero_img.jpg'
+import React from 'react';
+import hero_img from '../../assets/images/hero_img.jpg';
+import hero_img_3 from '../../assets/images/hero_img_3.png'
 import { FaBook, FaUserGraduate, FaChalkboardTeacher } from "react-icons/fa";
-
+import { ArrowRight } from "lucide-react";
 
 const HeroSection = () => {
   return (
-    <section id="home" className="bg-gradient-to-r from-primary to-secondary text-white">
-      <div className="container mx-auto flex flex-col md:flex-row items-center py-16 px-6">
+    <section id="home" className="relative overflow-hidden bg-gradient-to-br from-primary-600 to-primary-800 text-white">
+      {/* Background Elements */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-10">
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-secondary rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 right-0 w-64 h-64 bg-secondary-400 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-primary-300 rounded-full blur-3xl"></div>
+      </div>
+      
+      <div className="container mx-auto flex flex-col lg:flex-row items-center py-20 px-12 relative z-10">
         {/* Left Column */}
-        <div className="flex-1">
-          <h1 className="text-4xl md:text-6xl font-bold mb-4">Learn From the Best</h1>
-          <p className="text-lg mb-6">Explore top courses and categories to excel in your career.</p>
-          <div className="relative w-full md:w-2/3">
-            <input
-                type="text"
-                placeholder="Search for courses..."
-                className="px-4 py-2 w-full rounded bg-white text-text border border-gray-300 focus:border-secondary focus:ring focus:ring-secondary/40 outline-none transition-all duration-300 pr-12"
-            />
-            <button
-                type="submit"
-                className="absolute inset-y-0 right-0 px-4 bg-primary text-white font-bold rounded-r hover:bg-secondary transition-all duration-300"
-            >
-                Search
-            </button>
+        <div className="flex-1 max-w-2xl mb-10 lg:mb-0">
+          <div className="inline-block px-4 py-1 bg-white/10 backdrop-blur-sm rounded-full text-sm font-medium mb-6">
+            Learn. Excel. Succeed.
           </div>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+            Elevate Your <span className="text-secondary">Skills</span> With Expert-Led Courses
+          </h1>
+          <p className="text-lg text-white/80 mb-8 max-w-lg">
+            Join thousands of students and professionals enhancing their careers through our tailored learning paths and industry-leading instructors.
+          </p>
+          <button className="group flex items-center gap-2 px-8 py-3.5 bg-secondary hover:bg-secondary-600 rounded-full text-lg font-medium transition-all duration-300 hover:shadow-lg">
+            Start Your Journey
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          </button>
         </div>
 
         {/* Right Column */}
-        <div className="flex-1">
-          <img src={hero_img} alt="Hero" className="rounded shadow-lg" />
+        <div className="flex-1 lg:pl-10">
+          <div className="relative">
+            {/* <div className="absolute -top-4 -left-4 w-full h-full bg-secondary rounded-2xl"></div> */}
+            <img 
+              src={hero_img_3} 
+              alt="Students learning" 
+              className="relative rounded-2xl shadow-xl object-cover w-[500px] h-[500px] z-10" 
+            />
+          </div>
         </div>
       </div>
 
       {/* Stats Section */}
-      <div className="container mx-auto py-10 px-6">
+      <div className="container mx-auto py-10 px-6 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Total Courses */}
-          <div className="bg-white text-text rounded-lg shadow-lg p-6 text-center transform hover:scale-105 transition-transform duration-300">
-            <FaBook className="text-primary text-4xl mx-auto mb-4" />
-            <h3 className="text-2xl font-bold">Total Courses</h3>
-            <p className="text-4xl font-bold text-primary mt-2">1,200+</p>
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl shadow-lg p-8 text-center transform hover:scale-105 transition-transform duration-300 border border-white/20">
+            <div className="bg-secondary/20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6">
+              <FaBook className="text-secondary text-2xl" />
+            </div>
+            <h3 className="text-xl font-bold mb-2">Total Courses</h3>
+            <p className="text-4xl font-bold text-secondary mt-2">1,200+</p>
           </div>
 
           {/* Total Students */}
-          <div className="bg-white text-text rounded-lg shadow-lg p-6 text-center transform hover:scale-105 transition-transform duration-300">
-            <FaUserGraduate className="text-primary text-4xl mx-auto mb-4" />
-            <h3 className="text-2xl font-bold">Total Students</h3>
-            <p className="text-4xl font-bold text-primary mt-2">25,000+</p>
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl shadow-lg p-8 text-center transform hover:scale-105 transition-transform duration-300 border border-white/20">
+            <div className="bg-secondary/20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6">
+              <FaUserGraduate className="text-secondary text-2xl" />
+            </div>
+            <h3 className="text-xl font-bold mb-2">Total Students</h3>
+            <p className="text-4xl font-bold text-secondary mt-2">25,000+</p>
           </div>
 
           {/* Total Tutors */}
-          <div className="bg-white text-text rounded-lg shadow-lg p-6 text-center transform hover:scale-105 transition-transform duration-300">
-            <FaChalkboardTeacher className="text-primary text-4xl mx-auto mb-4" />
-            <h3 className="text-2xl font-bold">Total Tutors</h3>
-            <p className="text-4xl font-bold text-primary mt-2">500+</p>
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl shadow-lg p-8 text-center transform hover:scale-105 transition-transform duration-300 border border-white/20">
+            <div className="bg-secondary/20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6">
+              <FaChalkboardTeacher className="text-secondary text-2xl" />
+            </div>
+            <h3 className="text-xl font-bold mb-2">Total Tutors</h3>
+            <p className="text-4xl font-bold text-secondary mt-2">500+</p>
           </div>
         </div>
       </div>
     </section>
-  )
-}
+  );
+};
 
-export default HeroSection
+export default HeroSection;

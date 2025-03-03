@@ -11,7 +11,7 @@ const AdminCourseManagement = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
-  const pageSize = 8;
+  const pageSize = 20;
   
   const { coursesData, currentPage, totalPages, isCourseLoading, isCourseError } = useSelector(
     (state) => state.course
@@ -24,6 +24,8 @@ const AdminCourseManagement = () => {
   const handleManage = (id) => {
     navigate(`/admin/courses/${id}`)
   };
+
+  
   
   return (
     <>

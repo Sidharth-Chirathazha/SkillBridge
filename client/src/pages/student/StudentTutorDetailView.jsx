@@ -18,7 +18,7 @@ import { fetchAdminTutors } from '../../redux/slices/adminSlice';
 import { fetchTutorReviews, postTutorReview } from '../../redux/slices/authSlice';
 import toast from 'react-hot-toast';
 import { Loader } from 'lucide-react';
-import UserLayout from '../../components/common/UserLayout';
+
 
 const StudentTutorDetailView = () => {
   const [activeTab, setActiveTab] = useState('education');

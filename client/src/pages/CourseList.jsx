@@ -55,6 +55,9 @@ const CourseList = () => {
     
   }, [dispatch, page]);
 
+  console.log("All Course details in course list:", coursesData);
+  
+
   useEffect(() => {
     // Cleanup on unmount
     return () => {

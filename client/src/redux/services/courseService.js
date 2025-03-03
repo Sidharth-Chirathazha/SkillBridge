@@ -52,12 +52,21 @@ export const addCourse = async(courseInfo)=>{
 }
 
 //Fetch courses
-export const fetchCourses = async(page, pageSize, status=null, user=null)=>{
+export const fetchCourses = async(page, pageSize, status=null, user=null, categoryId=null, limit=null)=>{
     let url = `/courses/course/?page=${page}&page_size=${pageSize}`;
 
-    if (status){
-        url = `/courses/course/?page=${page}&page_size=${pageSize}&status=${status}`;
+    if (status) {
+        url += `&status=${status}`;
     }
+
+    if (categoryId) {
+        url += `&category_id=${categoryId}`;
+    }
+
+    if (limit) {
+        url += `&limit=${limit}`;
+    }
+    
     const config = user ? {
        requiresAuth:true
     } : {};
@@ -93,8 +102,13 @@ export const fetchPurchasedCourses = async(page, pageSize)=>{
 
 
 //Fetch Single Course
-export const fetchSingleCourse = async(id)=>{
-    const response = await axiosInstance.get(`/courses/course/${id}/`);
+export const fetchSingleCourse = async(id,user=null)=>{
+
+    const config = user ? {
+        requiresAuth:true
+     } : {};
+
+    const response = await axiosInstance.get(`/courses/course/${id}/`, config);
     return response.data;
 }
 
@@ -227,6 +241,14 @@ export const postComment = async(courseId, newComment, parentId)=>{
 //Fetch Comments
 export const fetchComments = async(courseId)=>{
     const response = await axiosInstance.get( `/courses/comments/?course=${courseId}`,
+        { requiresAuth:true }
+    );
+    return response.data;
+}
+
+//Delete Comments
+export const deleteComment = async(commentId)=>{
+    const response = await axiosInstance.delete( `/courses/comments/${commentId}/`,
         { requiresAuth:true }
     );
     return response.data;

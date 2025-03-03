@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from users.models import User
+from courses.models import Purchase
 
 
 class AdminLoginSerializer(serializers.Serializer):
@@ -30,6 +31,7 @@ class AdminTutorSerializer(serializers.ModelSerializer):
    # Fields from User
     skills = serializers.StringRelatedField(many=True)
     profile_pic_url = serializers.CharField(source="profile_pic_url.url", allow_null=True)
+    full_name = serializers.CharField(source="get_full_name", read_only=True)
 
     # Fields from TutorProfile
     tutor_id = serializers.IntegerField(source="tutor_profile.id")
@@ -37,6 +39,10 @@ class AdminTutorSerializer(serializers.ModelSerializer):
     rating = serializers.FloatField(source="tutor_profile.rating")
     is_verified = serializers.BooleanField(source="tutor_profile.is_verified")
     cur_job_role = serializers.CharField(source="tutor_profile.cur_job_role")
+
+    total_courses = serializers.SerializerMethodField()
+    total_students = serializers.SerializerMethodField()
+    total_reviews = serializers.SerializerMethodField()
 
     # Related fields
     educations = serializers.SerializerMethodField()
@@ -47,8 +53,7 @@ class AdminTutorSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "tutor_id",
-            "first_name",
-            "last_name",
+            "full_name",
             "email",
             "phone",
             "is_active",
@@ -66,6 +71,9 @@ class AdminTutorSerializer(serializers.ModelSerializer):
             "cur_job_role",
             "educations",
             "work_experiences",
+            "total_courses",
+            "total_students",
+            "total_reviews"
         ]
 
     def get_educations(self, obj):
@@ -96,6 +104,18 @@ class AdminTutorSerializer(serializers.ModelSerializer):
                 for exp in work_experiences
             ]
         return []
+    
+    def get_total_courses(self,obj):
+        """ Get the total number of courses by the tutor """
+        return obj.tutor_profile.instructed_courses.count()
+    
+    def get_total_students(self, obj):
+        """Get total students under this tutor"""
+        return Purchase.objects.filter(course__tutor=obj.tutor_profile).values("user").distinct().count()
+    
+    def get_total_reviews(self, obj):
+        """ Get the total number of reviews received by the tutor """
+        return obj.tutor_profile.reviews.count()
 
 class AdminStudentSerializer(serializers.ModelSerializer):
 

@@ -7,8 +7,8 @@ const axiosInstance = axios.create({
   
 });
 
-//Function to refresh Acees Token
-const refreshAcessToken = async() =>{
+//Function to refresh Access Token
+const refreshAccessToken = async() =>{
   try {
     const refreshToken = localStorage.getItem("refresh_token")
     if(!refreshToken){
@@ -71,7 +71,7 @@ axiosInstance.interceptors.response.use(
       if(!originalRequest._retry){
         originalRequest._retry = true;
 
-        const newAccessToken = await refreshAcessToken();
+        const newAccessToken = await refreshAccessToken();
         if(newAccessToken){
           originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
           return axiosInstance(originalRequest);

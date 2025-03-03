@@ -50,6 +50,9 @@ class CourseViewSet(ModelViewSet):
 
         tutor_id = self.request.query_params.get('tutor_id')
         status = self.request.query_params.get('status')
+        category_id = self.request.query_params.get('category_id')
+        limit = self.request.query_params.get('limit')
+
         print(status)
         if tutor_id:
             queryset = queryset.filter(tutor=tutor_id)
@@ -59,6 +62,17 @@ class CourseViewSet(ModelViewSet):
             queryset = queryset.filter(status=status, is_active=True)
             if not queryset.exists():
                 raise NotFound({"detail: No courses found with this status"})
+            
+        if category_id:
+            queryset = queryset.filter(category=category_id)
+
+        if limit:
+            try:
+                limit = int(limit)
+                queryset = queryset[:limit]
+            except ValueError:
+                pass  # Ignore invalid limit values
+
         if self.request.user.is_authenticated:
             print("inside request.user in course view set")
             queryset = queryset.exclude(id__in=Purchase.objects.filter(user=self.request.user).values('course'))
@@ -341,8 +355,8 @@ class CommentViewSet(ModelViewSet):
     def get_queryset(self):
         course_id = self.request.query_params.get("course")
         if course_id:
-            return Comment.objects.filter(course=course_id, parent__isnull=True)
-        return Comment.objects.none()
+            return Comment.objects.filter(course=course_id, parent=None)
+        return Comment.objects.all()
     
     def destroy(self, request, *args, **kwargs):
         """Allows only person who commented to delete their comment"""

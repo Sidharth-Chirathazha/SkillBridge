@@ -26,17 +26,21 @@ export const fetchAdmin = async()=>{
 }
 
 //Fetch Admin Tutors
-export const fetchAdminTutors = async(page=1, pageSize=10, id=null)=>{
+export const fetchAdminTutors = async(page=1, pageSize=10, id=null, activeStatus=null, verifiedStatus=null)=>{
     let endpoint = id ? `/admin/tutors/${id}/` : `/admin/tutors/`;
     if (!id) {
         const params = new URLSearchParams();
         if (page) params.append("page", page);
         if (pageSize) params.append("page_size", pageSize);
+        if(activeStatus !== null) params.append("active_status", activeStatus);
+        if(verifiedStatus !== null) params.append("verified_status", verifiedStatus);
         endpoint += `?${params.toString()}`;
     }
+
+    const config = id? {requiresAuth: true} : {}
     const response = await axiosInstance.get(
         endpoint, 
-        {requiresAuth: true}
+        config
     );
     return response.data
 }

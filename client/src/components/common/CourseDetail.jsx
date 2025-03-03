@@ -14,6 +14,9 @@ const CourseDetail = ({ course, variant = 'student', onAction }) => {
 
   const [isTradeModalOpen, setIsTradeModalOpen] = useState(false);
 
+  // console.log("Course data in course detail:", course);
+  
+
   const StatusBadge = ({ status }) => (
     <span className={`px-3 py-1 rounded-full text-sm ${
       status === 'Approved' 
@@ -218,7 +221,7 @@ const CourseDetail = ({ course, variant = 'student', onAction }) => {
                           <Video size={16} />
                           Video
                         </a>
-                        <a href={module.tasks} 
+                        <a href={`${module.tasks}?response-content-disposition=attachment`} 
                           className="flex items-center gap-2 text-primary-600 hover:text-primary-700">
                           <FileText size={16} />
                           Tasks

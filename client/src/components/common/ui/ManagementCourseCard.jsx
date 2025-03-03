@@ -93,7 +93,7 @@ const ManagementCourseCard = ({
                 <Edit size={18} className="mr-2" />
                 <span>Edit</span>
               </button>
-              <ConfirmDialog
+              {/* <ConfirmDialog
                     trigger={(open) =>(
                       <button
                         onClick={open}
@@ -110,7 +110,7 @@ const ManagementCourseCard = ({
                     destructive
                     onConfirm={()=> onDelete(course.id)}
                     variant='user' 
-              />
+              /> */}
             </>
           ) : (
             <button

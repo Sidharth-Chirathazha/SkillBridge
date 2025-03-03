@@ -50,12 +50,14 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PARSER_CLASSES': [
         'rest_framework.parsers.JSONParser',
+        'rest_framework.parsers.MultiPartParser', 
+        'rest_framework.parsers.FormParser',
     ],
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),  # Customize as needed
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),    # Customize as needed
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),  
+    'REFRESH_TOKEN_LIFETIME': timedelta(minutes=300),  
     'ROTATE_REFRESH_TOKENS': False,                # Optional: Set True to use rotating refresh tokens
     'BLACKLIST_AFTER_ROTATION': True,              # Required for blacklist functionality
     'ALGORITHM': 'HS256',                          # Default: Modify if needed
@@ -73,12 +75,14 @@ AUTHENTICATION_BACKENDS = [
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'channels',
     'users',
     'tutor',
     'student',
@@ -86,6 +90,8 @@ INSTALLED_APPS = [
     'sbAdmin',
     'courses',
     'wallet',
+    'cloudinary',
+    'community',
     'rest_framework',
     'corsheaders',
     'rest_framework_simplejwt',
@@ -132,6 +138,19 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'skillbridge.wsgi.application'
+ASGI_APPLICATION = 'skillbridge.asgi.application'
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}
+
+CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
+
 
 
 # Database
@@ -238,5 +257,17 @@ cloudinary.config(
     api_key=os.getenv('CLOUDINARY_API_KEY'),       # Replace with your Cloudinary API key
     api_secret=os.getenv('CLOUDINARY_API_SECRET')  # Replace with your Cloudinary API secret
 )
+
+# CLOUDINARY_STORAGE = {
+#     'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),    # Replace with your Cloudinary cloud name
+#     'API_KEY': os.getenv('CLOUDINARY_API_KEY'),       # Replace with your Cloudinary API key
+#     'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),   # Replace with your Cloudinary API secret
+#     'UPLOAD_OPTIONS': {
+#         'resource_type': 'raw',
+#         'use_filename': True,          # Preserve original filename
+#         'unique_filename': False,       # Avoid unique hashes
+#         'use_original_extension': True  # Keep file extensions
+#     }
+# }
 
  

@@ -25,7 +25,6 @@ class TutorProfileSerializer(serializers.ModelSerializer):
     resume_url = serializers.FileField()
     educations = TutorEducationSerializer(many=True, required=False)
     work_experiences = TutorWorkExperienceSerializer(many=True, required=False)
-    # social_media_profiles = SocialMediaPlatformSerializer(many=True, required=False)
 
     class Meta:
         model = TutorProfile

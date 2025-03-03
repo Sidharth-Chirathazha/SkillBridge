@@ -2,8 +2,9 @@ import { configureStore } from "@reduxjs/toolkit";
 import authReducer from '../redux/slices/authSlice';
 import adminReducer from '../redux/slices/adminSlice';
 import courseReducer from '../redux/slices/courseSlice';
+import communityReducer from '../redux/slices/communitySlice';
 import storage from "redux-persist/lib/storage"; // Uses localStorage by default
-import { persistReducer, persistStore } from "redux-persist";
+import { persistReducer, persistStore, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
 
 
 
@@ -66,10 +67,13 @@ const store = configureStore({
         auth: persistedAuthReducer,
         admin: adminReducer,
         course: persistedCourseReducer,
+        community: communityReducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({
-          serializableCheck: false, // ✅ Ignore non-serializable values in actions
+            serializableCheck: {
+                ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+              },
     }),
 });
 

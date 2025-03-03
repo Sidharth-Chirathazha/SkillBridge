@@ -15,7 +15,7 @@ const StudentTutors = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
-  const pageSize = 5;
+  const pageSize = 8;
   const {adminTutorsData, currentPage, totalPages} = useSelector((state)=>state.admin);
   
   useEffect(() => {
@@ -23,7 +23,7 @@ const StudentTutors = () => {
     const fetchData = async () => {
         try {
         setLoading(true);
-        await dispatch(fetchAdminTutors({page, pageSize})).unwrap();
+        await dispatch(fetchAdminTutors({page, pageSize, activeStatus:true, verifiedStatus:true})).unwrap();
         } catch (error) {
         
         toast.error("Failed to fetch Tutor")

@@ -7,6 +7,8 @@ import { fetchUser, logoutUser } from '../../redux/slices/authSlice';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@mui/material";
 import { Outlet } from 'react-router-dom';
+import { persistor } from '../../redux/store';
+import axiosInstance from '../../api/axios.Config';
 
 const UserLayout = () => {
   const [activePage, setActivePage] = useState('Dashboard');
@@ -25,7 +27,7 @@ const UserLayout = () => {
     { name: 'Teaching', icon: BookCopy, path: '/tutor/teaching/' },
     { name: 'Courses', icon: GraduationCap, path: '/tutor/courses/' },
     { name: 'Learning', icon: Library, path: '/tutor/learning/' },
-    { name: 'Community', icon: Users, path: '/tutor/dashboard/' },
+    { name: 'Community', icon: Users, path: '/tutor/communities/' },
     { name: 'Messages', icon: MessageSquare, path: '/tutor/dashboard/' },
     { name: 'Reviews', icon: Star, path: '/tutor/dashboard/' },
     { name: 'Account', icon: UserRoundPen, path: '/tutor/profile/' },
@@ -35,8 +37,8 @@ const UserLayout = () => {
     { name: 'Dashboard', icon: HomeIcon, path: '/student/dashboard/' },
     { name: 'Courses', icon: GraduationCap, path: '/student/courses/' },
     { name: 'My Learning', icon: Book, path: '/student/learning/' },
-    { name: 'Tutors', icon: Users, path: '/student/tutors/' },
-    { name: 'Messages', icon: MessageSquare, path: '/student/dashboard/' },
+    { name: 'Tutors', icon: BookCopy, path: '/student/tutors/' },
+    { name: 'Community', icon: Users, path: '/student/communities/' },
     { name: 'Account', icon: UserRoundPen, path: '/student/profile/' },
   ];
 
@@ -45,21 +47,26 @@ const UserLayout = () => {
 
   const handleLogout = async () => {
     const refresh_token = localStorage.getItem("refresh_token");
-    const access_token = localStorage.getItem("access_token");
-
-    if (!refresh_token || !access_token) {
-      console.log("Refresh token is missing");
+   
+    if (!refresh_token ) {
+      console.error("Refresh token is missing");
       return;
     }
 
     try {
-      await dispatch(logoutUser({ refresh: refresh_token })).unwrap();
-      localStorage.removeItem("access_token");
+      await axiosInstance.post("/logout/", { refresh: refresh_token },{ requiresAuth:true } );
+
+      await dispatch(logoutUser()).unwrap();
+
       localStorage.removeItem("refresh_token");
+      localStorage.removeItem("access_token");
+
+      setTimeout(() => persistor.purge(), 500);
+
       toast.success("Logged out successfully.");
       navigate("/login");
     } catch (error) {
-      console.log("Logout failed:", error);
+      console.error("Logout failed:", error);
       toast.error("Failed to logout.");
     }
   };
@@ -276,7 +283,7 @@ const UserLayout = () => {
             )}
 
             {/* Profile Dropdown */}
-            <div className="relative" ref={dropdownRef}>
+            <div className="relative z-50" ref={dropdownRef}>
             <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
                 className="flex items-center space-x-2 focus:outline-none"

@@ -90,7 +90,7 @@ class Module(BaseModel):
     description = models.TextField(null=True, blank=True)
     video = cloudinary.models.CloudinaryField(resource_type='video', null=True, blank=True)
     duration = models.IntegerField(null=True, blank=True, default=0)
-    tasks = cloudinary.models.CloudinaryField(resource_type='raw', blank=True, null=True)
+    tasks = cloudinary.models.CloudinaryField(resource_type="raw", blank=True, null=True)
     is_liked = models.BooleanField(default=False)
     likes_count = models.PositiveBigIntegerField(default=0)
     views_count = models.PositiveIntegerField(default=0)

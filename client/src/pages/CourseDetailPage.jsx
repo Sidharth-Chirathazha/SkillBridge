@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import UserLayout from '../components/common/UserLayout'
 import CourseDetail from '../components/common/CourseDetail'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -21,7 +20,7 @@ const CourseDetailPage = () => {
     const fetchData = async () => {
         try {
         setLoading(true);
-        await dispatch(fetchSingleCourse(id)).unwrap();
+        await dispatch(fetchSingleCourse({id,user:true})).unwrap();
         } catch (error) {
         console.error('Failed to fetch Course:', error);
         } finally {
@@ -30,6 +29,9 @@ const CourseDetailPage = () => {
     };
     fetchData();
     }, [dispatch, id]);
+
+    console.log("Course detail in course detial page:", singleCourse);
+    
 
     useEffect(() => {
         // Cleanup on unmount

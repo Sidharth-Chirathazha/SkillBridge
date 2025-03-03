@@ -22,23 +22,36 @@ const LoginPage = () => {
     dispatch(googleLogin({ token, role: userType }));
   };
 
-  useEffect(() => {
+  // useEffect(() => {
+  //   if (isError) {
+  //     toast.error(message);
+  //     dispatch(resetState());
+  //   }
+  // }, [isError, message, dispatch]);
+
+  // useEffect(() => {
+  //   dispatch(resetState());
+  //   if (role === 'student') {
+  //     navigate('/student/dashboard');
+  //     toast.success("Logged in successfully");
+  //   } else if (role === 'tutor') {
+  //     navigate('/tutor/dashboard');
+  //     toast.success("Logged in successfully");
+  //   }
+  // }, [isSuccess, role, navigate, dispatch]);
+
+  useEffect(()=>{
+    dispatch(resetState());
+    if (isSuccess && role) {
+      const path = role === 'student' ? '/student/dashboard' : '/tutor/dashboard';
+      navigate(path);
+      toast.success("Logged in successfully");
+    }
     if (isError) {
       toast.error(message);
       dispatch(resetState());
     }
-  }, [isError, message, dispatch]);
-
-  useEffect(() => {
-    dispatch(resetState());
-    if (role === 'student') {
-      navigate('/student/dashboard');
-      toast.success("Logged in successfully");
-    } else if (role === 'tutor') {
-      navigate('/tutor/dashboard');
-      toast.success("Logged in successfully");
-    }
-  }, [isSuccess, role, navigate, dispatch]);
+  }, [isSuccess, isError, role, message, navigate, dispatch])
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
