@@ -4,7 +4,6 @@ import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import Joi from 'joi';
 import { joiResolver } from '@hookform/resolvers/joi';
 import { Upload, PlusCircle, Trash2, FileText, Edit, ChevronLeft, ChevronRight, Loader2} from 'lucide-react';
-import UserLayout from '../../components/common/UserLayout';
 import { fetchSkills, fetchUser, updateUser } from '../../redux/slices/authSlice';
 import toast from 'react-hot-toast';
 import FormInput from '../../components/common/ui/FormInput';
@@ -114,7 +113,7 @@ const TutorProfile = () => {
   
     useEffect(() => {
       dispatch(fetchUser());
-      dispatch(fetchSkills());
+      dispatch(fetchSkills({ skillPage: 1, pageSize: 100 }));
     }, [dispatch]);
   
     useEffect(() => {

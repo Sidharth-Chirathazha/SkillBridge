@@ -78,9 +78,9 @@ export const fetchAdmin = createAsyncThunk(
 //Thunk for Fetching tutots from admin
 export const fetchAdminTutors = createAsyncThunk(
   "/fetchAdminTutors",
-  async({page, pageSize, id, activeStatus, verifiedStatus},thunkAPI)=>{
+  async({page, pageSize, id, activeStatus, verifiedStatus, search},thunkAPI)=>{
       try{
-          return await adminService.fetchAdminTutors(page, pageSize, id, activeStatus, verifiedStatus);
+          return await adminService.fetchAdminTutors(page, pageSize, id, activeStatus, verifiedStatus, search);
         
       }catch(error){
         const message = 
@@ -99,9 +99,9 @@ export const fetchAdminTutors = createAsyncThunk(
 //Thunk for Fetching students from admin
 export const fetchAdminStudents = createAsyncThunk(
   "/fetchAdminStudents",
-  async({page=null, pageSize=null, id=null},thunkAPI)=>{
+  async({page, pageSize, id, activeStatus, search},thunkAPI)=>{
       try{
-          return await adminService.fetchAdminStudents(page, pageSize, id);
+          return await adminService.fetchAdminStudents(page, pageSize, id, activeStatus, search);
         
       }catch(error){
         const message = 

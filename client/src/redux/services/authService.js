@@ -76,9 +76,12 @@ export const googleLogin = async(token, role)=>{
 }
 
 //Fetch Skills
-export const fetchSkills = async()=>{
+export const fetchSkills = async(skillPage = 1, pageSize = 100)=>{
+    
+    let url = `/skills/?page=${skillPage}&page_size=${pageSize}`;
+
     const response = await axiosInstance.get(
-        "/skills/", 
+        url, 
         {requiresAuth: true}
     );
     return response.data

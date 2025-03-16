@@ -4,7 +4,6 @@ import { useForm, Controller } from 'react-hook-form';
 import Joi from 'joi';
 import { joiResolver } from '@hookform/resolvers/joi';
 import { Upload, PlusCircle, Linkedin } from 'lucide-react';
-import UserLayout from '../../components/common/UserLayout';
 import { fetchUser, updateUser, fetchSkills } from '../../redux/slices/authSlice';
 import toast from 'react-hot-toast';
 import FormInput from '../../components/common/ui/FormInput';
@@ -80,8 +79,11 @@ const StudentProfile = () => {
 
   useEffect(() => {
     dispatch(fetchUser());
-    dispatch(fetchSkills());
+    dispatch(fetchSkills({ skillPage: 1, pageSize: 100 }));
   }, [dispatch]);
+
+  console.log("User profile skills:", skillsData);
+  
 
   useEffect(() => {
     if (userData) {

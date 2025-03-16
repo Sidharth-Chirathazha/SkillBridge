@@ -14,6 +14,7 @@ User = get_user_model()
 redis_client =  redis.StrictRedis(host="127.0.0.1", port=6379, db=0, decode_responses=True)
 
 class CommunityChatConsumer(AsyncWebsocketConsumer):
+
     async def connect(self):
 
         query_string = self.scope["query_string"].decode()

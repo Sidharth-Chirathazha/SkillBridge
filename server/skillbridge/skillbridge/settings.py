@@ -83,6 +83,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'channels',
+    'django_celery_beat',
     'users',
     'tutor',
     'student',
@@ -108,13 +109,13 @@ AUTH_USER_MODEL = 'users.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
 
 ]
@@ -218,10 +219,6 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173',  # Frontend URL
-]
-
 SITE_ID = 1
 
 SOCIALACCOUNT_PROVIDERS = {
@@ -258,6 +255,10 @@ cloudinary.config(
     api_secret=os.getenv('CLOUDINARY_API_SECRET')  # Replace with your Cloudinary API secret
 )
 
+
+ZEGO_APP_ID =  os.getenv('ZEGO_APP_ID')
+ZEGO_SERVER_SECRET =  os.getenv('ZEGO_SERVER_SECRET')
+
 # CLOUDINARY_STORAGE = {
 #     'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),    # Replace with your Cloudinary cloud name
 #     'API_KEY': os.getenv('CLOUDINARY_API_KEY'),       # Replace with your Cloudinary API key
@@ -270,4 +271,26 @@ cloudinary.config(
 #     }
 # }
 
- 
+
+CORS_ALLOWED_ORIGINS = [  
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174", 
+]
+
+
+CORS_ALLOW_METHODS = ["GET", "POST", "OPTIONS", "DELETE", "PUT", "PATCH"]
+
+CORS_ALLOW_HEADERS = [
+    "authorization",
+    "content-type",
+    "x-csrftoken",
+    "x-requested-with",
+]
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^http://localhost:\d+$",
+    r"^http://127.0.0.1:\d+$",
+]
+

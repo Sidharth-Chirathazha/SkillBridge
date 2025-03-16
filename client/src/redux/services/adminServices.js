@@ -26,7 +26,7 @@ export const fetchAdmin = async()=>{
 }
 
 //Fetch Admin Tutors
-export const fetchAdminTutors = async(page=1, pageSize=10, id=null, activeStatus=null, verifiedStatus=null)=>{
+export const fetchAdminTutors = async(page=1, pageSize=10, id=null, activeStatus=null, verifiedStatus=null, search=null)=>{
     let endpoint = id ? `/admin/tutors/${id}/` : `/admin/tutors/`;
     if (!id) {
         const params = new URLSearchParams();
@@ -34,6 +34,7 @@ export const fetchAdminTutors = async(page=1, pageSize=10, id=null, activeStatus
         if (pageSize) params.append("page_size", pageSize);
         if(activeStatus !== null) params.append("active_status", activeStatus);
         if(verifiedStatus !== null) params.append("verified_status", verifiedStatus);
+        if(search !== null) params.append("search", search);
         endpoint += `?${params.toString()}`;
     }
 
@@ -55,12 +56,14 @@ export const updateTutorAuthorization = async (id, is_verified)=>{
 }
 
 //Fetch Admin Students
-export const fetchAdminStudents = async(page=1, pageSize=10, id=null)=>{
+export const fetchAdminStudents = async(page=1, pageSize=10, id=null, activeStatus=null, search=null)=>{
     let endpoint = id ? `/admin/students/${id}/` : "/admin/students/";
     if (!id) {
         const params = new URLSearchParams();
         if (page) params.append("page", page);
         if (pageSize) params.append("page_size", pageSize);
+        if (activeStatus) params.append("active_status", activeStatus)
+        if(search) params.append("search", search)
         endpoint += `?${params.toString()}`;
     }
     const response = await axiosInstance.get(

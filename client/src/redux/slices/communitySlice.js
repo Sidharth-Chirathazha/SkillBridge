@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, current } from "@reduxjs/toolkit";
 import * as communityService from "../services/communityService"
 import toast from "react-hot-toast";
 
@@ -11,9 +11,9 @@ const handleApiError = (error, thunkAPI)=>{
 
   export const fetchCommunities = createAsyncThunk(
     'community/fetchCommunities',
-    async (_, thunkAPI) => {
+    async ({page,pageSize,search}, thunkAPI) => {
       try {
-        return await communityService.fetchCommunities();
+        return await communityService.fetchCommunities(page,pageSize,search);
       } catch (error) {
         return handleApiError(error, thunkAPI);
       }
@@ -63,6 +63,8 @@ const handleApiError = (error, thunkAPI)=>{
         isCommunityError : false,
         isCommunitySuccess: false,
         communityError: null,
+        currentPage: 1,
+        totalPages: 1
        
       },
       reducers: {
@@ -82,7 +84,9 @@ const handleApiError = (error, thunkAPI)=>{
         .addCase(fetchCommunities.fulfilled,(state,action)=>{
           state.isCommunityLoading = false;
           state.isCommunitySuccess = true;
-          state.communities = action.payload;
+          state.communities = action.payload.results;
+          state.currentPage = action.payload.current_page || 1;
+          state.totalPages = action.payload.total_pages
         })
         .addCase(fetchCommunities.rejected,(state)=>{
           state.isCommunityError = true;

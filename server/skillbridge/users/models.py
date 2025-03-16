@@ -57,6 +57,7 @@ class User(AbstractBaseUser):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     password = models.CharField(max_length=128)
+    total_time_spent = models.PositiveIntegerField(default=0)
 
 
     objects = UserManager()
@@ -80,9 +81,17 @@ class User(AbstractBaseUser):
         """Does the user have permissions to view the app 'app_label'?"""
         return self.is_superuser
     
+class UserActivity(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="activities")
+    date = models.DateField(auto_now_add=True)  # Stores when the activity happened
+    time_spent = models.IntegerField(default=0)  # Time spent in seconds
+
+    class Meta:
+        unique_together = ("user", "date")  # Ensures one entry per user per day
+    
 class Notification(models.Model):
     NOTIFICATION_TYPES = [
-        ("message", "Community Message"),
+        ("message", "Message"),
         ("trade_request", "Trade Request"),
     ]
 

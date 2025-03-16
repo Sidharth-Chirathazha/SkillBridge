@@ -14,13 +14,27 @@ import { fetchAdminTutors } from '../../redux/slices/adminSlice';
 import { useNavigate } from 'react-router-dom';
 import StatusCell from '../../components/common/ui/StatusCell';
 import Pagination from '../../components/common/ui/Pagination';
+import SearchBar from '../../components/common/ui/SearchBar';
+import DropdownMenu from '../../components/common/ui/DropdownMenu';
 
 const AdminTutorsManagement = () => {
 
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
+  const [selectedActiveStatus, setSelectedActiveStatus] = useState(null);
+  const [selectedVerifiedStatus, setSelectedVerifiedStatus] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const pageSize = 5;
+
+  const activeStatusOptions = [
+    { value: true, label: "Active" },
+    { value: false, label: "Blocked" },
+  ];
+
+  const verifiedStatusOptions = [
+    { value: true, label: "Verified" },
+    { value: false, label: "Unverified" },
+  ];
   
   const navigate = useNavigate();
   const {adminTutorsData, currentPage, totalPages } = useSelector((state)=>state.admin);
@@ -30,7 +44,8 @@ const AdminTutorsManagement = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        await dispatch(fetchAdminTutors({page, pageSize})).unwrap();
+        await dispatch(fetchAdminTutors({page, pageSize, activeStatus:selectedActiveStatus === "" ? null : selectedActiveStatus, 
+          verifiedStatus:selectedVerifiedStatus === ""? null : selectedVerifiedStatus, search:searchQuery})).unwrap();
       } catch (error) {
         console.error('Failed to fetch user:', error);
       } finally {
@@ -39,7 +54,31 @@ const AdminTutorsManagement = () => {
     };
     
     fetchData();
-  }, [dispatch, page]);
+  }, [dispatch, page, selectedActiveStatus, selectedVerifiedStatus, searchQuery]);
+
+  const handleActiveStatusChange = (status) => {
+    setPage(1);
+    setSelectedActiveStatus(status);
+  };
+
+  const handleVerifiedStatusChange = (status) => {
+    setPage(1);
+    setSelectedVerifiedStatus(status);
+  };
+
+
+  const handleSearch = (query) => {
+    // setPage(1);
+    setSearchQuery(query);
+  };
+
+  const handlePageChange = (newPage) => {
+    setPage((prevPage) => (prevPage !== newPage ? newPage : prevPage));
+  };
+  
+
+  console.log("Active status:", selectedActiveStatus);
+  
 
 
   if (loading || !adminTutorsData) {
@@ -53,29 +92,26 @@ const AdminTutorsManagement = () => {
   return (
     <>
       <div className="bg-background-50 p-4 md:p-6 rounded-lg shadow-lg">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div className="flex flex-col mb-6 gap-4">
           <h1 className="text-xl md:text-2xl font-semibold text-text-500 transition-colors duration-300">Tutors Management</h1>
           
-          <div className="flex items-center space-x-4 w-full md:w-auto sticky top-0 z-20 bg-background-50 py-2">
-            <div className="relative w-full md:w-auto">
-              <button 
-                onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className="flex items-center px-4 py-2 bg-background-100 text-text-400 rounded-lg border border-background-200 hover:bg-background-200 transition-all duration-300 w-full md:w-auto justify-between md:justify-start shadow-sm hover:shadow-md"
-              >
-                <div className="flex items-center">
-                  <Filter className="h-5 w-5 mr-2" />
-                  Filter
-                </div>
-                <ChevronDown className={`h-4 w-4 ml-2 transform transition-transform duration-300 ${isFilterOpen ? 'rotate-180' : ''}`} />
-              </button>
-              
-              {isFilterOpen && (
-                <div className="absolute right-0 mt-2 w-full md:w-64 bg-background-50 border border-background-200 rounded-lg shadow-xl p-4 z-10 transform transition-all duration-300 origin-top">
-                  <p className="text-text-400 text-sm">Filter options coming soon...</p>
-                </div>
-              )}
+            {/* Add Filters Section Here */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  <SearchBar value={searchQuery} onChange={handleSearch} placeholder='Search tutors...'/>
+                  <DropdownMenu
+                    dropDownItems={activeStatusOptions} 
+                    value={selectedActiveStatus} 
+                    onChange={handleActiveStatusChange}
+                    defaultLabel={"All"} 
+                  />
+                  <DropdownMenu
+                    dropDownItems={verifiedStatusOptions} 
+                    value={selectedVerifiedStatus} 
+                    onChange={handleVerifiedStatusChange}
+                    defaultLabel={"All"} 
+                  />
+                  
             </div>
-          </div>
         </div>
 
         {/* Desktop Table View */}
@@ -85,8 +121,8 @@ const AdminTutorsManagement = () => {
               <tr className="bg-background-100 border-b border-background-200">
                 <th className="p-4 text-left text-text-400 text-sm font-medium">Profile</th>
                 <th className="p-4 text-left text-text-400 text-sm font-medium">Name</th>
-                <th className="p-4 text-left text-text-400 text-sm font-medium">Email</th>
                 <th className="p-4 text-left text-text-400 text-sm font-medium">Job Role</th>
+                <th className="p-4 text-left text-text-400 text-sm font-medium">Active Status</th>
                 <th className="p-4 text-left text-text-400 text-sm font-medium">Verification</th>
                 <th className="p-4 text-left text-text-400 text-sm font-medium">Actions</th>
               </tr>
@@ -101,14 +137,14 @@ const AdminTutorsManagement = () => {
                     <div className="h-10 w-10 rounded-full overflow-hidden shadow-md transition-transform duration-300 hover:scale-110">
                       <img 
                         src={tutor.profile_pic_url} 
-                        alt={tutor.first_name} 
+                        alt={tutor.full_name} 
                         className="h-full w-full object-cover"
                       />
                     </div>
                   </td>
-                  <td className="p-4 text-text-500 font-medium">{tutor.first_name} {tutor.last_name}</td>
-                  <td className="p-4 text-text-400">{tutor.email}</td>
+                  <td className="p-4 text-text-500 font-medium">{tutor.full_name}</td>
                   <td className="p-4 text-text-400">{tutor.cur_job_role}</td>
+                  <StatusCell type="active" status={tutor.is_active} />
                   <StatusCell type="verification" status={tutor.is_verified} />
                   <td className="p-4">
                     <div className="flex items-center space-x-2">
@@ -119,12 +155,12 @@ const AdminTutorsManagement = () => {
                       >
                         <Eye className="h-5 w-5" />
                       </button>
-                      <button 
+                      {/* <button 
                         className="text-text-400 hover:bg-background-200 p-2 rounded-full transition-all duration-300 hover:shadow-md"
                         title="More Options"
                       >
                         <MoreVertical className="h-5 w-5" />
-                      </button>
+                      </button> */}
                     </div>
                   </td>
                 </tr>
@@ -172,9 +208,11 @@ const AdminTutorsManagement = () => {
                     />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-medium text-text-500">{tutor.first_name} {tutor.last_name}</h3>
-                    <p className="text-sm text-text-400 mt-1">{tutor.email}</p>
+                    <h3 className="font-medium text-text-500">{tutor.full_name}</h3>
                     <p className="text-sm text-text-400 mt-1">{tutor.cur_job_role}</p>
+                    <div className="mt-1">
+                      <StatusCell type="active" status={tutor.is_active} />
+                    </div>
                     <div className="mt-1">
                       <StatusCell type="verification" status={tutor.is_verified} />
                     </div>
@@ -191,7 +229,7 @@ const AdminTutorsManagement = () => {
           <Pagination 
             currentPage={currentPage}
             totalPages={totalPages}
-            onPageChange={setPage}
+            onPageChange={handlePageChange}
             className="mt-4 md:mt-0"
           />
           

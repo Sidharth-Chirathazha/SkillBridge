@@ -102,9 +102,10 @@ class TutorProfileSerializer(serializers.ModelSerializer):
     
 class TutorReviewUserSerializer(serializers.ModelSerializer):
     profile_pic_url = serializers.ImageField(read_only=True)
+    full_name = serializers.CharField(source="get_full_name", read_only=True)
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'profile_pic_url']
+        fields = ['id', 'first_name', 'last_name', 'profile_pic_url', 'full_name']
 
 class TutorReviewSerializer(serializers.ModelSerializer):
     user = TutorReviewUserSerializer(read_only=True)

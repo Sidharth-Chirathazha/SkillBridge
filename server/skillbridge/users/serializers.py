@@ -4,7 +4,7 @@ from student.models import StudentProfile
 from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from .models import Skill,Notification
+from .models import Skill,Notification,UserActivity
 from .utils import generate_email_otp
 from cloudinary.utils import cloudinary_url
 from cloudinary.uploader import upload as cloudinary_upload
@@ -181,4 +181,8 @@ class NotificationSerializer(serializers.ModelSerializer):
         model = Notification
         fields = ['id', 'user', "notification_type", "message", "is_read", "created_at"]
 
-    
+
+class UserActivitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserActivity
+        fields = ["date", "time_spent"]

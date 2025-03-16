@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { Star, FileText, ThumbsUp, MessageSquare,ChevronUp, ChevronDown, Trash2, Clock } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Star, FileText, ThumbsUp, MessageSquare,ChevronUp, ChevronDown, Trash2, Clock, CheckCircle, Circle, Check, MessageCircle } from 'lucide-react';
 import { Dialog } from '@headlessui/react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { deleteComment, fetchComments, fetchReviews, fetchSingleCourse, postComment, postReview } from '../redux/slices/courseSlice';
+import { deleteComment, fetchComments, fetchPurchasedCourses, fetchReviews,  markModuleCompleted, postComment, postReview } from '../redux/slices/courseSlice';
 import TutorVerificationMessage from '../components/tutor/TutorVerificationMessage';
 import { ConfirmDialog } from '../components/common/ui/ConfirmDialog';
-
+import axiosInstance from '../api/axios.Config';
+import toast from 'react-hot-toast';
 
 // const fetchComments = (courseSlug) => async () => []; // Replace with actual API call
 // const postComment = (commentData) => async () => {};  // Replace with actual API call
@@ -22,17 +23,24 @@ const CoursePlayer = () => {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [replyingTo, setReplyingTo] = useState(null);
+  const [chatRoomId, setChatRoomId] = useState(null);
+  const [startTime, setStartTime] = useState(0);
+  const [totalPlayTime, setTotalPlayTime] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef(null);
   const { id } = useParams();
 
-  const { singleCourse, isCourseLoading, reviewsData, commentsData } = useSelector((state) => state.course);
+  const { singlePurchasedCourse, isCourseLoading, reviewsData, commentsData } = useSelector((state) => state.course);
 
   const {role, userData} = useSelector((state)=>state.auth);
+
+  const navigate = useNavigate();
 
   // Fetch course data
   useEffect(() => {
     const fetchCourse = async () => {
       try {
-        await dispatch(fetchSingleCourse({id,user:true})).unwrap();
+        await dispatch(fetchPurchasedCourses({courseId:id})).unwrap();
       } catch (error) {
         console.error('Failed to fetch course:', error);
       }
@@ -40,45 +48,100 @@ const CoursePlayer = () => {
     fetchCourse();
   }, [dispatch, id]);
 
+
+  useEffect(() => {
+    const sendTimeToBackend = () => {
+        if (totalPlayTime > 0) {
+            axiosInstance.post("/update-learning-time/", { time_spent: totalPlayTime }, { requiresAuth: true })
+                .then(() => setTotalPlayTime(0))  // Reset after sending
+                .catch(err => console.error("Time update failed", err));
+        }
+    };
+
+    const interval = setInterval(sendTimeToBackend, 20000); // Send every 60 seconds
+
+    return () => {
+        clearInterval(interval);
+        sendTimeToBackend(); // Send final time when leaving page
+    };
+  }, [totalPlayTime]);
+
+
+  // Track when video starts playing
+  const handlePlay = () => {
+    setStartTime(Date.now());
+    setIsPlaying(true);
+  };
+
+  // Track when video pauses/stops
+  const handlePause = () => {
+      if (isPlaying) {
+          const elapsed = Math.floor((Date.now() - startTime) / 1000);
+          setTotalPlayTime(prevTime => prevTime + elapsed);
+          setIsPlaying(false);
+      }
+  };
+
   // Set initial module
   useEffect(() => {
-    if (singleCourse?.modules?.length > 0) {
-      setCurrentModule(singleCourse.modules[0]);
+    if (singlePurchasedCourse?.modules?.length > 0) {
+      setCurrentModule(singlePurchasedCourse.modules[0]);
     }
-  }, [singleCourse?.modules]);
+  }, [singlePurchasedCourse?.modules]);
 
   console.log(currentModule?.tasks);
+
+
+  // Fetch initial data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch current chat room
+        const chatRoomResponse = await axiosInstance.get(
+          `/courses/chat-room/?student_id=${userData?.user?.id}&tutor_id=${singlePurchasedCourse?.tutor?.user_id}&course_id=${id}`,
+          { requiresAuth: true }
+        );
+        setChatRoomId(chatRoomResponse.data.id)
+        // toast.success("Connected to chat room");
+        console.log('Connected to chat room');
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+  }, [id]);
   
 
   // Fetch reviews when slug is available
   useEffect(() => {
     const fetchCourseReviews = async () => {
       try {
-        if (singleCourse?.slug) {
-          await dispatch(fetchReviews(singleCourse.slug)).unwrap();
+        if (singlePurchasedCourse?.slug) {
+          await dispatch(fetchReviews(singlePurchasedCourse.slug)).unwrap();
         }
       } catch (error) {
         console.error('Failed to fetch reviews:', error);
       }
     };
     fetchCourseReviews();
-  }, [dispatch, singleCourse?.slug]);
+  }, [dispatch, singlePurchasedCourse?.slug]);
   
 
   // Fetch comments
   useEffect(() => {
     const loadComments = async () => {
       try {
-        const response = await dispatch(fetchComments(singleCourse?.id)).unwrap();
+        const response = await dispatch(fetchComments(singlePurchasedCourse?.id)).unwrap();
         setComments(response);
       } catch (error) {
         console.error('Failed to fetch comments:', error);
       }
     };
-    if (activeTab === 'comments' && singleCourse?.id) {
+    if (activeTab === 'comments' && singlePurchasedCourse?.id) {
       loadComments();
     }
-  }, [dispatch, singleCourse?.id, activeTab]);
+  }, [dispatch, singlePurchasedCourse?.id, activeTab]);
 
 
   const toggleReplies = (commentId) => {
@@ -96,12 +159,12 @@ const CoursePlayer = () => {
   const handleSubmitComment = async (parentId = null) => {
     try {
       await dispatch(postComment({
-        courseId:singleCourse?.id, 
+        courseId:singlePurchasedCourse?.id, 
         newComment: newComment,
         parentId : parentId
         })).unwrap();
       
-      const response = await dispatch(fetchComments(singleCourse.id)).unwrap();
+      const response = await dispatch(fetchComments(singlePurchasedCourse.id)).unwrap();
       setComments(response);
       setNewComment('');
       setReplyingTo(null);
@@ -111,19 +174,19 @@ const CoursePlayer = () => {
   };
 
   const handleModuleChange = (moduleId) => {
-    const selectedModule = singleCourse.modules.find(module => module.id === moduleId);
+    const selectedModule = singlePurchasedCourse.modules.find(module => module.id === moduleId);
     setCurrentModule(selectedModule);
   };
 
   const handleSubmitReview = async () => {
     try {
       await dispatch(postReview({
-        course: singleCourse.id,
+        course: singlePurchasedCourse.id,
         review: review,
         rating: rating,
       })).unwrap();
       
-      await dispatch(fetchReviews(singleCourse.slug)).unwrap();
+      await dispatch(fetchReviews(singlePurchasedCourse.slug)).unwrap();
       setShowReviewModal(false);
       setRating(0);
       setReview('');
@@ -136,7 +199,7 @@ const CoursePlayer = () => {
     try {
       await dispatch(deleteComment(commentId)).unwrap();
 
-      const response = await dispatch(fetchComments(singleCourse.id)).unwrap();
+      const response = await dispatch(fetchComments(singlePurchasedCourse.id)).unwrap();
       setComments(response);
       setNewComment('');
       setReplyingTo(null);
@@ -146,13 +209,24 @@ const CoursePlayer = () => {
     }
   };
 
-  console.log("Comments:", commentsData);
-  console.log("User:", userData);
+  const  handleMarkAsCompleted = async (moduleId) => {
+    try{
+      await dispatch(markModuleCompleted(moduleId)).unwrap();
+      await dispatch(fetchPurchasedCourses({courseId:id})).unwrap();
+      awa
+    }catch(error){
+      console.error('Falied to mark module as completed', error);
+    }
+  }
+
+  // console.log("Comments:", commentsData);
+  // console.log("User:", userData);
+  console.log("Purchased Single Course:", singlePurchasedCourse);
   
 
 
   
-  if (isCourseLoading || !singleCourse) {
+  if (isCourseLoading || !singlePurchasedCourse) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="animate-spin h-10 w-10 text-primary" />
@@ -174,8 +248,11 @@ const CoursePlayer = () => {
                   className="w-full h-full object-cover"
                   controls
                   src={currentModule?.video}
-                  poster={singleCourse.thumbnail}
+                  poster={singlePurchasedCourse.thumbnail}
                   key={currentModule?.id}
+                  onPlay={handlePlay}
+                  onPause={handlePause}
+                  onEnded={handlePause} // Also track when video ends
                 />
               </div>
             </div>
@@ -188,27 +265,27 @@ const CoursePlayer = () => {
               <div className="md:col-span-2 space-y-6">
                 {/* Enhanced Course Header */}
                 <div className="bg-white rounded-xl p-6 shadow-md transition-all hover:shadow-lg border border-background-200">
-                  <h1 className="text-2xl md:text-3xl font-bold text-text-700 mb-3">{singleCourse.title}</h1>
+                  <h1 className="text-2xl md:text-3xl font-bold text-text-700 mb-3">{singlePurchasedCourse.title}</h1>
                   <div className="flex items-center gap-3 mb-2">
                     <img
-                      src={singleCourse.tutor.profile_pic}
-                      alt={singleCourse.tutor.first_name}
+                      src={singlePurchasedCourse.tutor.profile_pic}
+                      alt={singlePurchasedCourse.tutor.first_name}
                       className="w-12 h-12 rounded-full border-2 border-primary-100 shadow-sm"
                     />
                     <div>
                       <p className="text-lg font-medium text-text-700">
-                        {singleCourse.tutor.first_name} {singleCourse.tutor.last_name}
+                        {singlePurchasedCourse.tutor.first_name} {singlePurchasedCourse.tutor.last_name}
                       </p>
                       <div className="flex items-center gap-1">
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
                             size={16}
-                            className={i < Math.floor(singleCourse.rating) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}
+                            className={i < Math.floor(singlePurchasedCourse.rating) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}
                           />
                         ))}
                         <span className="text-sm text-text-600 ml-1">
-                          ({singleCourse.rating.toFixed(1)}) • {reviewsData?.length || 0} reviews
+                          ({singlePurchasedCourse.rating.toFixed(1)}) • {reviewsData?.length || 0} reviews
                         </span>
                       </div>
                     </div>
@@ -218,9 +295,32 @@ const CoursePlayer = () => {
                 {/* Enhanced Current Module Content */}
                 {currentModule && (
                   <div className="bg-white rounded-xl p-6 shadow-md border-l-4 border-l-primary-500 border-t border-r border-b border-background-200 transition-all hover:shadow-lg">
-                    <h2 className="text-xl md:text-2xl font-semibold text-text-700 mb-4">
-                      {currentModule.title}
-                    </h2>
+                    <div className="flex justify-between items-center mb-4">
+                      <h2 className="text-xl md:text-2xl font-semibold text-text-700 mb-4">
+                        {currentModule.title}
+                      </h2>
+                      <button
+                        onClick={() =>!currentModule.is_completed && handleMarkAsCompleted(currentModule.id)}
+                        disabled={currentModule.is_completed}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                          currentModule.is_completed
+                            ? "bg-primary-500 text-white hover:bg-primary-600"
+                            : "bg-primary-100 text-primary-700 hover:bg-primary-200"
+                        }`}
+                      >
+                        {currentModule.is_completed ? (
+                          <>
+                            <Check size={16} />
+                            Completed
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle size={16} />
+                            Mark as Completed
+                          </>
+                        )}
+                      </button>
+                    </div>
                     <p className="text-text-600 mb-6 leading-relaxed">{currentModule.description}</p>
                     <a
                       href={`${currentModule.tasks}?response-content-disposition=attachment`}
@@ -520,7 +620,7 @@ const CoursePlayer = () => {
                     </h3>
                   </div>
                   <div className="max-h-[600px] overflow-y-auto">
-                    {singleCourse.modules?.map((module, index) => (
+                    {singlePurchasedCourse.modules?.map((module, index) => (
                       <button
                         key={module.id}
                         onClick={() => handleModuleChange(module.id)}
@@ -549,12 +649,27 @@ const CoursePlayer = () => {
                               {module.duration} minutes
                             </p>
                           </div>
-                          {currentModule?.id === module.id && (
-                            <ThumbsUp size={16} className="text-primary-500 flex-shrink-0" />
-                          )}
+                          {/* Module completion status indicator */}
+                          <div className="flex-shrink-0">
+                            {module.is_completed ? (
+                              <CheckCircle size={16} className="text-primary-500" />
+                            ) : (
+                              <Circle size={16} className="text-gray-400" />
+                            )}
+                          </div>
                         </div>
                       </button>
                     ))}
+                  </div>
+                  {/* Chat Room Button - Added at the bottom of the sidebar */}
+                  <div className="p-4 border-t border-background-200">
+                    <button 
+                      onClick={() => navigate(`/${role}/chatroom/${chatRoomId}`)} 
+                      className="w-full py-3 px-4 bg-primary-500 hover:bg-primary-600 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                    >
+                      <MessageCircle size={18} />
+                      Open Chat Room
+                    </button>
                   </div>
                 </div>
               </div>

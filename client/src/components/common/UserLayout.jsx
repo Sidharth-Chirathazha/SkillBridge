@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, HomeIcon, Users, GraduationCap, Book, MessageSquare, Star, UserRoundPen, LogOut, PlusCircle, 
+import { Search, HomeIcon,Bell, Users, GraduationCap, Book, MessageSquare, Star, UserRoundPen, LogOut, PlusCircle, 
  BookCopy, ChevronDown, Loader, Menu, X, ChevronsLeft, ChevronsRight, User, Wallet,Library } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
@@ -9,6 +9,8 @@ import { Button } from "@mui/material";
 import { Outlet } from 'react-router-dom';
 import { persistor } from '../../redux/store';
 import axiosInstance from '../../api/axios.Config';
+import { useNotification } from '../../context_providers/NotificationProvider'
+import { ConfirmDialog } from './ui/ConfirmDialog';
 
 const UserLayout = () => {
   const [activePage, setActivePage] = useState('Dashboard');
@@ -17,6 +19,9 @@ const UserLayout = () => {
   const [isMobile, setIsMobile] = useState(false);
   const dropdownRef = useRef(null);
   const sidebarRef = useRef(null);
+  const {notificationCount, setNotificationCount} = useNotification();
+  const [showSidebarLogoutDialog, setShowSidebarLogoutDialog] = useState(null);
+  const ws = useRef(null);
 
   const { userData } = useSelector((state) => state.auth);
   const [loading, setLoading] = useState(true);
@@ -28,8 +33,8 @@ const UserLayout = () => {
     { name: 'Courses', icon: GraduationCap, path: '/tutor/courses/' },
     { name: 'Learning', icon: Library, path: '/tutor/learning/' },
     { name: 'Community', icon: Users, path: '/tutor/communities/' },
-    { name: 'Messages', icon: MessageSquare, path: '/tutor/dashboard/' },
-    { name: 'Reviews', icon: Star, path: '/tutor/dashboard/' },
+    { name: 'Chat Room', icon: MessageSquare, path: '/tutor/chatroom/' },
+    { name: 'Notifications', icon: Bell, path: '/tutor/notifications/' },
     { name: 'Account', icon: UserRoundPen, path: '/tutor/profile/' },
   ];
 
@@ -39,6 +44,8 @@ const UserLayout = () => {
     { name: 'My Learning', icon: Book, path: '/student/learning/' },
     { name: 'Tutors', icon: BookCopy, path: '/student/tutors/' },
     { name: 'Community', icon: Users, path: '/student/communities/' },
+    { name: 'Chat Room', icon: MessageSquare, path: '/student/chatroom/' },
+    { name: 'Notifications', icon: Bell, path: '/student/notifications/' },
     { name: 'Account', icon: UserRoundPen, path: '/student/profile/' },
   ];
 
@@ -70,6 +77,35 @@ const UserLayout = () => {
       toast.error("Failed to logout.");
     }
   };
+
+  const fetchNotifications = async() => {
+    try{
+      const response = await axiosInstance.get("/notifications/",{requiresAuth: true});
+      const unreadCount = response.data.filter(notification => !notification.is_read).length;
+      setNotificationCount(unreadCount)
+    }catch(error){
+      console.error('Error fetching notifications:', error);
+      toast.error('Error fetching notifications:', error)
+    }
+  }
+
+
+  useEffect(()=>{
+    fetchNotifications();
+  }, [])
+
+  useEffect(()=>{
+    const token  = localStorage.getItem("access_token")
+    ws.current = new WebSocket(`ws://localhost:8000/ws/notifications/?token=${token}`);
+
+    ws.current.onmessage = () => {
+      fetchNotifications();
+    };
+
+    return () =>{
+      if (ws.current) ws.current.close();
+    }
+  }, []);
 
   // Check for mobile view
   useEffect(() => {
@@ -168,70 +204,86 @@ const UserLayout = () => {
         } bg-primary text-background-50 transition-all duration-300 ease-in-out z-40
         ${!isMobile && !isSidebarOpen ? 'w-20' : 'w-64'}`}
       >
-      {/* Logo Area with Toggle */}
-      <div className="p-4 mb-6 flex items-center justify-between">
-        <div className="flex items-center space-x-2 cursor-pointer group"
-        onClick={() => !isSidebarOpen && !isMobile && setSidebarOpen(true)}
-        >
-          <GraduationCap className="text-background-50 text-2xl group-hover:text-secondary transition-all duration-700" />
-          <span className={`text-background-50 text-xl font-bold group-hover:text-secondary transition-all duration-700 
-            ${(!isMobile && !isSidebarOpen) ? 'lg:hidden' : ''}`}>
-            SkillBridge
-          </span>
-        </div>
-
-           {/* Desktop Toggle Button - Enhanced visibility */}
-        {!isMobile && (
-          <button
-            onClick={() => setSidebarOpen(!isSidebarOpen)}
-            className="text-background-50 hover:text-secondary-500 p-1 rounded-full hover:bg-primary-600 transition-all"
+        {/* Logo Area with Toggle */}
+        <div className="p-4 mb-6 flex items-center justify-between">
+          <div className="flex items-center space-x-2 cursor-pointer group"
+            onClick={() => !isSidebarOpen && !isMobile && setSidebarOpen(true)}
           >
-            {isSidebarOpen ? <ChevronsLeft size={20} /> : <ChevronsRight size={20} />}
-          </button>
-        )}
-      </div>
-
-        {/* Navigation Items - Better touch targets */}
-      <nav className="flex-1">
-        {navItems.map((item) => (
-          <button
-            key={item.name}
-            onClick={() => handleNavigation(item)}
-            className={`w-full flex items-center px-4 py-3.5 text-sm font-medium ${
-              location.pathname.startsWith(item.path)
-                ? 'bg-primary-600 text-background-50'
-                : 'text-background-300 hover:bg-primary-600 hover:text-background-50'
-            } transition-colors duration-200 group relative`}
-          >
-            <item.icon className="h-5 w-5 min-w-[1.25rem]" />
-            <span className={`ml-3 whitespace-nowrap ${
-              !isMobile && !isSidebarOpen ? 'lg:hidden' : ''
-            }`}>
-              {item.name}
+            <GraduationCap className="text-background-50 text-2xl group-hover:text-secondary transition-all duration-700" />
+            <span className={`text-background-50 text-xl font-bold group-hover:text-secondary transition-all duration-700 
+              ${(!isMobile && !isSidebarOpen) ? 'lg:hidden' : ''}`}>
+              SkillBridge
             </span>
-            {/* Tooltip for collapsed state */}
-            {!isMobile && !isSidebarOpen && (
-              <span className="absolute left-full ml-2 px-2 py-1 text-xs font-medium text-white bg-gray-900 rounded-lg shadow-lg opacity-0 group-hover:opacity-200 transition-opacity duration-200">
+          </div>
+  
+          {/* Desktop Toggle Button - Enhanced visibility */}
+          {!isMobile && (
+            <button
+              onClick={() => setSidebarOpen(!isSidebarOpen)}
+              className="text-background-50 hover:text-secondary-500 p-1 rounded-full hover:bg-primary-600 transition-all"
+            >
+              {isSidebarOpen ? <ChevronsLeft size={20} /> : <ChevronsRight size={20} />}
+            </button>
+          )}
+        </div>
+  
+        {/* Navigation Items - Better touch targets */}
+        <nav className="flex-1">
+          {navItems.map((item) => (
+            <button
+              key={item.name}
+              onClick={() => handleNavigation(item)}
+              className={`w-full flex items-center px-4 py-3.5 text-sm font-medium ${
+                location.pathname.startsWith(item.path)
+                  ? 'bg-primary-600 text-background-50'
+                  : 'text-background-300 hover:bg-primary-600 hover:text-background-50'
+              } transition-colors duration-200 group relative`}
+            >
+              <item.icon className="h-5 w-5 min-w-[1.25rem]" />
+              <span className={`ml-3 whitespace-nowrap ${
+                !isMobile && !isSidebarOpen ? 'lg:hidden' : ''
+              }`}>
                 {item.name}
               </span>
-            )}
-          </button>
-        ))}
-      </nav>
-
-        {/* Logout Button - Consistent styling */}
-      <button
-        onClick={handleLogout}
-        className="w-full flex items-center px-4 py-3.5 text-sm font-medium text-background-50 hover:text-secondary-500 transition-colors duration-500"
-      >
-        <LogOut className="h-5 w-5 min-w-[1.25rem]" />
-        <span className={`ml-3 ${!isMobile && !isSidebarOpen ? 'lg:hidden' : ''}`}>
-          Logout
-        </span>
-      </button>
-
+  
+              {/* Notification badge - only for Notifications item */}
+              {item.name === 'Notifications' && notificationCount > 0 && (
+                <span className={`${
+                  !isMobile && !isSidebarOpen
+                  ? 'absolute top-0.5 right-0.5' 
+                  : 'ml-auto mr-1'
+                } flex items-center justify-center h-5 w-5 text-xs font-medium text-white bg-secondary-500 rounded-full`}>
+                  {notificationCount}
+                </span>
+              )}
+  
+              {/* Tooltip for collapsed state */}
+              {!isMobile && !isSidebarOpen && (
+                <span className="absolute left-full ml-2 px-2 py-1 text-xs font-medium text-white bg-gray-900 rounded-lg shadow-lg opacity-0 group-hover:opacity-200 transition-opacity duration-200">
+                  {item.name}
+                  {item.name === 'Notifications' && notificationCount > 0 && ` (${notificationCount})`}
+                </span>
+              )}
+            </button>
+          ))}
+        </nav>
+  
+        {/* Logout Button - Modified to improve dialog positioning */}
+        <button
+          onClick={() => {
+            // Set a state to trigger the logout confirmation dialog
+            // This is a new approach: the dialog will be rendered in the main content area
+            setShowSidebarLogoutDialog(true);
+          }}
+          className="w-full flex items-center px-4 py-3.5 text-sm font-medium text-background-50 hover:text-secondary-500 transition-colors duration-500"
+        >
+          <LogOut className="h-5 w-5 min-w-[1.25rem]" />
+          <span className={`ml-3 ${!isMobile && !isSidebarOpen ? 'lg:hidden' : ''}`}>
+            Logout
+          </span>
+        </button>
       </div>
-
+  
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
@@ -239,11 +291,11 @@ const UserLayout = () => {
           {/* Search Bar */}
           <div className="flex-1 max-w-2xl lg:ml-0">
             <div className="relative ml-10">
-            <input
+              <input
                 type="text"
                 placeholder="Search..."
                 className="w-full pl-10 pr-4 py-2 rounded-lg border border-background-200 
-                focus-visible:outline-none  focus:ring-1 
+                focus-visible:outline-none focus:ring-1 
                 focus:ring-primary-500 
                 placeholder:text-text-300"
               />
@@ -251,16 +303,22 @@ const UserLayout = () => {
                 group-focus-within:text-primary-500 transition-colors duration-300" />
             </div>
           </div>
-
+  
           <div className="flex items-center gap-4 sm:gap-4 ml-2">
-            {/* Wallet Button */}
-            {/* <button
-              className="p-2 rounded-full hover:bg-background-100 
+            {/* Notification Icon */}
+            <button
+              className="relative p-2 rounded-full hover:bg-background-100 
               text-text-500 hover:text-primary-500 transition-colors duration-300"
-              onClick={() => navigate('/wallet')}
+              onClick={() => navigate(`/${userData?.user?.role}/notifications/`)}
             >
-              <Wallet className="h-5 w-5" />
-            </button> */}
+              <Bell className="h-5 w-5 text-text-500 hover:text-secondary-500 transition-colors duration-300" />
+              {notificationCount > 0 && (
+                <span className="absolute top-0 right-0 bg-secondary-500 text-white 
+                rounded-full text-xs w-5 h-5 flex items-center justify-center">
+                  {notificationCount}
+                </span>
+              )}
+            </button>
             {userData.user.role === "tutor" && (
               <Button
                 startIcon={<PlusCircle className="h-5 w-5" />}
@@ -278,13 +336,12 @@ const UserLayout = () => {
                 }}
               >
                 <span className="hidden sm:inline">Add Course</span>
-                {/* <span className="xs:hidden">Add</span> */}
               </Button>
             )}
-
+  
             {/* Profile Dropdown */}
             <div className="relative z-50" ref={dropdownRef}>
-            <button
+              <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
                 className="flex items-center space-x-2 focus:outline-none"
               >
@@ -304,9 +361,8 @@ const UserLayout = () => {
                   />
                 </div>
               </button>
-
+  
               {/* Dropdown Menu */}
-              {/* Simplified Dropdown Menu */}
               {isProfileOpen && (
                 <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-background-50 ring-1 ring-black ring-opacity-5 origin-top-right">
                   <div className="py-1" role="menu">
@@ -331,31 +387,58 @@ const UserLayout = () => {
                       <span>Wallet</span>
                     </button>
                     <div className="border-t border-background-200 my-1"></div>
-                    <button
-                      onClick={handleLogout}
-                      className="w-full text-left px-4 py-2.5 text-sm text-secondary-500 hover:bg-background-100 flex items-center space-x-2"
-                      role="menuitem"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      <span>Sign out</span>
-                    </button>
+                    <ConfirmDialog
+                      trigger={(open) =>(
+                        <button
+                          onClick={open}
+                          className="w-full text-left px-4 py-2.5 text-sm text-secondary-500 hover:bg-background-100 flex items-center space-x-2"
+                          role="menuitem"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          <span>Sign out</span>
+                        </button>
+                      )}
+                      title="Logout"
+                      description={`Are you sure you want to logout?`}
+                      confirmText='Confirm'
+                      destructive
+                      onConfirm={() => handleLogout()}
+                      variant='user' 
+                    />
                   </div>
                 </div>
               )}
             </div>
           </div>
         </header>
-
+  
         {/* Page Content */}
         <main className='flex-1 overflow-auto p-4 sm:p-6 bg-background-500'>
-            <Outlet />  {/* This renders the current page */}
+          <Outlet />  {/* This renders the current page */}
         </main>
       </div>
+      
       {/* Overlay for mobile when sidebar is open */}
       {isMobile && isSidebarOpen && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-30 transition-opacity duration-300"
           onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
+      {/* Render the sidebar logout dialog outside of the sidebar */}
+      {showSidebarLogoutDialog && (
+        <ConfirmDialog
+          trigger={(open) => null} // We don't need a trigger since we're controlling it with state
+          title="Logout"
+          description={`Are you sure you want to logout?`}
+          confirmText='Confirm'
+          destructive
+          onConfirm={() => handleLogout()}
+          onCancel={() => setShowSidebarLogoutDialog(false)}
+          isOpen={showSidebarLogoutDialog}
+          setIsOpen={setShowSidebarLogoutDialog}
+          variant='user' 
         />
       )}
     </div>

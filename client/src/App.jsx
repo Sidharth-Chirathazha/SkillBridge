@@ -8,6 +8,8 @@ import AdminRoutes from './routes/AdminRoutes'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import theme from './assets/styles/theme'
 import { ThemeProvider, CssBaseline } from '@mui/material';
+import UserPrivateRoute from './routes/UserPrivateRoute'
+import VideoCallPage from './pages/VideoCallPage'
 
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
@@ -62,6 +64,9 @@ function App() {
               <Route path="/student/*" element={<StudentRoutes />} />
               <Route path="/tutor/*" element={<TutorRoutes />} />
               <Route path="/admin/*" element={<AdminRoutes/>}/>
+              <Route element={<UserPrivateRoute />}>
+                  <Route path="/video-call/:roomId" element={<VideoCallPage />} />
+              </Route>
             </Routes>
         </BrowserRouter>
       </ThemeProvider>

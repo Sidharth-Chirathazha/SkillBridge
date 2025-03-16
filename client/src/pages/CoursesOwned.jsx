@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { fetchPurchasedCourses, fetchTradeRequests, updateTradeRequest } from '../redux/slices/courseSlice';
+import { fetchPurchasedCourses, fetchTradeRequests, updateTradeRequest, fetchCategories } from '../redux/slices/courseSlice';
 import Pagination from '../components/common/ui/Pagination';
 import CourseCard from '../components/common/ui/CourseCard';
 import { Loader, CheckCircle, XCircle, BarChart2 } from 'lucide-react';
 import { ConfirmDialog } from '../components/common/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
 import TutorVerificationMessage from '../components/tutor/TutorVerificationMessage';
+import SearchBar from '../components/common/ui/SearchBar';
+import DropdownMenu from '../components/common/ui/DropdownMenu';
 
 
 const CoursesOwned = ({ variant = 'student' }) => {
@@ -16,17 +18,26 @@ const CoursesOwned = ({ variant = 'student' }) => {
   const pageSize = 8;
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
 
-  const { purchasedCoursesData, currentPage, totalPages, isCourseLoading, isCourseError, requestedTrades, receivedTrades, tradeError } = useSelector((state) => state.course);
+  const { purchasedCoursesData, currentPage, totalPages, isCourseLoading, 
+    isCourseError, requestedTrades, receivedTrades, tradeError, categoriesData } = useSelector((state) => state.course);
 
   const {role, userData} = useSelector((state)=>state.auth)
 
   console.log("Requested trades", requestedTrades);
   console.log("Received trades", receivedTrades);
+  console.log("Purchased Courses Data", purchasedCoursesData);
+
+   useEffect(() => {
+      dispatch(fetchCategories({categoryPage:1, pageSize:100}));
+    }, [dispatch]);
+  
   
   useEffect(() => {
-    dispatch(fetchPurchasedCourses({ page, pageSize }));
-  }, [dispatch, page]);
+    dispatch(fetchPurchasedCourses({ page, pageSize, search:searchQuery, categoryId:selectedCategory}));
+  }, [dispatch, page, searchQuery, selectedCategory]);
 
   // Fetch course data
     useEffect(() => {
@@ -46,11 +57,23 @@ const CoursesOwned = ({ variant = 'student' }) => {
         }
     }, [tradeError])
 
+
+    const handleSearch = (query) => {
+      setPage(1);
+      setSearchQuery(query);
+    };
+  
+    const handleCategoryChange = (categoryId) => {
+      setPage(1);
+      setSelectedCategory(categoryId);
+    };
+
   const handleTradeAction = async (tradeId, action) => {
         try{
             console.log("Dispatching trade action:", { tradeId, action });
             await dispatch(updateTradeRequest({tradeId, action})).unwrap();
             await dispatch(fetchTradeRequests()).unwrap();
+            dispatch(fetchPurchasedCourses({ page, pageSize, search:searchQuery, categoryId:selectedCategory}));
             toast.success("Course traded successfully");
         }catch(error){
             console.log("Trade action error:", error);
@@ -171,7 +194,7 @@ const CoursesOwned = ({ variant = 'student' }) => {
 
   return (
     <>
-    {userData?.is_verified === false ? (
+    { role === "tutor" && userData?.is_verified === false ? (
         <TutorVerificationMessage/>
       ) :(
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
@@ -216,6 +239,16 @@ const CoursesOwned = ({ variant = 'student' }) => {
               </div>
             ) : (
                 <>
+                {/* Add Filters Section Here */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    <SearchBar value={searchQuery} onChange={handleSearch} />
+                    <DropdownMenu
+                      dropDownItems={categoriesData.map((cat) => ({value:cat.id, label:cat.name}))} 
+                      value={selectedCategory} 
+                      onChange={handleCategoryChange}
+                      defaultLabel={"All Categories"} 
+                    />
+                  </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-8">
                     {purchasedCoursesData?.map((course) => (
                     <CourseCard

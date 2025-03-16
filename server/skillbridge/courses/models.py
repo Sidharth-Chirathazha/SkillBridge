@@ -100,17 +100,42 @@ class Module(BaseModel):
     class Meta:
         ordering = ['id']
 
+class ModuleCompletion(BaseModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    module = models.ForeignKey(Module, on_delete=models.CASCADE, related_name="completions")
+    completed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'module')
+
+    def __str__(self):
+        return f"{self.user.first_name} completed {self.module.title}"
+
 class Purchase(BaseModel):
+    PURCHASE_TYPE_CHOICES = (
+        ('Payment', 'payment'),
+        ('Trade', 'trade')
+    )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="purchases")
     stripe_payment_intent_id = models.CharField(max_length=100, null=True, blank=True)
     status = models.CharField(max_length=20, default='pending')
+    purchase_type = models.CharField(max_length=20, choices=PURCHASE_TYPE_CHOICES, default="Payment")
     progress = models.FloatField(default=0.0, null=True, blank=True)  # Store progression percentage (0-100)
     completed = models.BooleanField(default=False)  # Mark if the course is completed
     purchased_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)  # Track purchase date
 
     class Meta:
          unique_together = ('user', 'course')
+
+    def update_progress(self):
+        total_modules = self.course.modules.count()
+        completed_modules = ModuleCompletion.objects.filter(user=self.user, module__course=self.course).count()
+
+        if total_modules > 0:
+            self.progress = (completed_modules/total_modules) * 100
+            self.completed = self.progress == 100
+            self.save()
 
     def __str__(self):
 
@@ -158,3 +183,23 @@ class CourseTradeModel(models.Model):
         default="pending",
     )
     created_at = models.DateTimeField(auto_now_add=True)
+
+class ChatRoom(models.Model):
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name="student_chats")
+    tutor = models.ForeignKey(User, on_delete=models.CASCADE, related_name="tutor_chats")
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="course_chats")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('student', 'tutor', 'course')
+
+    def __str__(self):
+        return f"Room for {self.course.title} between {self.student.first_name} and {self.tutor.first_name}"
+    
+class ChatMessage(models.Model):
+    sender = models.ForeignKey(User, on_delete=models.CASCADE)
+    chat_room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name="messages")
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    

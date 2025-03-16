@@ -4,20 +4,28 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny,IsAuthenticated,IsAdminUser
 from rest_framework.parsers import MultiPartParser, FormParser
-from .serializers import CourseSerializer ,CategorySerialzier, ModuleSerializer, ReviewSerializer, CommentSerializer, CourseTradeCreateSerializer, CourseTradeRequestSerializer
-from .models import Category,Course,Module,Purchase,Review,Comment,CourseTradeModel
+from .serializers import CourseSerializer ,CategorySerialzier, ModuleSerializer, ReviewSerializer, CommentSerializer, CourseTradeCreateSerializer, CourseTradeRequestSerializer, ChatRoomSerializer, ChatMessageSerializer
+from .models import Category,Course,Module,Purchase,Review,Comment,CourseTradeModel,ModuleCompletion,ChatRoom, ChatMessage
 from rest_framework.exceptions import ValidationError
 from rest_framework.viewsets import ModelViewSet,ReadOnlyModelViewSet
 from rest_framework.exceptions import NotFound
 from base.custom_pagination import CustomPagination
-from django.db.models import Count, Sum, Q
+from django.db.models import Count, Sum, Q, Value
+from django.db.models.functions import Coalesce
 import stripe
+from django.utils import timezone
 from skillbridge import settings
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError, transaction
 from decimal import Decimal
 from wallet.models import Wallet, Transaction
 from rest_framework.decorators import action
+from users.models import Notification
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+import traceback
+
+
 User = get_user_model()
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -43,15 +51,16 @@ class CourseViewSet(ModelViewSet):
     
     def get_queryset(self):
         queryset = (Course.objects.annotate(
-            total_modules = Count("modules"),
-            total_duration = Sum("modules__duration"),
-            total_purchases = Count("purchases")
+            total_modules = Count("modules", distinct=True),
+            total_duration = Coalesce(Sum("modules__duration", distinct=True), Value(0)),
+            total_purchases = Count("purchases", filter=Q(purchases__status="completed"), distinct=True)
         ).select_related("tutor__user"))
 
         tutor_id = self.request.query_params.get('tutor_id')
         status = self.request.query_params.get('status')
         category_id = self.request.query_params.get('category_id')
         limit = self.request.query_params.get('limit')
+        search = self.request.query_params.get('search')
 
         print(status)
         if tutor_id:
@@ -59,12 +68,18 @@ class CourseViewSet(ModelViewSet):
             if not queryset.exists():
                 raise NotFound({"detail": "No courses found for this tutor."})
         if status:
-            queryset = queryset.filter(status=status, is_active=True)
-            if not queryset.exists():
-                raise NotFound({"detail: No courses found with this status"})
+            if status == "Approved":
+                active_status = True
+            else:
+                active_status = False
+            queryset = queryset.filter(status=status, is_active=active_status)
+            # if not queryset.exists():
+            #     raise NotFound({"detail: No courses found with this status"})
             
         if category_id:
             queryset = queryset.filter(category=category_id)
+            # if not queryset.exists():
+            #     raise NotFound({"detail: No courses found with this category"})
 
         if limit:
             try:
@@ -72,6 +87,11 @@ class CourseViewSet(ModelViewSet):
                 queryset = queryset[:limit]
             except ValueError:
                 pass  # Ignore invalid limit values
+
+        if search:
+            queryset = queryset.filter(
+                Q(title__icontains=search)
+            )
 
         if self.request.user.is_authenticated:
             print("inside request.user in course view set")
@@ -83,9 +103,9 @@ class CourseViewSet(ModelViewSet):
     
     def get_object(self):
         queryset = Course.objects.annotate(
-        total_modules=Count("modules"),
-        total_duration=Sum("modules__duration"),
-        total_purchases=Count("purchases")
+        total_modules=Count("modules", distinct=True),
+        total_duration=Coalesce(Sum("modules__duration", distinct=True), Value(0)),
+        total_purchases=Count("purchases", filter=Q(purchases__status="completed"), distinct=True)
         ).select_related("tutor__user")
 
         return get_object_or_404(queryset, pk=self.kwargs['pk'])
@@ -104,13 +124,33 @@ class PurchasedCoursesViewSet(ReadOnlyModelViewSet):
      permission_classes = [IsAuthenticated]
      pagination_class = CustomPagination
 
+
+     def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context
+
      def get_queryset(self):
          purchased_courses = Purchase.objects.filter(user=self.request.user).values('course')
          queryset = (Course.objects.filter(id__in=purchased_courses).annotate(
             total_modules=Count("modules", distinct=True),
-            total_duration=Sum("modules__duration"), # Note - Fix the bug here 
+            total_duration=Coalesce(Sum("modules__duration", distinct=True), Value(0)),
             total_purchases=Count("purchases", distinct=True)
             ).select_related("tutor__user"))
+         
+         category_id = self.request.query_params.get('category_id')
+         search = self.request.query_params.get('search')
+
+         if category_id:
+            queryset = queryset.filter(category=category_id)
+            # if not queryset.exists():
+            #     raise NotFound({"detail: No courses found with this category"})
+            
+         if search:
+            queryset = queryset.filter(
+                Q(title__icontains=search)
+            )
+
          
          return queryset
 
@@ -133,6 +173,12 @@ class ModuleViewSet(ModelViewSet):
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
     
+    def get_serializer_context(self):
+        """Pass request context to the serializer"""
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context
+    
     def partial_update(self, request, *args, **kwargs): 
         print("Request Data (PATCH):", request.data) 
         instance = self.get_object() 
@@ -142,12 +188,32 @@ class ModuleViewSet(ModelViewSet):
             print("Serializer Errors:", serializer.errors) 
             return Response(serializer.errors, status=400)  
         return super().partial_update(request, *args, **kwargs)
-     
+    
+    @action(detail=True, methods=["PATCH"], permission_classes=[IsAuthenticated])
+    def mark_completed(self, request, pk=None):
+        """Mark a module as completed by a specific user and update the course progress"""
+
+        module = self.get_object()
+        user = request.user
+
+        try:
+            purchase = Purchase.objects.get(user=user, course=module.course)
+        except Purchase.DoesNotExist:
+            return Response({"error": "You have not purchased this course."}, status=status.HTTP_403_FORBIDDEN)
+        
+        if ModuleCompletion.objects.filter(user=user, module=module).exists():
+            return Response({"message": "Module already marked as completed."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        ModuleCompletion.objects.create(user=user, module=module)
+        purchase.update_progress()
+
+        return Response({"message": "Module marked as completed."}, status=status.HTTP_200_OK)
 
 """Handles the CRUD Operations for category"""
 class CategoryViewSet(ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerialzier
+    pagination_class = CustomPagination
 
 
     def get_permissions(self):
@@ -236,8 +302,8 @@ class StripeWebhookView(APIView):
                 tutor = course.tutor.user
                 admin_user = User.objects.filter(is_superuser=True).first()
 
-                tutor_share = course_price * Decimal(0.90)
-                admin_share = course_price * Decimal(0.10)
+                tutor_share = course_price * Decimal(0.82)
+                admin_share = course_price * Decimal(0.18)
                 print(f"Tutor Share:{tutor_share}, Admin Share:{admin_share}")
 
                 with transaction.atomic():
@@ -247,6 +313,7 @@ class StripeWebhookView(APIView):
                          defaults={
                             'stripe_payment_intent_id': session['payment_intent'],
                             'status': 'completed',
+                            'purchase_type':'Payment'
                         }
                     )
                     if not created:
@@ -281,6 +348,17 @@ class StripeWebhookView(APIView):
                     print(f"Error updating wallet/transaction: {e}")
                     return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
                 
+                student = get_object_or_404(User, id=user_id)
+
+                chat_room, created = ChatRoom.objects.get_or_create(
+                    student=student,
+                    tutor=tutor,
+                    course=course
+                )
+
+                if created:
+                    print(f"Chat Room Created: {chat_room}")
+                
                 print(f"Webhook Event: {event}")
 
                 return Response({'status': 'success'}, status=status.HTTP_200_OK)
@@ -309,6 +387,7 @@ class VerifyPurchase(APIView):
                     course_id=session.metadata['course_id'] 
                 )
                 purchase.status = 'completed'
+                purchase.purchase_type = 'Payment'
                 purchase.save()
 
                 return Response({'status': 'success'})
@@ -399,6 +478,23 @@ class CourseTradeViewSet(ModelViewSet):
         accepter = requested_course.tutor.user
         serializer.save(requester=self.request.user, accepter=accepter)
 
+        notification = Notification.objects.create(
+            user = accepter,
+            notification_type = "trade_request",
+            message=f"You received a new trade request from {self.request.user.get_full_name()}.",
+            created_at=timezone.now()  # Explicit timestamp
+        )
+
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"notifications_{accepter.id}",
+            {
+                "type": "send.notification",
+                "message": notification.message,
+                "notification_type": "trade_request"
+            }
+        )
+
     @action(detail=True, methods=["post"])
     def accept_trade(self,request,pk=None):
         trade_request = self.get_object()
@@ -409,8 +505,10 @@ class CourseTradeViewSet(ModelViewSet):
         trade_request.status = "accepted"
         trade_request.save()
 
-        Purchase.objects.create(user=trade_request.requester, course=trade_request.requested_course, status="completed")
-        Purchase.objects.create(user=request.user, course=trade_request.offered_course, status="completed")
+        Purchase.objects.create(user=trade_request.requester, course=trade_request.requested_course, status="completed", purchase_type="Trade")
+        ChatRoom.objects.create(student=trade_request.requester, tutor=request.user, course=trade_request.requested_course)
+        Purchase.objects.create(user=request.user, course=trade_request.offered_course, status="completed", purchase_type="Trade")
+        ChatRoom.objects.create(student=request.user, tutor=trade_request.requester, course=trade_request.offered_course)
 
         return Response({"message": "Trade accepted. Both tutors have access to each other's courses."}, status=status.HTTP_200_OK)
     
@@ -424,3 +522,72 @@ class CourseTradeViewSet(ModelViewSet):
         trade_request.status = "declined"
         trade_request.save()
         return Response({"message": "Trade declined"}, status=status.HTTP_200_OK)
+    
+class GetChatRoomAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        student_id = self.request.query_params.get("student_id")
+        tutor_id = self.request.query_params.get("tutor_id")
+        course_id = self.request.query_params.get("course_id")
+
+        if not student_id or not tutor_id or not course_id:
+            return Response({'error': 'Missing required parameters'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            chat_room = get_object_or_404(
+                ChatRoom,
+                student__id=student_id,
+                tutor__id=tutor_id,
+                course__id=course_id
+            )
+            serializer = ChatRoomSerializer(chat_room)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            print("Error Traceback:", traceback.format_exc())  
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+class GetChatRoomByIdAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, chat_room_id):
+        try:
+            chat_room = get_object_or_404(ChatRoom, id=chat_room_id)
+            serializer = ChatRoomSerializer(chat_room)
+            return Response(serializer.data,  status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+class GetUserChatRoomsAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, requset, user_id):
+        
+        chat_rooms = ChatRoom.objects.filter(Q(student__id=user_id) | Q(tutor__id=user_id))
+
+        if not chat_rooms.exists():
+            return Response({"error": "No chat rooms found for this user"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = ChatRoomSerializer(chat_rooms, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+            
+        
+class GetChatMessageAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        chat_room_id = self.request.query_params.get("chat_room_id")
+
+        if not chat_room_id:
+            return Response({'error': 'Missing chat_room_id parameter'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            chat_room = get_object_or_404(ChatRoom, id=chat_room_id)
+            messages = ChatMessage.objects.filter(chat_room=chat_room).order_by("-created_at")
+
+            serializer = ChatMessageSerializer(messages, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            print("Error Traceback:", traceback.format_exc())
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

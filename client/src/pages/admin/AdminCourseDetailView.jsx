@@ -13,11 +13,13 @@ const AdminCourseDetailView = () => {
     const {singleCourse, isCourseLoading} = useSelector((state)=>state.course);
     const {id} = useParams();
 
+    console.log("Id:", id);
+    
     useEffect(() => {
     const fetchData = async () => {
         try {
         setLoading(true);
-        await dispatch(fetchSingleCourse(id)).unwrap();
+        await dispatch(fetchSingleCourse({id})).unwrap();
         } catch (error) {
         console.error('Failed to fetch Course:', error);
         } finally {
@@ -45,7 +47,7 @@ const AdminCourseDetailView = () => {
         try{
             await dispatch(updateCourse({id:id, updateData:formData})).unwrap();
             toast.success("Course status updated");
-            dispatch(fetchSingleCourse(id));
+            dispatch(fetchSingleCourse({id}));
         }catch(error){
             toast.error("Failed to update course status")
         }

@@ -95,7 +95,7 @@ const CourseCard = ({
         {/* Category */}
         <div className="flex items-center gap-2 text-secondary text-sm font-medium mb-2">
           <LayoutGrid className="w-4 h-4" />
-          <span>{course.category?.name || "Uncategorized"}</span>
+          <span>{course.category_details?.name || "Uncategorized"}</span>
         </div>
 
         {/* Title */}

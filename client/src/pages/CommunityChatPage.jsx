@@ -5,8 +5,8 @@ import MessageBubble from '../components/common/MessageBubble';
 import MembersList from '../components/common/MembersList';
 import axiosInstance from '../api/axios.Config';
 import toast from 'react-hot-toast';
-import { v4 as uuidv4} from 'uuid';
 import { PaperAirplaneIcon, Bars3Icon as MenuIcon, XMarkIcon as XIcon } from '@heroicons/react/24/solid';
+import TutorVerificationMessage from '../components/tutor/TutorVerificationMessage';
 
 const CommunityChatPage = () => {
   const { communityId } = useParams();
@@ -15,7 +15,11 @@ const CommunityChatPage = () => {
   const [members, setMembers] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [startTime, setStartTime] = useState(Date.now());
+  const [isActive, setIsActive] = useState(true);
   const currentUser = useSelector(state => state.auth.userData?.user);
+  const {userData, role} = useSelector((state)=>state.auth)
+    
   
   const ws = useRef(null);
   const messagesEndRef = useRef(null);
@@ -39,7 +43,9 @@ const CommunityChatPage = () => {
             requiresAuth: true
         });
         setMessages(messagesResponse.data);
-        toast.success("Connected to chat room");
+        // toast.success("Connected to chat room");
+        console.log("Connected to chat room");
+        
       } catch (error) {
         console.error('Error fetching data:', error);
         toast.error("Failed to connect to chat room");
@@ -48,6 +54,33 @@ const CommunityChatPage = () => {
 
     fetchData();
   }, [communityId]);
+
+
+  useEffect(() => {
+      const handleActivity = () => setIsActive(true);
+  
+      document.addEventListener("mousemove", handleActivity);
+      document.addEventListener("keydown", handleActivity);
+  
+      const sendTimeToBackend = () => {
+          if (isActive) {
+              const timeSpent = Math.floor((Date.now() - startTime) / 1000);
+              axiosInstance.post("/update-learning-time/", { time_spent: timeSpent }, { requiresAuth: true })
+                  .catch(err => console.error("Time update failed", err));
+              setStartTime(Date.now());
+              setIsActive(false);
+          }
+      };
+  
+      const interval = setInterval(sendTimeToBackend, 20000);
+  
+      return () => {
+          document.removeEventListener("mousemove", handleActivity);
+          document.removeEventListener("keydown", handleActivity);
+          clearInterval(interval);
+          sendTimeToBackend();
+      };
+    }, [isActive, startTime]);
 
   // WebSocket setup
   useEffect(() => {
@@ -135,105 +168,111 @@ const CommunityChatPage = () => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-background-100">
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col h-full relative">
-        {/* Topbar */}
-        <div className="bg-white border-b border-background-300 shadow-sm py-3 px-4 flex items-center justify-between">
-          <h1 className="text-text-500 font-semibold">Community Chat</h1>
-          <button 
-            onClick={toggleMobileSidebar}
-            className="md:hidden p-2 rounded-full hover:bg-background-200 transition-colors focus:outline-none"
-          >
-            <MenuIcon className="h-5 w-5 text-text-400" />
-          </button>
-        </div>
+    <>
+    { role === "tutor" && userData?.is_verified === false ? (
+        <TutorVerificationMessage/>
+      ) :(
+      <div className="flex flex-col md:flex-row h-screen bg-background-100">
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col h-full relative">
+          {/* Topbar */}
+          <div className="bg-white border-b border-background-300 shadow-sm py-3 px-4 flex items-center justify-between">
+            <h1 className="text-text-500 font-semibold">Community Chat</h1>
+            <button 
+              onClick={toggleMobileSidebar}
+              className="md:hidden p-2 rounded-full hover:bg-background-200 transition-colors focus:outline-none"
+            >
+              <MenuIcon className="h-5 w-5 text-text-400" />
+            </button>
+          </div>
 
-        {/* Messages area */}
-        <div 
-          ref={messageContainerRef}
-          className="flex-1 overflow-y-auto py-4 px-3 md:px-6 bg-background-50"
-        >
-          <div className="max-w-4xl mx-auto space-y-4">
-            {messages.length === 0 ? (
-              <div className="flex items-center justify-center h-32 text-text-400">
-                No messages yet. Start the conversation!
-              </div>
-            ) : (
-              messages.map((msg) => (
-                <MessageBubble 
-                  key={msg.id}
-                  message={msg}
-                  isCurrentUser={msg.sender === currentUser?.id}
-                />
-              ))
-            )}
-            <div ref={messagesEndRef} />
+          {/* Messages area */}
+          <div 
+            ref={messageContainerRef}
+            className="flex-1 overflow-y-auto py-4 px-3 md:px-6 bg-background-50"
+          >
+            <div className="max-w-4xl mx-auto space-y-4">
+              {messages.length === 0 ? (
+                <div className="flex items-center justify-center h-32 text-text-400">
+                  No messages yet. Start the conversation!
+                </div>
+              ) : (
+                messages.map((msg) => (
+                  <MessageBubble 
+                    key={msg.id}
+                    message={msg}
+                    isCurrentUser={msg.sender === currentUser?.id}
+                  />
+                ))
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          </div>
+          
+          {/* Message input */}
+          <div className="bg-white border-t border-background-300 p-3 md:p-4">
+            <form 
+              onSubmit={handleSendMessage} 
+              className="max-w-4xl mx-auto flex items-center gap-2"
+            >
+              <input
+                type="text"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder="Type your message..."
+                className="flex-1 py-3 px-4 bg-background-100 border-0 rounded-full focus:ring-2 focus:ring-primary-300 focus:outline-none text-text-500 placeholder-text-300"
+              />
+              <button
+                type="submit"
+                className="p-3 rounded-full bg-primary-500 text-white hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-300 transition-colors"
+                disabled={!newMessage.trim()}
+              >
+                <PaperAirplaneIcon className="h-5 w-5 transform -rotate-90" />
+              </button>
+            </form>
           </div>
         </div>
-        
-        {/* Message input */}
-        <div className="bg-white border-t border-background-300 p-3 md:p-4">
-          <form 
-            onSubmit={handleSendMessage} 
-            className="max-w-4xl mx-auto flex items-center gap-2"
-          >
-            <input
-              type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type your message..."
-              className="flex-1 py-3 px-4 bg-background-100 border-0 rounded-full focus:ring-2 focus:ring-primary-300 focus:outline-none text-text-500 placeholder-text-300"
-            />
-            <button
-              type="submit"
-              className="p-3 rounded-full bg-primary-500 text-white hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-300 transition-colors"
-              disabled={!newMessage.trim()}
-            >
-              <PaperAirplaneIcon className="h-5 w-5 transform rotate-90" />
-            </button>
-          </form>
-        </div>
-      </div>
 
-      {/* Members Sidebar - Desktop */}
-      <div className="hidden md:block w-72 lg:w-80 bg-white border-l border-background-300 overflow-y-auto">
-        <div className="p-4 border-b border-background-300">
-          <h3 className="text-lg font-semibold text-text-500">Members</h3>
-          <p className="text-sm text-text-400">{members.length} online</p>
+        {/* Members Sidebar - Desktop */}
+        <div className="hidden md:block w-72 lg:w-80 bg-white border-l border-background-300 overflow-y-auto">
+          <div className="p-4 border-b border-background-300">
+            <h3 className="text-lg font-semibold text-text-500">Members</h3>
+            <p className="text-sm text-text-400">{members.length} online</p>
+          </div>
+          <div className="p-2">
+            <MembersList members={members} onlineUserIds={onlineUsers}/>
+          </div>
         </div>
-        <div className="p-2">
-          <MembersList members={members} onlineUserIds={onlineUsers}/>
-        </div>
-      </div>
 
-      {/* Mobile Sidebar */}
-      <div 
-        className={`fixed inset-y-0 right-0 z-50 w-72 bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
-          isMobileSidebarOpen ? 'translate-x-0' : 'translate-x-full'
-        } md:hidden`}
-      >
-        <div className="flex items-center justify-between p-4 border-b border-background-300">
-          <h3 className="text-lg font-semibold text-text-500">Members</h3>
-          <button 
-            onClick={toggleMobileSidebar}
-            className="p-2 rounded-full hover:bg-background-200 transition-colors"
-          >
-            <XIcon className="h-5 w-5 text-text-400" />
-          </button>
-        </div>
-        <div className="p-2 overflow-y-auto h-full">
-          <MembersList members={members} onlineUserIds={onlineUsers}/>
-        </div>
-      </div>
-      {/* Overlay for mobile sidebar */}
-      {isMobileSidebarOpen && (
+        {/* Mobile Sidebar */}
         <div 
-          className="fixed inset-0 bg-black bg-opacity-30 z-40 md:hidden"
-          onClick={toggleMobileSidebar}
-        ></div>
+          className={`fixed inset-y-0 right-0 z-50 w-72 bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
+            isMobileSidebarOpen ? 'translate-x-0' : 'translate-x-full'
+          } md:hidden`}
+        >
+          <div className="flex items-center justify-between p-4 border-b border-background-300">
+            <h3 className="text-lg font-semibold text-text-500">Members</h3>
+            <button 
+              onClick={toggleMobileSidebar}
+              className="p-2 rounded-full hover:bg-background-200 transition-colors"
+            >
+              <XIcon className="h-5 w-5 text-text-400" />
+            </button>
+          </div>
+          <div className="p-2 overflow-y-auto h-full">
+            <MembersList members={members} onlineUserIds={onlineUsers}/>
+          </div>
+        </div>
+        {/* Overlay for mobile sidebar */}
+        {isMobileSidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-30 z-40 md:hidden"
+            onClick={toggleMobileSidebar}
+          ></div>
+        )}
+      </div>
       )}
-    </div>
+    </>
   );
 };
 

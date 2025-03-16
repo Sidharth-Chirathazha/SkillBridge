@@ -21,7 +21,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { adminLogout, fetchAdmin } from '../../redux/slices/adminSlice';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-// import admin_avatar from '../../assets/images/admin.jpg';
+import avatar from '../../assets/images/avatar.jpg'
 
 const AdminLayout = ({ children }) => {
   const [activePage, setActivePage] = useState('');
@@ -234,8 +234,7 @@ const AdminLayout = ({ children }) => {
                 focus:ring-2  focus:ring-primary-200 transition-all duration-300 
                 placeholder:text-text-300 bg-background-100"
               />
-              <Search className="absolute left-3 top-2.5 h-5 w-5 text-text-300
-                              group-focus-within:text-text-500 transition-colors duration-300" />
+              <Search className="absolute left-3 top-2.5 h-5 w-5 text-text-300 group-focus-within:text-text-500 transition-colors duration-300" />
             </div>
           </div>
 
@@ -252,9 +251,11 @@ const AdminLayout = ({ children }) => {
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
                 className="flex items-center space-x-2 focus:outline-none"
               >
-                <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold">
-                  A
-                </div>
+               <img
+                  src={avatar}
+                  alt="Profile"
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-background-200"
+                />
                 <div className="hidden sm:flex items-center">
                   <span className="text-sm font-medium text-text-500 mr-1 sm:mr-2 truncate max-w-[120px]">{adminData.email}</span>
                   <ChevronDown className={`h-4 w-4 text-text-400 transition-transform ${isProfileOpen ? 'transform rotate-180' : ''}`} />

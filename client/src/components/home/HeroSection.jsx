@@ -1,10 +1,32 @@
-import React from 'react';
-import hero_img from '../../assets/images/hero_img.jpg';
+import React, { useEffect, useState } from 'react';
 import hero_img_3 from '../../assets/images/hero_img_3.png'
 import { FaBook, FaUserGraduate, FaChalkboardTeacher } from "react-icons/fa";
 import { ArrowRight } from "lucide-react";
+import axiosInstance from '../../api/axios.Config';
+
 
 const HeroSection = () => {
+
+  const [heroSectionData, setHeroSectionData] = useState({});
+
+  console.log("Hero section data:", heroSectionData);
+  
+
+  useEffect(()=>{
+    const fetchHeroSectionData = async () =>{
+
+      // setIsLoading(true);
+      try{
+        const response = await axiosInstance.get('/admin/global-summary/');
+        setHeroSectionData(response.data);
+      }catch (error){
+        console.error("Error fetching herosection data:", error);
+      }
+    };
+    fetchHeroSectionData();
+  }, []);
+
+
   return (
     <section id="home" className="relative overflow-hidden bg-gradient-to-br from-primary-600 to-primary-800 text-white">
       {/* Background Elements */}
@@ -54,7 +76,7 @@ const HeroSection = () => {
               <FaBook className="text-secondary text-2xl" />
             </div>
             <h3 className="text-xl font-bold mb-2">Total Courses</h3>
-            <p className="text-4xl font-bold text-secondary mt-2">1,200+</p>
+            <p className="text-4xl font-bold text-secondary mt-2">{heroSectionData?.total_courses}+</p>
           </div>
 
           {/* Total Students */}
@@ -63,7 +85,7 @@ const HeroSection = () => {
               <FaUserGraduate className="text-secondary text-2xl" />
             </div>
             <h3 className="text-xl font-bold mb-2">Total Students</h3>
-            <p className="text-4xl font-bold text-secondary mt-2">25,000+</p>
+            <p className="text-4xl font-bold text-secondary mt-2">{heroSectionData?.total_students}+</p>
           </div>
 
           {/* Total Tutors */}
@@ -72,7 +94,7 @@ const HeroSection = () => {
               <FaChalkboardTeacher className="text-secondary text-2xl" />
             </div>
             <h3 className="text-xl font-bold mb-2">Total Tutors</h3>
-            <p className="text-4xl font-bold text-secondary mt-2">500+</p>
+            <p className="text-4xl font-bold text-secondary mt-2">{heroSectionData?.total_tutors}+</p>
           </div>
         </div>
       </div>

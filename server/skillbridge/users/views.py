@@ -1,5 +1,6 @@
-from .serializers import UserCreationSerializer,UserLoginSerializer, SkillSerializer, NotificationSerializer
+from .serializers import UserCreationSerializer,UserLoginSerializer, SkillSerializer, NotificationSerializer, UserActivitySerializer
 from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -11,13 +12,19 @@ from student.serializers import StudentProfileSerializer
 from tutor.serializers import TutorProfileSerializer
 from rest_framework.parsers import MultiPartParser,FormParser,JSONParser
 import json
+from datetime import date
+from datetime import timedelta
+from django.utils.timezone import now
 from student.models import StudentProfile
 from tutor.models import TutorProfile
-from users.models import User, Skill, Notification
+from users.models import User, Skill, Notification, UserActivity
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
+from base.custom_pagination import CustomPagination
+from django.conf import settings
+
 
 # Create your views here.
 
@@ -190,8 +197,10 @@ class SkillListHandleView(APIView):
     
     def get(self, request):
         skills = Skill.objects.all()
-        serializer = SkillSerializer(skills, many=True)
-        return Response(serializer.data)
+        paginator =  CustomPagination()
+        paginated_skills = paginator.paginate_queryset(skills, request)
+        serializer = SkillSerializer(paginated_skills, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
     def post(self, request):
         serializer = SkillSerializer(data=request.data)
@@ -220,6 +229,72 @@ class NotificationViewSet(ModelViewSet):
     
     
     @action(detail=False, methods=["POST"])
-    def mark_as_read(self, request):
-        Notification.objects.filter(user=self.request.user, is_read=False).update(is_read=True)
+    def mark_all_as_read(self, request):
+        Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
         return Response({"message": "Notifications marked as read"}, status=status.HTTP_200_OK)
+    
+    @action(detail=True, methods=["POST"])
+    def mark_single_as_read(self, request, pk=None):
+        try:
+            notification = Notification.objects.get(pk=pk, user=request.user)
+            notification.is_read = True
+            notification.save()
+            return Response({"message": "Notification marked as read"}, status=status.HTTP_200_OK)
+        except Notification.DoesNotExist:
+            return Response({"error": "Notification not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+    @action(detail=False, methods=["DELETE"])
+    def delete_read_notifications(self, request):
+        deleted_count, _ = Notification.objects.filter(user=request.user, is_read=True).delete()
+        return Response({"message": f"Deleted {deleted_count} read notifications"}, status=status.HTTP_200_OK)
+    
+
+
+class UpdateLearningTimeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        today = date.today()
+        time_spent = request.data.get("time_spent", 0)
+
+        # Try to get today's record, else create it
+        activity, created = UserActivity.objects.get_or_create(
+            user=user, date=today,
+            defaults={"time_spent": time_spent}
+        )
+
+        if not created:
+            # If record exists, update the time spent
+            activity.time_spent += int(time_spent)
+            activity.save()
+
+        # Update total time in User model
+        user.total_time_spent = sum(user.activities.values_list("time_spent", flat=True))
+        user.save()
+
+        return Response({
+            "message": "Time updated",
+            "total_time_spent": user.total_time_spent,
+            "today_time_spent": activity.time_spent
+        })
+    
+class UserLearningActivityView(ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserActivitySerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        time_period = self.request.query_params.get("period", "weekly")  # default to weekly
+
+        today = now().date()
+        if time_period == "daily":
+            start_date = today
+        elif time_period == "monthly":
+            start_date = today.replace(day=1)
+        else:  # default weekly
+            start_date = today - timedelta(days=7)
+
+        return UserActivity.objects.filter(user=user, date__gte=start_date).order_by("date")
+
+        

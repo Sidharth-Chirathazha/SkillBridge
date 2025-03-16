@@ -11,10 +11,12 @@ const handleApiError = (error, thunkAPI)=>{
 
 // Thunk for fetching categories
 export const fetchCategories = createAsyncThunk(
+  
   "/course/fetchCategories",
-  async (_, thunkAPI) => {
+  async ({categoryPage, pageSize}, thunkAPI) => {
     try {
-      return await courseService.fetchCategories();
+      console.log("Inside fetch categories in thunk");
+      return await courseService.fetchCategories(categoryPage, pageSize);
     } catch (error) {
       return handleApiError(error, thunkAPI);
     }
@@ -73,9 +75,9 @@ export const addCourse = createAsyncThunk(
 // Thunk for fetching courses
 export const fetchCourses = createAsyncThunk(
   "/course/fetchCourses",
-  async ({page, pageSize, status, user, categoryId, limit }, thunkAPI) => {
+  async ({page, pageSize, status, user, search, categoryId, limit }, thunkAPI) => {
     try {
-      return await courseService.fetchCourses(page, pageSize,status,user,categoryId,limit);
+      return await courseService.fetchCourses(page, pageSize,status,user,search,categoryId,limit);
     } catch (error) {
       return handleApiError(error, thunkAPI);
     }
@@ -85,9 +87,9 @@ export const fetchCourses = createAsyncThunk(
 // Thunk for fetching courses
 export const fetchPurchasedCourses = createAsyncThunk(
   "/course/purchasedCourses",
-  async ({page, pageSize}, thunkAPI) => {
+  async ({page, pageSize, search, categoryId, courseId}, thunkAPI) => {
     try {
-      return await courseService.fetchPurchasedCourses(page, pageSize);
+      return await courseService.fetchPurchasedCourses(page, pageSize, search, categoryId, courseId);
     } catch (error) {
       return handleApiError(error, thunkAPI);
     }
@@ -97,9 +99,9 @@ export const fetchPurchasedCourses = createAsyncThunk(
 // Thunk for fetching tutor courses
 export const fetchTutorCourses = createAsyncThunk(
   "/course/fetchTutorCourses",
-  async ({ tutorId, page, pageSize, status }, thunkAPI) => {
+  async ({ tutorId, page, pageSize, status, search, categoryId }, thunkAPI) => {
     try {
-      return await courseService.fetchTutorCourses(tutorId, page, pageSize, status);
+      return await courseService.fetchTutorCourses(tutorId, page, pageSize, status, search, categoryId);
     } catch (error) {
       return handleApiError(error, thunkAPI);
     }
@@ -181,10 +183,22 @@ export const deleteModule = createAsyncThunk(
   }
 );
 
+// Thunk for marking module as completed
+export const markModuleCompleted = createAsyncThunk(
+  "/course/markModuleCompleted",
+  async (moduleId, thunkAPI) => {
+    try {
+      return await courseService.markModuleCompleted(moduleId);
+    } catch (error) {
+      return handleApiError(error, thunkAPI);
+    }
+  }
+);
+
  // Thunk for fetching single course
  export const fetchSingleCourse = createAsyncThunk(
   "/course/fetchSingleCourse",
-  async ({id,user}, thunkAPI) => {
+  async ({id, user}, thunkAPI) => {
     console.log(id);
     
     try {
@@ -326,6 +340,7 @@ const courseSlice = createSlice({
       tutorCoursesData:[],
       modulesData:[],
       singleCourse:null,
+      singlePurchasedCourse:null,
       reviewsData:[],
       commentsData:[],
       requestedTrades: [],
@@ -352,6 +367,8 @@ const courseSlice = createSlice({
       checkoutSession: null,
       currentPage: 1,
       totalPages: 1,
+      currentCategoryPage: 1,
+      totalCategoryPages: 1,
       message: "",
     },
     reducers: {
@@ -397,9 +414,11 @@ const courseSlice = createSlice({
       .addCase(fetchCategories.fulfilled,(state,action)=>{
         state.isCategoryLoading = false;
         state.isCategorySuccess = true;
-        state.categoriesData = action.payload;
+        state.categoriesData = action.payload.results;
+        state.currentCategoryPage = action.payload.current_page || 1;
+        state.totalCategoryPages = action.payload.total_pages;
       })
-      .addCase(fetchCategories.rejected,(state)=>{
+      .addCase(fetchCategories.rejected,(state,action)=>{
         state.isCategoryError = true;
         state.message = action.payload;
       })
@@ -485,7 +504,11 @@ const courseSlice = createSlice({
       .addCase(fetchPurchasedCourses.fulfilled,(state,action)=>{
         state.isCourseLoading = false;
         state.isCourseSuccess = true;
-        state.purchasedCoursesData = action.payload.results;
+        if (action.payload.results){
+          state.purchasedCoursesData = action.payload.results;
+        }else{
+          state.singlePurchasedCourse = action.payload;
+        }
         state.currentPage = action.payload.current_page || 1;
         state.totalPages = action.payload.total_pages
         

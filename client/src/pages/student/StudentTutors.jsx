@@ -3,11 +3,11 @@ import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Pagination from '../../components/common/ui/Pagination';
 import { Loader } from 'lucide-react';
-import UserLayout from '../../components/common/UserLayout';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import TutorCard from '../../components/tutor/TutorCard';
 import { fetchAdminTutors } from '../../redux/slices/adminSlice';
+import SearchBar from '../../components/common/ui/SearchBar';
 
 const StudentTutors = () => {
   
@@ -16,6 +16,7 @@ const StudentTutors = () => {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const pageSize = 8;
+  const [searchQuery, setSearchQuery] = useState('');
   const {adminTutorsData, currentPage, totalPages} = useSelector((state)=>state.admin);
   
   useEffect(() => {
@@ -23,7 +24,7 @@ const StudentTutors = () => {
     const fetchData = async () => {
         try {
         setLoading(true);
-        await dispatch(fetchAdminTutors({page, pageSize, activeStatus:true, verifiedStatus:true})).unwrap();
+        await dispatch(fetchAdminTutors({page, pageSize, activeStatus:true, verifiedStatus:true, search:searchQuery})).unwrap();
         } catch (error) {
         
         toast.error("Failed to fetch Tutor")
@@ -34,7 +35,12 @@ const StudentTutors = () => {
     };
 
     fetchData();
-    }, [dispatch,page]);
+    }, [dispatch,page, searchQuery]);
+
+    const handleSearch = (query) => {
+      // setPage(1);
+      setSearchQuery(query);
+    };
 
   return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
@@ -54,6 +60,9 @@ const StudentTutors = () => {
             </div>
         ) :  (
             <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+              <SearchBar value={searchQuery} onChange={handleSearch} placeholder='Search tutors...'/>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-8">
                 {adminTutorsData?.map((tutor) => (
                 <TutorCard 

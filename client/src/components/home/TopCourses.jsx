@@ -15,7 +15,7 @@ const Courses = () => {
     const fetchData = async () => {
       try {
         await dispatch(fetchCourses({ page: 1, pageSize: 10, status: 'Approved', categoryId: null, limit: 8 })).unwrap();
-        await dispatch(fetchCategories()).unwrap();
+        await dispatch(fetchCategories({categoryPage:1, pageSize:100})).unwrap();
       } catch (error) {
         console.error('Failed to fetch courses:', error);
       }

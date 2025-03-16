@@ -7,21 +7,31 @@ import { addSkill, deleteSkill } from '../../redux/slices/adminSlice';
 import { fetchCategories, addCategory, updateCategory, deleteCategory } from '../../redux/slices/courseSlice';
 import toast from 'react-hot-toast';
 import { ConfirmDialog } from '../../components/common/ui/ConfirmDialog';
+import Pagination from '../../components/common/ui/Pagination';
 
 const AdminContentManagement = () => {
   const [newCategory, setNewCategory] = useState('');
   const [newSkill, setNewSkill] = useState('');
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [isAddingSkill, setIsAddingSkill] = useState(false);
+  const [categoryPage, setCategoryPage] = useState(1);
+  const [skillPage, setSkillPage] = useState(1);
+  const pageSize = 5;
 
   const dispatch = useDispatch();
-  const { skillsData, isLoading, isSuccess } = useSelector((state) => state.auth);
-  const { categoriesData, isCategoryLoading } = useSelector((state) => state.course);
+  const { skillsData, isLoading, isSuccess, currentSkillsPage, totalSkillsPages } = useSelector((state) => state.auth);
+  const { categoriesData, isCategoryLoading, currentCategoryPage, totalCategoryPages } = useSelector((state) => state.course);
+
+  console.log("Skills data:", skillsData);
+  
 
   useEffect(() => {
-    dispatch(fetchSkills());
-    dispatch(fetchCategories());
-  }, [dispatch]);
+    dispatch(fetchCategories({categoryPage, pageSize}));
+  }, [dispatch, categoryPage]);
+
+  useEffect(() => {
+    dispatch(fetchSkills({skillPage, pageSize}));
+  }, [dispatch, skillPage]);
 
   const handleAddCategory = async (e) => {
     e.preventDefault();
@@ -176,6 +186,13 @@ const AdminContentManagement = () => {
               </div>
             ))}
           </div>
+          <div className='w-auto mt-10'>
+            <Pagination
+                currentPage={currentCategoryPage}
+                totalPages={totalCategoryPages}
+                onPageChange={setCategoryPage}
+            />
+          </div>
         </div>
 
         {/* Skills Section */}
@@ -233,6 +250,13 @@ const AdminContentManagement = () => {
                 </div>
               </div>
             ))}
+          </div>
+          <div className='w-auto mt-10'>
+            <Pagination
+                currentPage={currentSkillsPage}
+                totalPages={totalSkillsPages}
+                onPageChange={setSkillPage}
+            />
           </div>
         </div>
       </div>

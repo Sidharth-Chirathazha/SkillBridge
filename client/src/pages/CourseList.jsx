@@ -2,27 +2,33 @@ import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CourseCard from '../components/common/ui/CourseCard';
 import Pagination from '../components/common/ui/Pagination';
-import { fetchCourses, initiateCheckout, resetCheckout, fetchTutorCourses } from '../redux/slices/courseSlice';
+import { fetchCourses, initiateCheckout, resetCheckout, fetchTutorCourses, fetchCategories } from '../redux/slices/courseSlice';
 import { Loader } from 'lucide-react';
 import {loadStripe} from '@stripe/stripe-js'
 import toast from 'react-hot-toast';
 import TutorVerificationMessage from '../components/tutor/TutorVerificationMessage';
+import SearchBar from '../components/common/ui/SearchBar';
+import DropdownMenu from '../components/common/ui/DropdownMenu';
 
 const stripePromise = loadStripe('pk_test_51Qp6mdRZhgmNkKQoW8Hp4xmJjjpuuC9iwjD0s1utEDyqLsByg7yXK81XadWBK751vQE8nbAMV5RmL11nw25aQrFh00zV21sORj')
+
 
 const CourseList = () => {
   const dispatch = useDispatch();
   const [page, setPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
   const pageSize = 8;
   
   const { coursesData, currentPage, totalPages, 
-    isCourseLoading, isCourseError, isCheckoutLoading, checkoutError, checkoutSession } = useSelector(
+    isCourseLoading, isCourseError, isCheckoutLoading, checkoutError, checkoutSession, categoriesData } = useSelector(
     (state) => state.course
   );
 
   const {role, userData} = useSelector((state)=>state.auth)
 
   const tutorId = userData?.id || null;
+
 
   useEffect(() => {
     if (!tutorId) return;
@@ -42,20 +48,26 @@ const CourseList = () => {
 
   }, [dispatch,tutorId]);
 
+  useEffect(() => {
+    dispatch(fetchCategories({categoryPage:1, pageSize:100}));
+    
+  }, [dispatch]);
+
 
   useEffect(() => {
     const fetchData = async () => {
         try {
-          await dispatch(fetchCourses({ page, pageSize, status :'Approved', user:true })).unwrap();
+          await dispatch(fetchCourses({ page, pageSize, status :'Approved', user:true, search:searchQuery, categoryId:selectedCategory })).unwrap();
         } catch (error) {
           console.error('Failed to fetch Course:', error);
         } 
     };
     fetchData();
     
-  }, [dispatch, page]);
+  }, [dispatch, page, searchQuery, selectedCategory]);
 
-  console.log("All Course details in course list:", coursesData);
+  // console.log("All Course details in course list:", coursesData);
+  // console.log("Categories data in course list:", categoriesData);
   
 
   useEffect(() => {
@@ -84,6 +96,16 @@ const CourseList = () => {
     // Handle like logic
   };
 
+  const handleSearch = (query) => {
+    // setPage(1);
+    setSearchQuery(query);
+  };
+
+  const handleCategoryChange = (categoryId) => {
+    setPage(1);
+    setSelectedCategory(categoryId);
+  };
+
   const handleBuy = async (courseId) => {
     console.log("Inside handle buy",courseId);
     
@@ -94,7 +116,6 @@ const CourseList = () => {
     }
   };
 
-  console.log(coursesData);
   
   return (
     <>
@@ -115,7 +136,6 @@ const CourseList = () => {
           </p>
         </div>
 
-        
         {isCourseLoading || isCheckoutLoading ? (
             <div className="flex justify-center items-center h-screen">
             <Loader className="animate-spin h-10 w-10 text-primary" />
@@ -126,6 +146,16 @@ const CourseList = () => {
               </div>
         ) : (
             <>
+            {/* Add Filters Section Here */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+              <SearchBar value={searchQuery} onChange={handleSearch} placeholder='Search courses...' />
+              <DropdownMenu
+                dropDownItems={categoriesData.map((cat) => ({value:cat.id, label:cat.name}))} 
+                value={selectedCategory} 
+                onChange={handleCategoryChange}
+                defaultLabel={"All Categories"} 
+              />
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-8">
                 {coursesData?.map((course) => (
                 <CourseCard 

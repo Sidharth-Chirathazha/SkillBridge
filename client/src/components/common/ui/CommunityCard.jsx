@@ -4,13 +4,10 @@ import { joinCommunity } from '../../../redux/slices/communitySlice';
 import { Link } from 'react-router-dom';
 import { AdvancedImage } from '@cloudinary/react';
 import { Cloudinary } from '@cloudinary/url-gen';
-import { PencilSquareIcon } from "@heroicons/react/24/solid";
-import toast from 'react-hot-toast';
+import { Users, Pencil, Clock } from 'lucide-react';
 
 const cld = new Cloudinary({
-  cloud: {
-    cloudName: 'dz9kgofdy',
-  },
+  cloud: { cloudName: 'dz9kgofdy' },
 });
 
 const getPublicIdFromUrl = (url) => {
@@ -30,41 +27,59 @@ const CommunityCard = ({ community, currentUserId, onEditCommunity, userRole }) 
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden relative">
-      {isCreator && (
-        <button
-          onClick={() => onEditCommunity(community)}
-          className="absolute top-1 right-1 p-1.5 bg-white/90 rounded-full shadow-sm hover:bg-gray-50 z-10"
-        >
-          <PencilSquareIcon className="w-4 h-4 text-secondary-500" />
-        </button>
-      )}
-      <div className="w-full h-40 bg-gray-100 overflow-hidden">
+    <div className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 flex flex-col group">
+      {/* Thumbnail Section */}
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         {community?.thumbnail ? (
           <AdvancedImage
             cldImg={cld.image(getPublicIdFromUrl(community.thumbnail))}
-            className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+            className="w-full aspect-video object-cover"
             alt={community.title}
           />
         ) : (
-          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+          <div className="w-full aspect-video bg-gray-200 flex items-center justify-center">
             <span className="text-gray-500 text-sm">No thumbnail</span>
           </div>
         )}
+        {isCreator && (
+          <button
+            onClick={() => onEditCommunity(community)}
+            className="absolute top-3 right-3 p-2 rounded-full bg-white/90 hover:bg-white shadow-md transition-all z-20"
+          >
+            <Pencil className="w-5 h-5 text-secondary-500" />
+          </button>
+        )}
       </div>
-      <div className="p-4">
-        <h3 className="text-lg font-semibold text-text-500 mb-1 truncate">{community.title}</h3>
-        <div className="flex justify-between text-xs text-text-400 mb-2">
-          <span>{new Date(community.created_at).toLocaleDateString()}</span>
-          <span className="font-medium">{community.members_count}/{community.max_members}</span>
+
+      {/* Content Section */}
+      <div className="p-5 flex-1 flex flex-col">
+        {/* Title */}
+        <h3 className="font-semibold text-lg mb-2 text-text line-clamp-2 group-hover:text-primary transition-colors">
+          {community.title}
+        </h3>
+
+        {/* Metrics */}
+        <div className="flex items-center gap-4 text-sm text-text-400 mb-4">
+          <div className="flex items-center gap-1">
+            <Users className="w-4 h-4" />
+            <span>{community.members_count}/{community.max_members}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Clock className="w-4 h-4" />
+            <span>{new Date(community.created_at).toLocaleDateString()}</span>
+          </div>
         </div>
-        <p className="text-text-400 text-xs mb-3 line-clamp-2">{community.description}</p>
-        
-        <div className="flex justify-center">
+
+        {/* Description */}
+        <p className="text-text-400 text-sm mb-4 line-clamp-2">{community.description}</p>
+
+        {/* Action Button */}
+        <div className="flex justify-center mt-auto pt-4 border-t border-gray-100">
           {isCreator || isMember ? (
-            <Link 
+            <Link
               to={`/${userRole}/communities/${community.id}/chat`}
-              className="inline-block text-center bg-secondary-500 hover:bg-secondary-600 text-white px-4 py-1.5 rounded-md text-sm font-medium transition-colors w-2/3"
+              className="w-full flex items-center justify-center bg-primary text-white px-4 py-2 rounded-full transition-colors hover:bg-secondary"
             >
               Open Community
             </Link>
@@ -72,9 +87,9 @@ const CommunityCard = ({ community, currentUserId, onEditCommunity, userRole }) 
             <button
               onClick={handleJoin}
               disabled={community.members_count >= community.max_members}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors w-2/3 ${
+              className={`w-full flex items-center justify-center px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 community.members_count >= community.max_members 
-                  ? 'bg-gray-300 cursor-not-allowed'
+                  ? 'bg-gray-300 cursor-not-allowed' 
                   : 'bg-secondary-500 hover:bg-secondary-600 text-white'
               }`}
             >

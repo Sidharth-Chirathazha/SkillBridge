@@ -14,3 +14,4 @@ def generate_email_otp(email, subject):
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[email],
         )
+

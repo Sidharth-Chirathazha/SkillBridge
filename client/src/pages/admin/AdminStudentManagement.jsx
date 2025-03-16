@@ -6,19 +6,27 @@ import {
   ChevronDown,
   Loader 
 } from 'lucide-react';
-import AdminLayout from '../../components/admin/AdminLayout';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAdminStudents } from '../../redux/slices/adminSlice';
 import { useNavigate } from 'react-router-dom';
 import StatusCell from '../../components/common/ui/StatusCell';
 import Pagination from '../../components/common/ui/Pagination';
+import DropdownMenu from '../../components/common/ui/DropdownMenu';
+import SearchBar from '../../components/common/ui/SearchBar';
+
 
 const AdminStudentManagement = () => {
 
-    const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
+    const [selectedActiveStatus, setSelectedActiveStatus] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
     const pageSize = 5;
+
+    const activeStatusOptions = [
+      { value: true, label: "Active" },
+      { value: false, label: "Blocked" },
+    ];
 
       
     const navigate = useNavigate();
@@ -30,7 +38,8 @@ const AdminStudentManagement = () => {
         const fetchData = async () => {
             try {
             setLoading(true);
-            await dispatch(fetchAdminStudents({page, pageSize})).unwrap();
+            await dispatch(fetchAdminStudents({page, pageSize, 
+              activeStatus:selectedActiveStatus === "" ? null : selectedActiveStatus, search:searchQuery})).unwrap();
             } catch (error) {
             console.error('Failed to fetch user:', error);
             }finally {
@@ -39,7 +48,22 @@ const AdminStudentManagement = () => {
         };
         
         fetchData();
-        }, [dispatch,page]);
+    }, [dispatch,page, selectedActiveStatus, searchQuery]);
+
+
+    const handleActiveStatusChange = (status) => {
+      setPage(1);
+      setSelectedActiveStatus(status);
+    };
+
+    const handleSearch = (query) => {
+      // setPage(1);
+      setSearchQuery(query);
+    };
+  
+    const handlePageChange = (newPage) => {
+      setPage((prevPage) => (prevPage !== newPage ? newPage : prevPage));
+    };
 
 
       
@@ -56,30 +80,18 @@ const AdminStudentManagement = () => {
   return (
      <>
     <div className="bg-background-50 p-4 md:p-6 rounded-lg shadow-lg">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+      <div className="flex flex-col mb-6 gap-4">
         <h1 className="text-xl md:text-2xl font-semibold text-text-500 transition-colors duration-300">Students Management</h1>
         
-        <div className="flex items-center space-x-4 w-full md:w-auto sticky top-0 z-20 bg-background-50 py-2">
-          {/* Filter Button */}
-          <div className="relative w-full md:w-auto">
-            <button 
-              onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className="flex items-center px-4 py-2 bg-background-50 text-text-400 rounded-lg border border-background-200 hover:bg-background-200 transition-colors duration-300 w-full md:w-auto justify-between md:justify-start"
-            >
-              <div className="flex items-center">
-                <Filter className="h-5 w-5 mr-2" />
-                Filter
-              </div>
-              <ChevronDown className="h-4 w-4 ml-2" />
-            </button>
-            
-            {isFilterOpen && (
-              <div className="absolute right-0 mt-2 w-full md:w-64 bg-background-50 border border-background-200 rounded-lg shadow-xl p-4 z-10 transform transition-all duration-300 origin-top">
-                {/* Filter options would go here */}
-                <p className="text-text-400 text-sm">Filter options coming soon...</p>
-              </div>
-            )}
-          </div>
+        {/* Add Filters Section Here */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <SearchBar value={searchQuery} onChange={handleSearch} placeholder='Search students...'/>
+            <DropdownMenu
+              dropDownItems={activeStatusOptions} 
+              value={selectedActiveStatus} 
+              onChange={handleActiveStatusChange}
+              defaultLabel={"All"} 
+            />
         </div>
       </div>
 
@@ -194,7 +206,7 @@ const AdminStudentManagement = () => {
           <Pagination 
             currentPage={currentPage}
             totalPages={totalPages}
-            onPageChange={setPage}
+            onPageChange={handlePageChange}
             className="mt-4 md:mt-0"
           />
           

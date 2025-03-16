@@ -9,18 +9,34 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+from users.models import Notification
+from base.custom_pagination import CustomPagination
+from django.db.models import  Q
 
 # Create your views here.
 
 redis_client = redis.StrictRedis(host="127.0.0.1", port=6379, db=0, decode_responses=True)
 
 class CommunityViewSet(ModelViewSet):
-    queryset = Community.objects.all()
     serializer_class = CommunitySerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
     parser_classes = [MultiPartParser, FormParser]
+    pagination_class = CustomPagination
 
     print("Inside community view set")
+
+    def get_queryset(self):
+        queryset = Community.objects.all()
+
+        search = self.request.query_params.get('search')
+
+        if search:
+            queryset = queryset.filter(
+                Q(title__icontains=search)
+            )
+        return queryset
 
     def perform_create(self, serializer):
         print("Received Data:", self.request.data)
@@ -87,16 +103,32 @@ class MessageViewSet(ModelViewSet):
         if not CommunityMember.objects.filter(user=self.request.user, community=community).exists():
             raise PermissionError("You are not a member of this community.")
         message = serializer.save(sender=self.request.user)
-        
+
+        members = CommunityMember.objects.filter(community=community).exclude(user=self.request.user)
         message_data = MessageSerializer(message).data
+
+        notifications = [
+            Notification(user=member.user, notification_type="message", message=f"New message in {community.title} from {self.request.user.get_full_name()}")
+            for member in members
+        ]
+
+        Notification.objects.bulk_create(notifications)
+
+        channel_layer = get_channel_layer()
+        for member in members:
+            async_to_sync(channel_layer.group_send)(
+            f"notifications_{member.user.id}",
+            {
+                "type": "send.notification",
+                "message": f"New message in {community.title}",
+                "notification_type": "message"
+            }
+        )
         
         redis_client.publish(
             f"community_{community.id}", 
             json.dumps(message_data)
         )
-
-        from asgiref.sync import async_to_sync
-        from channels.layers import get_channel_layer
 
         async_to_sync(get_channel_layer().group_send)(
             f"chat_{community.id}",

@@ -9,8 +9,15 @@ export const ConfirmDialog = ({
   onConfirm,
   variant = 'admin',
   destructive = false,
+  isOpen: controlledIsOpen, // New prop
+  setIsOpen: controlledSetIsOpen, // New prop
+  onCancel, // New prop for external cancel handler
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  // Use controlled state if provided, otherwise use internal state
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
+  const setIsOpen = controlledSetIsOpen || setInternalIsOpen;
+  
   const [isLoading, setIsLoading] = useState(false);
 
   const handleConfirm = async () => {
@@ -24,10 +31,17 @@ export const ConfirmDialog = ({
       setIsLoading(false);
     }
   };
+  
+  const handleCancel = () => {
+    setIsOpen(false);
+    if (onCancel) {
+      onCancel();
+    }
+  };
 
   return (
     <>
-      {trigger(() => setIsOpen(true))}
+      {trigger && trigger(() => setIsOpen(true))}
 
       {isOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
@@ -43,7 +57,7 @@ export const ConfirmDialog = ({
 
             <div className="mt-6 flex justify-end gap-3">
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={handleCancel}
                 className={`px-4 py-2 rounded-md ${
                   variant === 'user'
                     ? 'bg-primary-500 hover:bg-primary-600 text-white'

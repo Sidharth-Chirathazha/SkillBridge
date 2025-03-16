@@ -2,8 +2,11 @@ import axiosInstance from "../../api/axios.Config";
 
 
 //Categories Fetch
-export const fetchCategories = async()=>{
-    const response = await axiosInstance.get("/courses/categories/");
+export const fetchCategories = async(categoryPage=1, pageSize=100)=>{
+    
+    let url = `/courses/categories/?page=${categoryPage}&page_size=${pageSize}`
+
+    const response = await axiosInstance.get(url);
     return response.data;
 }
 
@@ -52,8 +55,10 @@ export const addCourse = async(courseInfo)=>{
 }
 
 //Fetch courses
-export const fetchCourses = async(page, pageSize, status=null, user=null, categoryId=null, limit=null)=>{
+export const fetchCourses = async(page, pageSize, status=null, user=null, search=null, categoryId=null, limit=null)=>{
     let url = `/courses/course/?page=${page}&page_size=${pageSize}`;
+
+    const searchQuery = encodeURIComponent(search);
 
     if (status) {
         url += `&status=${status}`;
@@ -66,6 +71,10 @@ export const fetchCourses = async(page, pageSize, status=null, user=null, catego
     if (limit) {
         url += `&limit=${limit}`;
     }
+
+    if (search) {
+        url += `&search=${searchQuery}`;
+    }
     
     const config = user ? {
        requiresAuth:true
@@ -76,15 +85,17 @@ export const fetchCourses = async(page, pageSize, status=null, user=null, catego
 }
 
 //Fetch tutor courses
-export const fetchTutorCourses = async(tutorId, page=null, pageSize=null, status=null)=>{
+export const fetchTutorCourses = async(tutorId, page=null, pageSize=null, status=null, search=null, categoryId=null)=>{
     console.log(tutorId);
-    
+    const searchQuery = encodeURIComponent(search);
     let params = new URLSearchParams();
     params.append("tutor_id", tutorId);
 
     if (page) params.append("page", page);
     if (pageSize) params.append("page_size", pageSize);
     if (status) params.append("status", status);
+    if (search) params.append("search", searchQuery)
+    if (categoryId) params.append("category_id", categoryId)
 
     const url = `/courses/course/?${params.toString()}`;
     
@@ -93,10 +104,24 @@ export const fetchTutorCourses = async(tutorId, page=null, pageSize=null, status
 }
 
 //Fetch courses
-export const fetchPurchasedCourses = async(page, pageSize)=>{
-    const response = await axiosInstance.get(`/courses/purchased-courses/?page=${page}&page_size=${pageSize}`,
-        {requiresAuth:true}
-    );
+export const fetchPurchasedCourses = async(page, pageSize, search=null, categoryId=null, courseId=null)=>{
+
+    let url =`/courses/purchased-courses/?page=${page}&page_size=${pageSize}`
+    const searchQuery = encodeURIComponent(search);
+
+    if (courseId){
+        url = `/courses/purchased-courses/${courseId}/`
+    }
+
+    if (search) {
+        url += `&search=${searchQuery}`;
+    }
+
+    if (categoryId) {
+        url += `&category_id=${categoryId}`;
+    }
+
+    const response = await axiosInstance.get(url, {requiresAuth:true});
     return response.data;
 }
 
@@ -182,6 +207,16 @@ export const updateModule = async(id, updateData)=>{
 export const deleteModule = async(id)=>{
     const response = await axiosInstance.delete(
         `/courses/modules/${id}/`,
+        { requiresAuth:true }
+    );
+    return response.data;
+}
+
+
+//Mark module as completed
+export const markModuleCompleted = async(moduleId)=>{
+    const response = await axiosInstance.patch(
+        `/courses/modules/${moduleId}/mark_completed/`,
         { requiresAuth:true }
     );
     return response.data;

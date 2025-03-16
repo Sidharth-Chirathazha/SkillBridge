@@ -1,6 +1,7 @@
 import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
 import * as authService from '../services/authService';
 import { resetCourseState } from './courseSlice';
+import { act } from 'react';
 
 
 const handleApiError = (error, thunkAPI)=>{
@@ -166,9 +167,9 @@ export const updateUser = createAsyncThunk(
 //Thunk for fetching user
 export const fetchSkills = createAsyncThunk(
   "/fetchSkills",
-  async(_, thunkAPI)=>{
+  async({skillPage, pageSize}, thunkAPI)=>{
       try{
-          const response = await authService.fetchSkills();
+          const response = await authService.fetchSkills(skillPage, pageSize);
           return response
           
       }catch(error){
@@ -257,7 +258,9 @@ const authSlice = createSlice({
       passwordResetSuccess: false,
       isAuthenticated : localStorage.getItem('isAuthenticated') === 'true',
       currentPage:1,
-      totalPages:1
+      totalPages:1,
+      currentSkillsPage:1,
+      totalSkillsPages:1
 
     },
     reducers: {
@@ -462,7 +465,9 @@ const authSlice = createSlice({
         .addCase(fetchSkills.fulfilled, (state, action)=>{
           state.isSuccess = true;
           state.isLoading = false;
-          state.skillsData = action.payload;
+          state.skillsData = action.payload.results;
+          state.currentSkillsPage = action.payload.current_page || 1;
+          state.totalSkillsPages = action.payload.total_pages;
         })
         .addCase(fetchSkills.rejected, (state, action)=>{
           state.isError = true;

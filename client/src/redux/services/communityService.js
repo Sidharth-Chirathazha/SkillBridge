@@ -1,8 +1,16 @@
 import axiosInstance from "../../api/axios.Config";
 
 //Fetch Communities
-export const fetchCommunities = async()=>{
-    const response = await axiosInstance.get("/community/communities/");
+export const fetchCommunities = async(page, pageSize, search=null)=>{
+
+    let url = `/community/communities/?page=${page}&page_size=${pageSize}`
+    const searchQuery = encodeURIComponent(search);
+
+    if (search) {
+        url += `&search=${searchQuery}`;
+    }
+    
+    const response = await axiosInstance.get(url);
     return response.data;
 }
 

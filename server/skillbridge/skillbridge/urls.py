@@ -23,6 +23,7 @@ urlpatterns = [
     path('api/admin/',include('sbAdmin.urls')),
     path('api/courses/',include('courses.urls')),
     path('api/tutor/',include('tutor.urls')),
+    path('api/student/',include('student.urls')),
     path('api/wallet/',include('wallet.urls')),
     path('api/community/',include('community.urls'))
 

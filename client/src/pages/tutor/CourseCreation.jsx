@@ -5,7 +5,8 @@ import Joi, { object } from 'joi';
 import { Upload, PlusCircle, Loader } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { addCourse, addModule, fetchCategories, fetchModules, 
-  fetchSingleCourse, updateCourse, updateModule, deleteModule } from '../../redux/slices/courseSlice';
+  fetchSingleCourse, updateCourse, updateModule, deleteModule, 
+  fetchTutorCourses} from '../../redux/slices/courseSlice';
 import toast from 'react-hot-toast';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ConfirmDialog } from '../../components/common/ui/ConfirmDialog';
@@ -23,10 +24,13 @@ const CourseCreation = () => {
   const [isEditing, setIsEditing] = useState(!isEditMode); // Enabled by default in create mode
   const [isEditingModule, setIsEditingModule] = useState(false);
   const { categoriesData, singleCourse, modulesData, isCourseLoading, isModuleLoading } = useSelector((state) => state.course);
-  const {userData} = useSelector((state)=>state.auth)
+  const {userData} = useSelector((state)=>state.auth);
+  const tutorId = userData?.id;
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  console.log("Categories in course creation", categoriesData);
+  
   const courseSchema = Joi.object({
     title: Joi.string().min(1).required().messages({
       'string.empty': 'Title is required',
@@ -116,11 +120,9 @@ const CourseCreation = () => {
   }, [dispatch]);
 
   useEffect(()=>{
-    console.log("Inside use effect");
     
     if(urlCourseId){
-      dispatch(fetchSingleCourse(urlCourseId));
-      console.log("Fetched single course:", singleCourse);
+      dispatch(fetchSingleCourse({id:urlCourseId, user:true}));
       
       dispatch(fetchModules(urlCourseId));
     }
@@ -181,17 +183,26 @@ const CourseCreation = () => {
           formData.append(key, value)
         }
       });
+
+      console.log("Inside the course creation submit course, formData:");
+
+      formData.forEach((value, key) => {
+        console.log(`${key}:`, value);
+      });
     
       if(isEditMode){
         console.log(urlCourseId);
+        
         await dispatch(updateCourse({id: urlCourseId, updateData: formData})).unwrap();
         setIsEditing(false);
+        dispatch(fetchTutorCourses({tutorId}));
         toast.success('Course updated successfully!');
       }else{
         const response = await dispatch(addCourse(formData)).unwrap();
         console.log("Inside course createtion tesing response:", response);
         
         navigate(`/tutor/teaching/edit/${response.id}`)
+        dispatch(fetchTutorCourses({tutorId}));
         toast.success('Course created successfully!');
       }
     }catch(error){
