@@ -112,5 +112,5 @@ Contributions are welcome! Please follow these steps:
 This project is licensed under the MIT License.
 
 ## Contact
-For any inquiries or collaborations, reach out via email: **your.email@example.com**
+For any inquiries or collaborations, reach out via email: **sidharthchirathazha@gmail.com**
 
