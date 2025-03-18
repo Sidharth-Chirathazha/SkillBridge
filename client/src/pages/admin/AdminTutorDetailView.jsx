@@ -19,6 +19,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { ConfirmDialog } from '../../components/common/ui/ConfirmDialog';
+import avatar2 from '../../assets/images/avatar2.jpg'
 
 const AdminTutorDetailView = () => {
   const [activeTab, setActiveTab] = useState('education');
@@ -77,7 +78,7 @@ const AdminTutorDetailView = () => {
           {/* Left Column: Profile Details */}
           <div className="bg-white rounded-xl shadow-sm border border-background-200 p-4 md:p-6 flex flex-col items-center">
             <img 
-              src={singleTutor.profile_pic_url} 
+              src={singleTutor.profile_pic_url || avatar2} 
               alt={`${singleTutor.first_name} ${singleTutor.last_name}`}
               className="w-32 h-32 md:w-48 md:h-48 rounded-full object-cover border-4 border-primary-100 mb-4"
             />

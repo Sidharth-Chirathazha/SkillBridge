@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, HomeIcon,Bell, Users, GraduationCap, Book, MessageSquare, Star, UserRoundPen, LogOut, PlusCircle, 
+import { Search ,Bell, GraduationCap, LogOut, PlusCircle, 
  BookCopy, ChevronDown, Loader, Menu, X, ChevronsLeft, ChevronsRight, User, Wallet,Library } from 'lucide-react';
+ import { RiUserCommunityFill } from "react-icons/ri";
+ import { FaChalkboardTeacher, FaBook, FaGraduationCap, FaUsers } from "react-icons/fa";
+ import { FaRegMessage } from "react-icons/fa6";
+ import { IoNotifications } from "react-icons/io5";
+ import { MdDashboard, MdAccountCircle} from "react-icons/md";
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import { fetchUser, logoutUser } from '../../redux/slices/authSlice';
@@ -11,6 +16,7 @@ import { persistor } from '../../redux/store';
 import axiosInstance from '../../api/axios.Config';
 import { useNotification } from '../../context_providers/NotificationProvider'
 import { ConfirmDialog } from './ui/ConfirmDialog';
+import avatar2 from '../../assets/images/avatar2.jpg'
 
 const UserLayout = () => {
   const [activePage, setActivePage] = useState('Dashboard');
@@ -28,25 +34,25 @@ const UserLayout = () => {
   const dispatch = useDispatch();
 
   const tutorNavItems = [
-    { name: 'Dashboard', icon: HomeIcon, path: '/tutor/dashboard/' },
-    { name: 'Teaching', icon: BookCopy, path: '/tutor/teaching/' },
-    { name: 'Courses', icon: GraduationCap, path: '/tutor/courses/' },
-    { name: 'Learning', icon: Library, path: '/tutor/learning/' },
-    { name: 'Community', icon: Users, path: '/tutor/communities/' },
-    { name: 'Chat Room', icon: MessageSquare, path: '/tutor/chatroom/' },
-    { name: 'Notifications', icon: Bell, path: '/tutor/notifications/' },
-    { name: 'Account', icon: UserRoundPen, path: '/tutor/profile/' },
+    { name: 'Dashboard', icon:  MdDashboard, path: '/tutor/dashboard/' },
+    { name: 'Teaching', icon: FaBook, path: '/tutor/teaching/' },
+    { name: 'Courses', icon: FaGraduationCap, path: '/tutor/courses/' },
+    { name: 'Learning', icon: FaChalkboardTeacher, path: '/tutor/learning/' },
+    { name: 'Community', icon: RiUserCommunityFill, path: '/tutor/communities/' },
+    { name: 'Chat Room', icon: FaRegMessage, path: '/tutor/chatroom/' },
+    { name: 'Notifications', icon: IoNotifications, path: '/tutor/notifications/' },
+    { name: 'Account', icon: MdAccountCircle, path: '/tutor/profile/' },
   ];
 
   const studentNavItems = [
-    { name: 'Dashboard', icon: HomeIcon, path: '/student/dashboard/' },
-    { name: 'Courses', icon: GraduationCap, path: '/student/courses/' },
-    { name: 'My Learning', icon: Book, path: '/student/learning/' },
-    { name: 'Tutors', icon: BookCopy, path: '/student/tutors/' },
-    { name: 'Community', icon: Users, path: '/student/communities/' },
-    { name: 'Chat Room', icon: MessageSquare, path: '/student/chatroom/' },
-    { name: 'Notifications', icon: Bell, path: '/student/notifications/' },
-    { name: 'Account', icon: UserRoundPen, path: '/student/profile/' },
+    { name: 'Dashboard', icon:  MdDashboard, path: '/student/dashboard/' },
+    { name: 'Courses', icon: FaGraduationCap, path: '/student/courses/' },
+    { name: 'My Learning', icon: FaChalkboardTeacher, path: '/student/learning/' },
+    { name: 'Tutors', icon: FaUsers, path: '/student/tutors/' },
+    { name: 'Community', icon: RiUserCommunityFill, path: '/student/communities/' },
+    { name: 'Chat Room', icon: FaRegMessage, path: '/student/chatroom/' },
+    { name: 'Notifications', icon: IoNotifications, path: '/student/notifications/' },
+    { name: 'Account', icon: MdAccountCircle, path: '/student/profile/' },
   ];
 
   const navigate = useNavigate();
@@ -346,7 +352,7 @@ const UserLayout = () => {
                 className="flex items-center space-x-2 focus:outline-none"
               >
                 <img
-                  src={userData.user.profile_pic_url}
+                  src={userData.user.profile_pic_url || avatar2}
                   alt="Profile"
                   className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-background-200"
                 />

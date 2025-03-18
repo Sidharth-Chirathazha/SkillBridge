@@ -53,11 +53,11 @@ const ForgotPasswordModal = ({isOpen, onClose}) => {
   }, [passwordResetSuccess]);
   
   useEffect(() => {
-    if (isError && message) {
-      toast.error(message);
+    if (isError) {
+      toast.error("An error occured");
       dispatch(resetState());
     }
-  }, [isError, message]);
+  }, [isError]);
 
 useEffect(()=>{
   if(isOpen && step === 2){

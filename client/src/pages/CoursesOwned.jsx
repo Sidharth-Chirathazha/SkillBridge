@@ -37,7 +37,7 @@ const CoursesOwned = ({ variant = 'student' }) => {
   
   useEffect(() => {
     dispatch(fetchPurchasedCourses({ page, pageSize, search:searchQuery, categoryId:selectedCategory}));
-  }, [dispatch, page, searchQuery, selectedCategory]);
+  }, [dispatch, page, searchQuery, selectedCategory, receivedTrades]);
 
   // Fetch course data
     useEffect(() => {

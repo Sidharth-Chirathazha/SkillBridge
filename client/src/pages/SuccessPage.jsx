@@ -19,6 +19,7 @@ const SuccessPage = () => {
         .then(() => {
           // Handle successful verification
           // Maybe redirect to course page or dashboard
+          localStorage.removeItem("checkoutSession");
           toast.success("Payment completed successfully")
           setTimeout(() => {
             navigate("/student/learning/");

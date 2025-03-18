@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 
 const handleApiError = (error, thunkAPI)=>{
   const message = error.response?.data?.detail || error.response?.data?.error || error.message;
-  toast.error(message)
+  // toast.error(message)
   return thunkAPI.rejectWithValue(message);
 }
 

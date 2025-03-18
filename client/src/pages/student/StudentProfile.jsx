@@ -7,19 +7,23 @@ import { Upload, PlusCircle, Linkedin } from 'lucide-react';
 import { fetchUser, updateUser, fetchSkills } from '../../redux/slices/authSlice';
 import toast from 'react-hot-toast';
 import FormInput from '../../components/common/ui/FormInput';
+import avatar2 from '../../assets/images/avatar2.jpg'
+import { Loader } from 'lucide-react';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
 const schema = Joi.object({
   user: Joi.object({
-    first_name: Joi.string().min(2).required().messages({
+    first_name: Joi.string().min(2).regex(/^[A-Za-z]+$/).required().messages({
       'string.min': 'First name must be at least 2 characters',
-      'string.empty': 'First name is required'
+      'string.empty': 'First name is required',
+      'string.pattern.base': 'First name should only contain alphabets'
     }),
-    last_name: Joi.string().min(1).required().messages({
+    last_name: Joi.string().min(1).regex(/^[A-Za-z]+$/).required().messages({
       'string.min': 'Last name is required',
-      'string.empty': 'Last name is required'
+      'string.empty': 'Last name is required',
+      'string.pattern.base': 'First name should only contain alphabets'
     }),
     phone: Joi.string().regex(/^[0-9]{10}$/).required().messages({
       'string.pattern.base': 'Invalid phone number'
@@ -62,7 +66,7 @@ const schema = Joi.object({
 
 const StudentProfile = () => {
   const dispatch = useDispatch();
-  const { userData, skillsData, isUpdateError } = useSelector((state) => state.auth);
+  const { userData, skillsData, isUpdateError, isLoading } = useSelector((state) => state.auth);
   const [filePreviews, setFilePreviews] = useState({ profile_pic: null });
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -177,7 +181,7 @@ const StudentProfile = () => {
             <div className="flex justify-center mb-4">
                 <div className="relative">
                   <img
-                      src={filePreviews.profile_pic || userData?.user?.profile_pic_url}
+                      src={filePreviews.profile_pic || userData?.user?.profile_pic_url || avatar2}
                       className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-white"
                       alt="Profile"
                   />
@@ -315,8 +319,15 @@ const StudentProfile = () => {
                   <button
                       type="submit"
                       className="w-full sm:w-auto px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 text-sm transition-colors duration-200"
+                      disabled={isLoading}
                   >
-                      Save Profile
+                     {isLoading ? (
+                      <>
+                        <Loader className="animate-spin h-4 w-4 mr-2" />
+                      </>
+                    ) : (
+                      "Save Profile"
+                    )}
                   </button>
               )}
           </div>

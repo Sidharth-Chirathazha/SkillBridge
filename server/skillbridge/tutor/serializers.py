@@ -34,9 +34,9 @@ class TutorProfileSerializer(serializers.ModelSerializer):
 
     def get_resume_url(self, obj):
         if obj.resume_url:
-            public_id = str(obj.resume_url)
-            return cloudinary_url(public_id)[0]
+            return f"https://res.cloudinary.com/dz9kgofdy/raw/upload/{obj.resume_url}.pdf"  
         return None
+
         
 
     def update(self, instance, validated_data):
@@ -71,7 +71,8 @@ class TutorProfileSerializer(serializers.ModelSerializer):
 
         if resume:
              print("Inside resume in serialzier",resume )
-             cloudinary_response = cloudinary_upload(resume)
+             cloudinary_response = cloudinary_upload(resume, resource_type="raw")
+             print("Cloudinary Response:", cloudinary_response)  # Debugging
              instance.resume_url = cloudinary_response.get('public_id')
         
         for field, value in validated_data.items():

@@ -19,11 +19,11 @@ const OtpVerificationModal = ({isOpen, onClose, email, role, password}) => {
   const navigate = useNavigate();
   const { isLoading, isError, message } = useSelector(state => state.auth);
 
-  useEffect(()=>{
-    if (isError && message){
-      toast.error(message);
-    }
-  }, [isError, message]);
+  // useEffect(()=>{
+  //   if (isError && message){
+  //     toast.error(message);
+  //   }
+  // }, [isError, message]);
 
   useEffect(()=>{
     if(isOpen){
@@ -93,7 +93,7 @@ const OtpVerificationModal = ({isOpen, onClose, email, role, password}) => {
     startTimeRef.current = Date.now();
     // Add your resend OTP logic here
     dispatch(registerUser({email, role, password}))
-    toast.success("An OTP has been sent to your email")
+    toast.success("An OTP has been sent to your email from resend")
     
   };
 
@@ -112,7 +112,7 @@ const OtpVerificationModal = ({isOpen, onClose, email, role, password}) => {
       navigate('/login')
     })
     .catch((error)=>{
-
+      toast.error(error)
     });
     
   };

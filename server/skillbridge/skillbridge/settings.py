@@ -91,6 +91,7 @@ INSTALLED_APPS = [
     'sbAdmin',
     'courses',
     'wallet',
+    'chatbot',
     'cloudinary',
     'community',
     'rest_framework',
@@ -245,6 +246,8 @@ ACCOUNT_AUTHENTICATED_REDIRECT_URL = '/'  # URL to redirect after successful log
 STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY')
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
 STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
+
+GEMINI_API_KEY=os.getenv('GEMINI_API_KEY')
 
 AUTH_USER_MODEL = 'users.User'
 

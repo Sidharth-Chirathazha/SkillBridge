@@ -10,7 +10,7 @@ export const fetchCommunities = async(page, pageSize, search=null)=>{
         url += `&search=${searchQuery}`;
     }
     
-    const response = await axiosInstance.get(url);
+    const response = await axiosInstance.get(url, {requiresAuth:true});
     return response.data;
 }
 

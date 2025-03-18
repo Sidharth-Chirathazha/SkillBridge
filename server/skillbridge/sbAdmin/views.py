@@ -2,6 +2,10 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.http import Http404
+from rest_framework.exceptions import APIException
+from django.core.exceptions import ObjectDoesNotExist
+from rest_framework.exceptions import ValidationError
 from .serializers import AdminLoginSerializer,AdminTutorSerializer,AdminStudentSerializer
 from rest_framework.permissions import IsAuthenticated,AllowAny,IsAdminUser
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -24,11 +28,14 @@ from django.utils import timezone
 class AdminLoginView(APIView):
     permission_classes =[AllowAny]
     def post(self,request):
-        serializer = AdminLoginSerializer(data=request.data)
-        if serializer.is_valid():
-            return Response(serializer.validated_data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+        try:
+            serializer = AdminLoginSerializer(data=request.data)
+            if serializer.is_valid():
+                return Response(serializer.validated_data, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
 
 class AdminLogoutView(APIView):
     permission_classes = [IsAuthenticated]
@@ -68,48 +75,60 @@ class AdminTutorViewSet(ModelViewSet):
         return [IsAdminUser()]
     
     def get_queryset(self):
-        queryset = User.objects.filter(role="tutor").select_related("tutor_profile").order_by("-created_at")
+        try:
+            queryset = User.objects.filter(role="tutor").select_related("tutor_profile").order_by("-created_at")
 
-        active_status = self.request.query_params.get("active_status")
-        verified_status = self.request.query_params.get("verified_status")
-        search = self.request.query_params.get("search")
+            active_status = self.request.query_params.get("active_status")
+            verified_status = self.request.query_params.get("verified_status")
+            search = self.request.query_params.get("search")
 
-        filters = {}
+            filters = {}
 
-        queryset = queryset.annotate(
-            full_name = Concat(F("first_name"), Value(" "), F("last_name"), output_field=CharField())
-            )
+            queryset = queryset.annotate(
+                full_name = Concat(F("first_name"), Value(" "), F("last_name"), output_field=CharField())
+                )
 
-        if search:
-          queryset = queryset.filter(
-            Q(full_name__icontains=search) | Q(tutor_profile__cur_job_role__icontains=search)
-            )
+            if search:
+                queryset = queryset.filter(
+                Q(full_name__icontains=search) | Q(tutor_profile__cur_job_role__icontains=search)
+                )
 
-        if active_status is not None:
-            filters["is_active"] = active_status.lower() == "true"
+            if active_status is not None:
+                filters["is_active"] = active_status.lower() == "true"
 
-        if verified_status is not None:
-            filters["tutor_profile__is_verified"] = verified_status.lower() == "true"
+            if verified_status is not None:
+                filters["tutor_profile__is_verified"] = verified_status.lower() == "true"
 
-        return queryset.filter(**filters)
+            return queryset.filter(**filters)
+        except Exception as e:
+            raise APIException(f"An error occurred while fetching tutors: {str(e)}")
 
     def retrieve(self, request, pk=None):
-        tutor = get_object_or_404(User, id=pk, role="tutor")
-        serializer = self.get_serializer(tutor)
-        return Response(serializer.data)
+        try:
+            tutor = get_object_or_404(User, id=pk, role="tutor")
+            serializer = self.get_serializer(tutor)
+            return Response(serializer.data)
+        except Http404:
+            return Response({"error": "Tutor not found."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     def partial_update(self, request, pk=None):
         """Handles partial updates (PATCH) for tutor verification"""
-        tutor = get_object_or_404(User, id=pk, role="tutor")
-        is_verified = request.data.get("is_verified")
+        try:
+            tutor = get_object_or_404(User, id=pk, role="tutor")
+            is_verified = request.data.get("is_verified")
 
-        if is_verified is not None:
-            tutor.tutor_profile.is_verified = is_verified
-            tutor.tutor_profile.save()
-            return Response({"detail": f"Tutor {'authorized' if is_verified else 'unauthorized'} successfully."})
+            if is_verified is not None:
+                tutor.tutor_profile.is_verified = is_verified
+                tutor.tutor_profile.save()
+                return Response({"detail": f"Tutor {'authorized' if is_verified else 'unauthorized'} successfully."})
 
-        return Response({"detail": "Invalid data."}, status=400)
-        
+            return Response({"detail": "Invalid data."}, status=400)
+        except Http404:
+            return Response({"error": "Tutor not found."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 
@@ -119,31 +138,40 @@ class AdminStudentViewSet(ModelViewSet):
     pagination_class = CustomPagination
 
     def get_queryset(self):
-        queryset = User.objects.filter(role="student").order_by("-created_at")
+        try:
+            queryset = User.objects.filter(role="student").order_by("-created_at")
 
-        active_status = self.request.query_params.get("active_status")
-        search = self.request.query_params.get("search")
+            active_status = self.request.query_params.get("active_status")
+            search = self.request.query_params.get("search")
 
-        filters = {}
+            filters = {}
 
-        queryset = queryset.annotate(
-            full_name = Concat(F("first_name"), Value(" "), F("last_name"), output_field=CharField())
-            )
+            queryset = queryset.annotate(
+                full_name = Concat(F("first_name"), Value(" "), F("last_name"), output_field=CharField())
+                )
 
-        if search:
-          queryset = queryset.filter(
-            Q(full_name__icontains=search)
-            )
-          
-        if active_status is not None:
-            filters["is_active"] = active_status.lower() == "true"
+            if search:
+                queryset = queryset.filter(
+                Q(full_name__icontains=search)
+                )
+            
+            if active_status is not None:
+                filters["is_active"] = active_status.lower() == "true"
 
-        return queryset.filter(**filters)
+            return queryset.filter(**filters)
+        
+        except Exception as e:
+            raise APIException(f"An error occurred while fetching students: {str(e)}")
 
     def retrieve(self, request, pk=None):
-        student = get_object_or_404(User, id=pk, role="student")
-        serializer = self.get_serializer(student)
-        return Response(serializer.data)
+        try:
+            student = get_object_or_404(User, id=pk, role="student")
+            serializer = self.get_serializer(student)
+            return Response(serializer.data)
+        except Http404:
+            return Response({"error": "Student not found."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     
     
@@ -155,14 +183,22 @@ class UpdateUserStatusView(APIView):
             return Response({"detail": "Tutor ID/Student ID is required."}, status=400)
         try:
             user = User.objects.get(id=id)
-        except:
-            return Response({"detail": "Tutor/Student not found."}, status=404)
+        except User.DoesNotExist:
+            raise Http404("Tutor/Student not found.")
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         is_active = request.data.get("is_active")
         if is_active is not None:
-            user.is_active = is_active
-            user.save()
-            return Response({"detail": f"User {'blocked' if is_active else 'unblocked'} successfully."})
+            try:
+                user.is_active = is_active
+                user.save()
+                status_message = "blocked" if not is_active else "unblocked"
+                return Response({"detail": f"User {status_message} successfully."}, status=status.HTTP_200_OK)
+            except ValidationError as e:
+                return Response({"detail": e.detail}, status=status.HTTP_400_BAD_REQUEST)
+            except Exception as e:
+                return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response({"detail": "Invalid data."}, status=400)
     
 
@@ -172,41 +208,49 @@ class AdminDashboardSummaryView(APIView):
 
     def get(self, request):
 
-        user = request.user
+        try:
+            user = request.user
 
-        admin_wallet = Wallet.objects.filter(user=user).first()
-        admin_earnings = admin_wallet.balance if admin_wallet else 0.00
+            admin_wallet = Wallet.objects.filter(user=user).first()
+            admin_earnings = admin_wallet.balance if admin_wallet else 0.00
 
-        total_sales = Wallet.objects.aggregate(Sum('balance'))['balance__sum'] or 0.00
+            total_sales = Wallet.objects.aggregate(Sum('balance'))['balance__sum'] or 0.00
 
-        if total_sales > 0:
-            admin_share_percentage = (admin_earnings / total_sales) * 100
-            tutor_share_percentage = 100 - admin_share_percentage  # Remaining goes to tutors
-        else:
-            admin_share_percentage = 0.00
-            tutor_share_percentage = 0.00
-        
-        data = {
-            "total_students" : User.objects.filter(role="student").count(),
-            "total_tutors" : User.objects.filter(role="tutor").count(),
-            "total_courses" : Course.objects.all().count(),
-            "total_earnings": admin_earnings,
-            "total_sales":total_sales,
-            "admin_share_percentage": round(admin_share_percentage, 2),  # Corrected calculation
-            "tutor_share_percentage": round(tutor_share_percentage, 2)   # Corrected calculation
-        }
-        return Response(data)
+            if total_sales > 0:
+                admin_share_percentage = (admin_earnings / total_sales) * 100
+                tutor_share_percentage = 100 - admin_share_percentage  # Remaining goes to tutors
+            else:
+                admin_share_percentage = 0.00
+                tutor_share_percentage = 0.00
+            
+            data = {
+                "total_students" : User.objects.filter(role="student").count(),
+                "total_tutors" : User.objects.filter(role="tutor").count(),
+                "total_courses" : Course.objects.all().count(),
+                "total_earnings": admin_earnings,
+                "total_sales":total_sales,
+                "admin_share_percentage": round(admin_share_percentage, 2),  # Corrected calculation
+                "tutor_share_percentage": round(tutor_share_percentage, 2)   # Corrected calculation
+            }
+            return Response(data)
+        except ObjectDoesNotExist:
+            return Response({"detail": "Data not found."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 class GlobalSummaryView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        data = {
-            "total_students" : User.objects.filter(role="student").count(),
-            "total_tutors" : User.objects.filter(role="tutor").count(),
-            "total_courses" : Course.objects.all().count()
-        }
-        return Response(data)
+        try:
+            data = {
+                "total_students" : User.objects.filter(role="student").count(),
+                "total_tutors" : User.objects.filter(role="tutor").count(),
+                "total_courses" : Course.objects.all().count()
+            }
+            return Response(data)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class AdminEarningsOverviewView(APIView):
     permission_classes = [IsAdminUser]
@@ -218,7 +262,7 @@ class AdminEarningsOverviewView(APIView):
            try:
                admin_wallet = user.wallet
            except Wallet.DoesNotExist:
-               return Response({"error": "Wallet not found"}, status=400)
+               return Response({"error": "Wallet not found"}, status=status.HTTP_400_BAD_REQUEST)
            
            admin_transactions = Transaction.objects.filter(wallet=admin_wallet, transaction_type="credit")
 

@@ -9,6 +9,7 @@ import { FiChevronRight } from 'react-icons/fi';
 import { FaStar, FaRegClock, FaBook, FaCheck } from 'react-icons/fa';
 import { fetchPurchasedCourses } from "../../redux/slices/courseSlice";
 import axiosInstance from "../../api/axios.Config";
+import avatar2 from '../../assets/images/avatar2.jpg'
 
 const StudentDashboard = () => {
   const dispatch = useDispatch();
@@ -149,7 +150,7 @@ const StudentDashboard = () => {
         const response = await axiosInstance.get('/student/dashboard-summary/', {requiresAuth:true});
         setSummaryData(response.data);
         setCompletedPercent(response.data.completed_percentage)
-        setRemainingPercent(response.data.remaining_percentage)
+        setRemainingPercent(response.data.completed_percentage > 0 ? 100 - response.data.completed_percentage : 0)
       }catch (error){
         console.error("Error fetching dashboard summary:", error);
       }
@@ -165,7 +166,7 @@ const StudentDashboard = () => {
         <div className="bg-white rounded-lg shadow-md p-6 mb-8 flex flex-col md:flex-row items-center md:items-start gap-4">
           <div className="flex-shrink-0">
             <img 
-              src={userData?.user?.profile_pic_url || "https://via.placeholder.com/100x100"} 
+              src={userData?.user?.profile_pic_url || avatar2} 
               alt="Profile" 
               className="w-24 h-24 rounded-full object-cover border-2 border-primary-500"
             />

@@ -7,6 +7,8 @@ import { Upload, PlusCircle, Trash2, FileText, Edit, ChevronLeft, ChevronRight, 
 import { fetchSkills, fetchUser, updateUser } from '../../redux/slices/authSlice';
 import toast from 'react-hot-toast';
 import FormInput from '../../components/common/ui/FormInput';
+import avatar2 from '../../assets/images/avatar2.jpg'
+
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
@@ -188,7 +190,7 @@ const PersonalSection = ({errors}) => (
       <div className="flex justify-center mb-4">
           <div className="relative">
               <img
-                  src={filePreviews.profile_pic || userData?.user?.profile_pic_url}
+                  src={filePreviews.profile_pic || userData?.user?.profile_pic_url || avatar2}
                   className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-white"
                   alt="Profile"
               />

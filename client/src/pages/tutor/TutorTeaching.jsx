@@ -49,7 +49,7 @@ const TutorTeaching = () => {
     }
     fetchData();
 
-  }, [dispatch, page, tutorId, searchQuery, selectedCategory]);
+  }, [dispatch, page, tutorId, searchQuery, selectedCategory, navigate]);
 
   const handleSearch = (query) => {
     setPage(1);

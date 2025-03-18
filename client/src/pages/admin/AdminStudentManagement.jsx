@@ -13,6 +13,7 @@ import StatusCell from '../../components/common/ui/StatusCell';
 import Pagination from '../../components/common/ui/Pagination';
 import DropdownMenu from '../../components/common/ui/DropdownMenu';
 import SearchBar from '../../components/common/ui/SearchBar';
+import avatar2 from '../../assets/images/avatar2.jpg'
 
 
 const AdminStudentManagement = () => {
@@ -117,7 +118,7 @@ const AdminStudentManagement = () => {
                 <td className="p-4">
                   <div className="h-10 w-10 rounded-full overflow-hidden shadow-md transition-transform duration-300 hover:scale-110">
                       <img 
-                        src={student.profile_pic_url} 
+                        src={student.profile_pic_url || avatar2} 
                         alt={student.first_name} 
                         className="h-full w-full object-cover"
                       />

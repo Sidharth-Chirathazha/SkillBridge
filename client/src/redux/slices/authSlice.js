@@ -1,7 +1,8 @@
 import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
 import * as authService from '../services/authService';
 import { resetCourseState } from './courseSlice';
-import { act } from 'react';
+import toast from 'react-hot-toast';
+
 
 
 const handleApiError = (error, thunkAPI)=>{
@@ -11,6 +12,7 @@ const handleApiError = (error, thunkAPI)=>{
     Object.values(error.response?.data || {})[0] || // First error if object
     error.message ||
     error.toString();
+    toast.error(message)
 
 return thunkAPI.rejectWithValue(message);
 }
@@ -296,7 +298,6 @@ const authSlice = createSlice({
         .addCase(registerUser.fulfilled, (state, action) => {
           state.isLoading = false;
           state.isSuccess = true;
-          state.message = "OTP sent successfully";
           state.otpRequestSuccess = true
         })
         .addCase(registerUser.rejected, (state, action) => {

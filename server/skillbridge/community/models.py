@@ -16,6 +16,7 @@ class Community(models.Model):
     max_members = models.PositiveIntegerField(default=50)
     members = models.ManyToManyField(User, related_name="joined_communities", through="CommunityMember")
     created_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return self.title

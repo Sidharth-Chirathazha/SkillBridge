@@ -19,7 +19,7 @@ class CommunitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Community
-        fields = ["id", "creator", "creator_name", "title", "description", "thumbnail", "max_members", "members_count", "created_at", "members"]
+        fields = ["id", "creator", "creator_name", "title", "description", "thumbnail", "max_members", "members_count", "created_at", "is_active", "members"]
         read_only_fields = ["creator"] 
 
     def validate_thumbnail(self, value):

@@ -10,6 +10,7 @@ import theme from './assets/styles/theme'
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import UserPrivateRoute from './routes/UserPrivateRoute'
 import VideoCallPage from './pages/VideoCallPage'
+import NotFound from './pages/NotFound'
 
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
@@ -67,6 +68,7 @@ function App() {
               <Route element={<UserPrivateRoute />}>
                   <Route path="/video-call/:roomId" element={<VideoCallPage />} />
               </Route>
+              <Route path="*" element={<NotFound/>} />
             </Routes>
         </BrowserRouter>
       </ThemeProvider>

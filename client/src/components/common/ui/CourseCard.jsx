@@ -18,7 +18,6 @@ const CourseCard = ({
 
   // console.log("Course details in card:", course);
   
-
   const handleCardClick = () => {
     if (isPublicView) {
       navigate('/login');
@@ -156,7 +155,7 @@ const CourseCard = ({
             </div>
 
             {/* Price and Action */}
-            <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
+            <div className={`flex mt-auto pt-4 border-t border-gray-100 ${role === 'tutor' && !isPublicView ? 'flex-col' : 'items-center justify-between'}`}>
               <div className="flex items-baseline gap-2">
                 <span className="text-lg font-bold text-secondary">
                   ₹{course.price || 0}
@@ -172,17 +171,17 @@ const CourseCard = ({
                 // "Under Trade" button
                 <button
                   disabled
-                  className="px-4 py-1.5 bg-gray-400 text-white text-sm rounded-full cursor-not-allowed"
+                  className="px-4 py-1.5 bg-gray-400 text-white text-sm rounded-full cursor-not-allowed mt-3"
                 >
                   Under Trade
                 </button>
               ) : (
-                <div className="flex items-center gap-2">
+                <div className={`flex ${role === 'tutor' && !isPublicView ? 'flex-col w-full gap-2 mt-3' : 'items-center gap-2'}`}>
                   {/* Enroll Button */}
                   <button
                     onClick={handleEnrollClick}
                     className={`px-4 py-1.5 bg-primary text-white text-sm rounded-full hover:bg-primary-600 transition-colors ${
-                      role === 'tutor' && !isPublicView ? 'w-20' : ''
+                      role === 'tutor' && !isPublicView ? 'w-full' : ''
                     }`}
                   >
                     {role === 'tutor' && !isPublicView ? 'Enroll' : 'Enroll Now'}
@@ -192,7 +191,7 @@ const CourseCard = ({
                   {role === 'tutor' && !isPublicView && (
                     <button
                       onClick={openTradeModal}
-                      className="w-20 py-1.5 bg-secondary text-white text-sm rounded-full hover:bg-secondary-600 transition-colors flex items-center justify-center"
+                      className="w-full py-1.5 bg-secondary text-white text-sm rounded-full hover:bg-secondary-600 transition-colors flex items-center justify-center"
                     >
                       <Repeat size={14} className="mr-1" />
                       <span>Trade</span>

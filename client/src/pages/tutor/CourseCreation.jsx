@@ -34,7 +34,6 @@ const CourseCreation = () => {
   const courseSchema = Joi.object({
     title: Joi.string().min(1).required().messages({
       'string.empty': 'Title is required',
-      'string.min': 'Title must be at least 1 character'
     }),
     description: Joi.string().min(1).required().messages({
       'string.empty': 'Description is required',
@@ -195,14 +194,14 @@ const CourseCreation = () => {
         
         await dispatch(updateCourse({id: urlCourseId, updateData: formData})).unwrap();
         setIsEditing(false);
-        dispatch(fetchTutorCourses({tutorId}));
+        await dispatch(fetchTutorCourses({tutorId,page:1, pageSize:8}));
         toast.success('Course updated successfully!');
       }else{
         const response = await dispatch(addCourse(formData)).unwrap();
         console.log("Inside course createtion tesing response:", response);
         
         navigate(`/tutor/teaching/edit/${response.id}`)
-        dispatch(fetchTutorCourses({tutorId}));
+        await dispatch(fetchTutorCourses({tutorId, page:1, pageSize:8}));
         toast.success('Course created successfully!');
       }
     }catch(error){
@@ -245,16 +244,16 @@ const CourseCreation = () => {
     }
   };
 
-  const handleDeleteModule = async(moduleId) =>{
-    try{
-      await dispatch(deleteModule(moduleId)).unwrap();
-      dispatch(fetchModules(urlCourseId));
-      setEditingModuleId(null);
-      toast.success("Module deleted successfully")
-    }catch(error){
-      toast.error("Error while deleting module")
-    }
-  }
+  // const handleDeleteModule = async(moduleId) =>{
+  //   try{
+  //     await dispatch(deleteModule(moduleId)).unwrap();
+  //     dispatch(fetchModules(urlCourseId));
+  //     setEditingModuleId(null);
+  //     toast.success("Module deleted successfully")
+  //   }catch(error){
+  //     toast.error("Error while deleting module")
+  //   }
+  // }
 
 
   const FormInput = ({ label, name, control, error, type = 'text', className = '', as = 'input' }) => (
@@ -479,7 +478,13 @@ const CourseCreation = () => {
                     type="submit"
                     className="w-full sm:w-auto px-6 py-2 bg-secondary-500 text-white rounded-lg hover:bg-secondary-600 transition-colors text-sm"
                   >
-                    {isEditing ? 'Save Changes' : 'Create Course'}
+                    {isCourseLoading ? (
+                      <>
+                        <Loader className="animate-spin h-4 w-4 mr-2" />
+                      </>
+                    ) : (
+                      isEditing ? 'Save Changes' : 'Create Course'
+                    )}
                   </button>
                 </div>
                 )}
@@ -681,7 +686,7 @@ const CourseCreation = () => {
                           >
                             {isEditingModule && editingModuleId === module.id ? 'Cancel' : 'Edit'}
                           </button>
-                          <ConfirmDialog
+                          {/* <ConfirmDialog
                             trigger={(open) => (
                               <button
                                 onClick={open}
@@ -696,7 +701,7 @@ const CourseCreation = () => {
                             destructive
                             onConfirm={() => handleDeleteModule(module.id)}
                             variant="user"
-                          />
+                          /> */}
                         </div>
                       )}
                     </div>

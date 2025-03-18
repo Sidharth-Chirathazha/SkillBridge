@@ -10,7 +10,8 @@ import TutorVerificationMessage from '../components/tutor/TutorVerificationMessa
 import SearchBar from '../components/common/ui/SearchBar';
 import DropdownMenu from '../components/common/ui/DropdownMenu';
 
-const stripePromise = loadStripe('pk_test_51Qp6mdRZhgmNkKQoW8Hp4xmJjjpuuC9iwjD0s1utEDyqLsByg7yXK81XadWBK751vQE8nbAMV5RmL11nw25aQrFh00zV21sORj')
+const stripe_publish_key = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = loadStripe(stripe_publish_key)
 
 
 const CourseList = () => {
@@ -84,13 +85,16 @@ const CourseList = () => {
         const {error} = await stripe.redirectToCheckout({
           sessionId: checkoutSession.sessionId
         });
-        if(error){
+        if (!error) {
+          dispatch(resetCheckout()); // ✅ Reset checkoutSession after redirect
+        }
+        else{
           console.error('Stripe redirect error:', error);
         }
       }
     };
     redirectToCheckout();
-  }, [checkoutSession])
+  }, [checkoutSession, dispatch])
 
   const handleLike = (courseId) => {
     // Handle like logic

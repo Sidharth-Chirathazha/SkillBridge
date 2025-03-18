@@ -78,7 +78,7 @@ const TutorDashboard = () => {
       let csvContent = "data:text/csv;charset=utf-8,";
 
       // Add CSV header
-      csvContent += "Course Name,User Name,Purchase Date,Purchase Type,Course Price,Purchase Amount\n";
+      csvContent += "Course Name,Purchased By,Purchase Date,Purchase Type,Course Price,Admin Share,Credited Amount\n";
 
       // Add data rows
       purchaseData.forEach(purchase => {
@@ -88,7 +88,8 @@ const TutorDashboard = () => {
           purchase.purchase_date,
           purchase.purchase_type,
           purchase.course_price,
-          purchase.transaction_amount
+          purchase.opposite_share,
+          purchase.credited_amount
         ].join(",");
         csvContent += row + "\n";
       });

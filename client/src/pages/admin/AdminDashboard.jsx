@@ -67,44 +67,45 @@ const AdminDashboard = () => {
   
   
   const handleDownloadReport = async () => {
-    // setIsDownloading(true);
-    // try{
-    //   const response = await axiosInstance.get(`/tutor/purchase-details?timeframe=${chartTimeframe}`, {requiresAuth:true});
-    //   const purchaseData = response.data.purchases;
+    setIsDownloading(true);
+    try{
+      const response = await axiosInstance.get(`/tutor/purchase-details?timeframe=${chartTimeframe}`, {requiresAuth:true});
+      const purchaseData = response.data.purchases;
 
-    //   // Generate CSV content
-    //   let csvContent = "data:text/csv;charset=utf-8,";
+      // Generate CSV content
+      let csvContent = "data:text/csv;charset=utf-8,";
 
-    //   // Add CSV header
-    //   csvContent += "Course Name,User Name,Purchase Date,Purchase Type,Course Price,Purchase Amount\n";
+      // Add CSV header
+      csvContent += "Course Name,Purchased By,Purchase Date,Purchase Type,Course Price,Tutor Share,Credited Amount\n";
 
-    //   // Add data rows
-    //   purchaseData.forEach(purchase => {
-    //     const row = [
-    //       `"${purchase.course_name}"`,
-    //       `"${purchase.user_name}"`,
-    //       purchase.purchase_date,
-    //       purchase.purchase_type,
-    //       purchase.course_price,
-    //       purchase.transaction_amount
-    //     ].join(",");
-    //     csvContent += row + "\n";
-    //   });
+      // Add data rows
+      purchaseData.forEach(purchase => {
+        const row = [
+          `"${purchase.course_name}"`,
+          `"${purchase.user_name}"`,
+          purchase.purchase_date,
+          purchase.purchase_type,
+          purchase.course_price,
+          purchase.opposite_share,
+          purchase.credited_amount
+        ].join(",");
+        csvContent += row + "\n";
+      });
 
-    //   const encodedUri = encodeURI(csvContent);
-    //   const link = document.createElement("a");
-    //   link.setAttribute("href", encodedUri);
-    //   link.setAttribute("download", `earnings_report_${chartTimeframe}_${new Date().toISOString().split('T')[0]}.csv`);
-    //   document.body.appendChild(link);
-    //   link.click();
-    //   document.body.removeChild(link);
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `earnings_report_${chartTimeframe}_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
 
-    // }catch (err) {
-    //   console.error('Error downloading report:', err);
-    //   alert('Failed to download report. Please try again later.');
-    // } finally {
-    //   setIsDownloading(false);
-    // }
+    }catch (err) {
+      console.error('Error downloading report:', err);
+      alert('Failed to download report. Please try again later.');
+    } finally {
+      setIsDownloading(false);
+    }
   
 
   };

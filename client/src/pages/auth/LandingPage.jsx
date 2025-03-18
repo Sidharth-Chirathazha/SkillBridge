@@ -4,6 +4,7 @@ import HeroSection from '../../components/home/HeroSection'
 import TopTutors from '../../components/home/TopTutors'
 import TopCourses from '../../components/home/TopCourses'
 import Footer from '../../components/home/Footer'
+import ChatBot from '../../components/home/ChatBot'
 
 
 const LandingPage = () => {
@@ -14,6 +15,7 @@ const LandingPage = () => {
       <TopCourses/>
       <TopTutors/>
       <Footer/>
+      <ChatBot/>
     </>
   )
 }
