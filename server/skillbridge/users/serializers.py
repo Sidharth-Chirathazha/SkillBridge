@@ -5,7 +5,8 @@ from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from .models import Skill,Notification,UserActivity
-from .utils import generate_email_otp
+# from .utils import generate_email_otp
+from .tasks import sent_otp_email
 from cloudinary.utils import cloudinary_url
 from cloudinary.uploader import upload as cloudinary_upload
 from wallet.models import Wallet
@@ -38,6 +39,7 @@ class UserCreationSerializer(serializers.Serializer):
 
             # Check if the OTP is correct
             cached_otp = cache.get(f'otp_{email}')
+            print(f"OTP Cached for {email}: {cache.get(f'otp_{email}')}") 
             if cached_otp is None:
                 raise serializers.ValidationError("Otp has expired. Please request for a new OTP.")
             if int(otp) != cached_otp:
@@ -69,13 +71,23 @@ class UserCreationSerializer(serializers.Serializer):
             return {"message": "User created successfully."}
         
         elif email and password and role:
-            generate_email_otp(email, subject="Registration")
+            subject = "Registration"
+            print(f"Preparing to send OTP to {email} with subject {subject}")
+            try:
+                if isinstance(email, str) and isinstance(subject, str):
+                    task = sent_otp_email.delay(email, subject)
+                    print(f"Task sent with id: {task.id}")
+                else:
+                    print(f"Invalid email or subject: email={type(email)}, subject={type(subject)}")
+            except Exception as e:
+                print(f"Error sending task: {e}")
             return {"message": "OTP sent for registration.", "email": email}
         
         elif email and not(password or role or otp or new_password):
             if not User.objects.filter(email=email).exists():
                 raise serializers.ValidationError("Email does not exists")
-            generate_email_otp(email, subject="Password reset")
+            subject="Password reset"
+            sent_otp_email.delay(email, subject)
             return {"message": "OTP sent for password reset.", "email": email}
         
         elif email and otp and not new_password:

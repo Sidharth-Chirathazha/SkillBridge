@@ -3,6 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
+from google.auth.exceptions import GoogleAuthError
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -12,6 +13,8 @@ from django.utils.decorators import method_decorator
 from student.serializers import StudentProfileSerializer
 from tutor.serializers import TutorProfileSerializer
 from rest_framework.parsers import MultiPartParser,FormParser,JSONParser
+import jwt
+import datetime
 import json
 from datetime import date
 from datetime import timedelta
@@ -25,15 +28,28 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from base.custom_pagination import CustomPagination
 from django.conf import settings
+import logging
+from celery import shared_task
+
+
+
+logger = logging.getLogger(__name__)
 
 
 # Create your views here.
+
+GOOGLE_CLIENT_ID = settings.GOOGLE_CLIENT_ID
 
 class CustomTokenRefreshView(TokenRefreshView):
     pass
 
 class UserCreationHandlerView(APIView):
     permission_classes = [AllowAny]
+
+    @shared_task
+    def test_task():
+        print("Test task executed successfully")
+        return True
 
     def post(self, request, *args, **kwargs):
         try:
@@ -156,12 +172,21 @@ class GoogleLoginView(APIView):
         token = request.data.get('token')
         role = request.data.get('role')
 
+        logger.info(f"Received Token: {token}, Role: {role}")
+
         if not token or not role:
             return Response({"error": "Token and role are required."}, status=status.HTTP_400_BAD_REQUEST)
+        if role not in ['student', 'tutor']:
+            return Response({"error": "Invalid role. Must be 'student' or 'tutor'."}, status=status.HTTP_400_BAD_REQUEST)
         
         try:
             # Verify the Google token
-            id_info = id_token.verify_oauth2_token(token, google_requests.Request())
+            logger.info(f"Current server time: {datetime.datetime.now()}")
+            decoded = jwt.decode(token, options={"verify_signature": False})
+            logger.info(f"Token payload: {decoded}")
+
+
+            id_info = id_token.verify_oauth2_token(token, google_requests.Request(), audience=GOOGLE_CLIENT_ID, clock_skew_in_seconds=2)
             email = id_info.get('email')
             first_name = id_info.get('given_name', '')
             last_name = id_info.get('family_name', '')
@@ -193,7 +218,7 @@ class GoogleLoginView(APIView):
                 "role": user.role,
             }, status=status.HTTP_200_OK)
 
-        except ValueError as e:
+        except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class SkillListHandleView(APIView):
