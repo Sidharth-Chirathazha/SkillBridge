@@ -1,13 +1,13 @@
-from .serializers import UserCreationSerializer,UserLoginSerializer, SkillSerializer, NotificationSerializer, UserActivitySerializer
+from .serializers import UserCreationSerializer,UserLoginSerializer, SkillSerializer, NotificationSerializer, UserActivitySerializer, BlogSerializer, CommentSerializer
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError,PermissionDenied,NotFound
 from google.auth.exceptions import GoogleAuthError
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
-from rest_framework.permissions import AllowAny,IsAuthenticated,IsAdminUser
+from rest_framework.permissions import AllowAny,IsAuthenticated,IsAdminUser,IsAuthenticatedOrReadOnly
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from student.serializers import StudentProfileSerializer
@@ -21,7 +21,7 @@ from datetime import timedelta
 from django.utils.timezone import now
 from student.models import StudentProfile
 from tutor.models import TutorProfile
-from users.models import User, Skill, Notification, UserActivity
+from users.models import User, Skill, Notification, UserActivity,Blog,Comment
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from rest_framework.viewsets import ModelViewSet
@@ -372,3 +372,60 @@ class UserLearningActivityView(ListAPIView):
         return UserActivity.objects.filter(user=user, date__gte=start_date).order_by("date")
 
         
+class BlogViewSet(ModelViewSet):
+    queryset = Blog.objects.all().order_by('-created_at')
+    serializer_class = BlogSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
+    def perform_update(self, serializer):
+        try:
+            blog = self.get_object()
+            if blog.author != self.request.user:
+                raise PermissionDenied("You do not have permission to edit this blog.")
+            serializer.save()
+        except Blog.DoesNotExist:
+            raise PermissionDenied("Blog not found.")
+        except Exception as e:
+            raise PermissionDenied(str(e))
+        
+    def perform_destroy(self, instance):
+        try:
+            if instance.author != self.request.user:
+                raise PermissionDenied("You do not have permission to delete this blog.")
+            instance.delete()
+        except Exception as e:
+            raise PermissionDenied(str(e))
+
+    @action(detail=True, methods=["post"])
+    def like(self, request, pk=None):
+        try:
+            blog = self.get_object()
+            if request.user in blog.likes.all():
+                blog.likes.remove(request.user)
+                return Response({"message": "Blog unliked"})
+            else:
+                blog.likes.add(request.user)
+                return Response({"message": "Blog liked"})
+        except NotFound:
+            return Response({"error": "Blog not found."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+class CommentViewSet(ModelViewSet):
+    queryset = Comment.objects.all().order_by('-created_at')
+    serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def perform_destroy(self, instance):
+        try:
+            if instance.user != self.request.user:
+                raise PermissionDenied("You do not have permission to delete this comment.")
+            instance.delete()
+        except Exception as e:
+            raise PermissionDenied(str(e))

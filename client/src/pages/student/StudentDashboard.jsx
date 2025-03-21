@@ -10,11 +10,13 @@ import { FaStar, FaRegClock, FaBook, FaCheck } from 'react-icons/fa';
 import { fetchPurchasedCourses } from "../../redux/slices/courseSlice";
 import axiosInstance from "../../api/axios.Config";
 import avatar2 from '../../assets/images/avatar2.jpg'
+import { useNavigate } from "react-router-dom";
 
 const StudentDashboard = () => {
   const dispatch = useDispatch();
   const { userData, role } = useSelector((state) => state.auth);
   const { purchasedCoursesData } = useSelector((state) => state.course);
+  const navigate = useNavigate()
 
   const [activityTimeframe, setActivityTimeframe] = useState('weekly');
   const [activityData, setActivityData] = useState([]);
@@ -323,7 +325,9 @@ const StudentDashboard = () => {
         <div className="bg-white rounded-lg shadow-md p-6 mb-8 transition duration-300 ease-in-out hover:shadow-lg">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-text-500">Courses in Progress</h2>
-            <button className="text-primary-500 text-sm flex items-center transition duration-200 hover:text-primary-600">
+            <button className="text-primary-500 text-sm flex items-center transition duration-200 hover:text-primary-600"
+            onClick={() => navigate('/student/learning/')}
+            >
               View All <FiChevronRight className="h-4 w-4 ml-1" />
             </button>
           </div>
@@ -364,7 +368,9 @@ const StudentDashboard = () => {
           <div className="bg-white rounded-lg shadow-md p-6 transition duration-300 ease-in-out hover:shadow-lg">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold text-text-500">Top Rated Courses</h2>
-              <button className="text-primary-500 text-sm flex items-center transition duration-200 hover:text-primary-600">
+              <button className="text-primary-500 text-sm flex items-center transition duration-200 hover:text-primary-600"
+              onClick={() => navigate("/student/courses/")}
+              >
                 View All <FiChevronRight className="h-4 w-4 ml-1" />
               </button>
             </div>
@@ -404,7 +410,9 @@ const StudentDashboard = () => {
           <div className="bg-white rounded-lg shadow-md p-6 transition duration-300 ease-in-out hover:shadow-lg">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold text-text-500">Top Rated Tutors</h2>
-              <button className="text-primary-500 text-sm flex items-center transition duration-200 hover:text-primary-600">
+              <button className="text-primary-500 text-sm flex items-center transition duration-200 hover:text-primary-600"
+              onClick={() => navigate("/student/tutors/")}
+              >
                 View All <FiChevronRight className="h-4 w-4 ml-1" />
               </button>
             </div>

@@ -18,7 +18,18 @@ const LoginPage = () => {
 
   const handleGoogleSuccess = (response) => {
     const token = response.tokenId || response.credential;
-    dispatch(googleLogin({ token, role: userType }));
+    dispatch(googleLogin({ token, role: userType }))
+      .then((action) => {
+        if (googleLogin.fulfilled.match(action)) {
+          const { role } = action.payload;
+          const path = role === 'student' ? '/student/dashboard' : '/tutor/dashboard';
+          navigate(path);
+          toast.success("Logged in successfully");
+        }
+      })
+      .catch((error) => {
+        toast.error(error.message || "Google login failed");
+      });
   };
 
   // useEffect(() => {
@@ -62,6 +73,8 @@ const LoginPage = () => {
       toast.success("Logged in successfully");
     } else if (loginUser.rejected.match(action)) {
       toast.error(action.payload || "Login failed");
+      console.error(action.payload);
+      
     }
   };
   

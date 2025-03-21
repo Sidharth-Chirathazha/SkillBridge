@@ -151,7 +151,19 @@ CHANNEL_LAYERS = {
     },
 }
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/0',
+    }
+}
+
 CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 
 
@@ -221,6 +233,8 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SITE_ID = 1
+
+GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 
 SOCIALACCOUNT_PROVIDERS = {
     'google': {

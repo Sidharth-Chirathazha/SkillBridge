@@ -84,7 +84,7 @@ const Courses = () => {
 
         <div className="text-center mt-12">
           <button 
-            onClick={() => navigate('/courses')}
+            onClick={() => navigate('/login')}
             className="px-8 py-3 border-2 border-primary text-primary rounded-full font-medium hover:bg-primary hover:text-white transition-all duration-300"
           >
             View All Courses

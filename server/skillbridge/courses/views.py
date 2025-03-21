@@ -326,7 +326,6 @@ class CreateCheckoutSession(APIView):
         
 
 class StripeWebhookView(APIView):
-    print("inside stripe webhook view")
     permission_classes=[AllowAny]
     def post(self, request, *args, **kwargs):
         payload = request.body
@@ -677,7 +676,7 @@ class GetChatMessageAPIView(APIView):
         
         try:
             chat_room = get_object_or_404(ChatRoom, id=chat_room_id)
-            messages = ChatMessage.objects.filter(chat_room=chat_room).order_by("-created_at")
+            messages = ChatMessage.objects.filter(chat_room=chat_room)
 
             serializer = ChatMessageSerializer(messages, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)

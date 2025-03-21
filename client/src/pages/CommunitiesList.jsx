@@ -60,20 +60,23 @@ const CommunitiesList = () => {
         <TutorVerificationMessage/>
       ) :(
       <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Explore & Connect</h1>
-          <p className="text-gray-600 text-sm sm:text-base mt-1">Join communities, share knowledge, and grow together!</p>
-        </div>
+       <div className="bg-white rounded-lg shadow-md p-6 mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Explore & Connect</h1>
+            <p className="text-gray-600 text-sm sm:text-base mt-1">
+              Join communities, share knowledge, and grow together!
+            </p>
+          </div>
           {role === 'tutor' && (
             <button
               onClick={() => setShowCreateModal(true)}
-              className="bg-secondary-500 hover:bg-secondary-600 text-white text-sm px-3 py-1.5 rounded-md"
+              className="bg-secondary text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-secondary-600 transition-colors"
             >
               Create Community
             </button>
           )}
-        </div>
+      </div>
+
 
         {isCommunityLoading ? (
           <div className="text-center">Loading...</div>

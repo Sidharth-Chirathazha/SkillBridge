@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchAdminTutors } from '../../redux/slices/adminSlice';
 import { toast } from 'react-hot-toast'; // Assuming you're using react-hot-toast for notifications
 import TutorCard from '../tutor/TutorCard'
+import { useNavigate } from 'react-router-dom';
 
 const TopTutors = ({ isPublicView = true }) => {
   const dispatch = useDispatch();
@@ -11,6 +12,7 @@ const TopTutors = ({ isPublicView = true }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [visibleCards, setVisibleCards] = useState(4);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Handle responsiveness
@@ -179,7 +181,9 @@ const TopTutors = ({ isPublicView = true }) => {
         
         {isPublicView && (
           <div className="text-center mt-12">
-            <button className="px-8 py-3 bg-primary text-background-50 rounded-full font-medium hover:bg-primary-600 transition-all duration-300">
+            <button className="px-8 py-3 bg-primary text-background-50 rounded-full font-medium hover:bg-primary-600 transition-all duration-300"
+            onClick={() => navigate('/register')}
+            >
               Become an Instructor
             </button>
           </div>

@@ -61,16 +61,19 @@ const AdminStudentDetailView = () => {
 
   return (
     <>
-      <div className="bg-background-100 p-4 md:p-8 space-y-6 md:space-y-8">
+      <div className="bg-background-100 p-4 md:p-8 space-y-6 md:space-y-8 min-h-screen">
         {/* Top Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
           {/* Left Column: Profile Details */}
-          <div className="bg-white rounded-xl shadow-sm border border-background-200 p-4 md:p-6 flex flex-col items-center">
-            <img 
-              src={singleStudent.profile_pic_url || avatar2} 
-              alt={`${singleStudent.first_name} ${singleStudent.last_name}`}
-              className="w-32 h-32 md:w-48 md:h-48 rounded-full object-cover border-4 border-primary-100 mb-4"
-            />
+          <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 border border-background-200 p-4 md:p-6 flex flex-col items-center">
+            <div className='relative'>
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-primary-300 to-primary-600 rounded-full blur opacity-70"></div>
+                <img 
+                  src={singleStudent.profile_pic_url || avatar2} 
+                  alt={`${singleStudent.first_name} ${singleStudent.last_name}`}
+                  className="relative w-32 h-32 md:w-48 md:h-48 rounded-full object-cover border-4 border-white mb-4"
+                />
+            </div>
             <h2 className="text-lg md:text-xl font-bold text-text-500 text-center">
               {singleStudent.first_name} {singleStudent.last_name}
             </h2>
@@ -81,7 +84,7 @@ const AdminStudentDetailView = () => {
                 href={singleStudent.linkedin_url} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="flex items-center justify-center md:justify-start text-primary-500 hover:text-primary-600 p-2 md:p-0"
+                className="flex items-center justify-center md:justify-start text-primary-500 hover:text-primary-600 bg-primary-50 hover:bg-primary-100 transition-colors py-3 px-4 rounded-lg shadow-sm"
               >
                 <Linkedin className="h-5 w-5 mr-2" />
                 LinkedIn Profile
@@ -90,24 +93,30 @@ const AdminStudentDetailView = () => {
           </div>
 
           {/* Right Column: About Me */}
-          <div className="md:col-span-2 bg-white rounded-xl shadow-sm border border-background-200 p-4 md:p-6">
+          <div className="md:col-span-2 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 border border-background-200 p-4 md:p-6">
             <h3 className="text-lg md:text-xl font-semibold text-text-500 mb-4">About Me</h3>
             <p className="text-text-400 leading-relaxed mb-4 md:mb-6">
               {singleStudent.bio}
             </p>
 
             {/* Personal Details Section */}
-            <div className="border-t border-background-200 pt-4 space-y-3 md:space-y-4">
+            <div className="border-t border-background-200 pt-4 space-y-3 md:space-y-4 bg-background-50 p-4 rounded-lg shadow-inner">
               <div className="flex items-center space-x-3">
-                <Mail className="h-5 w-5 text-primary-500 flex-shrink-0" />
+                <div className="p-2 bg-primary-100 rounded-full text-primary-600">
+                  <Mail className="h-5 w-5 text-primary-500 flex-shrink-0" />
+                </div>
                 <span className="text-text-400 break-all">{singleStudent.email}</span>
               </div>
               <div className="flex items-center space-x-3">
-                <Phone className="h-5 w-5 text-primary-500 flex-shrink-0" />
+                <div className="p-2 bg-primary-100 rounded-full text-primary-600">
+                  <Phone className="h-5 w-5 text-primary-500 flex-shrink-0" />
+                </div>
                 <span className="text-text-400">{singleStudent.phone}</span>
               </div>
               <div className="flex items-center space-x-3">
-                <MapPin className="h-5 w-5 text-primary-500 flex-shrink-0" />
+                <div className="p-2 bg-primary-100 rounded-full text-primary-600">
+                  <MapPin className="h-5 w-5 text-primary-500 flex-shrink-0" />
+                </div>
                 <span className="text-text-400">{singleStudent.city}, {singleStudent.country}</span>
               </div>
             </div>
@@ -115,7 +124,7 @@ const AdminStudentDetailView = () => {
         </div>
 
         {/* Stats Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-background-200">
+        <div className="bg-background-50 p-4 rounded-lg border border-background-200 shadow-sm hover:shadow-md transition-shadow duration-300">
           <div className="p-4 md:p-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="bg-background-50 p-4 rounded-lg border border-background-200 text-center">

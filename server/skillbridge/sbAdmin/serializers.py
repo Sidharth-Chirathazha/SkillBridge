@@ -36,7 +36,7 @@ class AdminTutorSerializer(serializers.ModelSerializer):
     # Fields from TutorProfile
     tutor_id = serializers.IntegerField(source="tutor_profile.id")
     resume_url = serializers.CharField(source="tutor_profile.resume_url.url", allow_null=True)
-    rating = serializers.FloatField(source="tutor_profile.rating")
+    rating = serializers.SerializerMethodField()
     is_verified = serializers.BooleanField(source="tutor_profile.is_verified")
     cur_job_role = serializers.CharField(source="tutor_profile.cur_job_role")
 
@@ -75,6 +75,9 @@ class AdminTutorSerializer(serializers.ModelSerializer):
             "total_students",
             "total_reviews"
         ]
+
+    def get_rating(self, obj):
+        return round(obj.tutor_profile.rating, 1) if obj.tutor_profile and obj.tutor_profile.rating else 0.0
 
     def get_educations(self, obj):
 

@@ -27,7 +27,6 @@ class CommunityViewSet(ModelViewSet):
     parser_classes = [MultiPartParser, FormParser]
     pagination_class = CustomPagination
 
-    print("Inside community view set")
 
     def get_queryset(self):
         try:

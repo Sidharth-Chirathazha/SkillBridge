@@ -105,65 +105,51 @@ const NotificationsPage = () => {
         <TutorVerificationMessage/>
       ) :(
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-          <div className="flex items-center mb-4 md:mb-0">
-            <Bell className="h-6 w-6 text-primary-500 mr-2" />
-            <h1 className="text-2xl font-bold text-text-500">Notifications</h1>
-            {unreadCount > 0 && (
-              <span className="ml-3 px-2 py-1 bg-secondary-500 text-white text-xs font-medium rounded-full">
-                {unreadCount} new
-              </span>
-            )}
-          </div>
-          
-          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-            <div className="inline-flex rounded-md shadow-sm" role="group">
-              <button
-                type="button"
-                onClick={() => setFilter('all')}
-                className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
-                  filter === 'all'
-                    ? 'bg-primary-500 text-white'
-                    : 'bg-white text-text-500 hover:bg-primary-50'
-                }`}
-              >
-                All
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilter('unread')}
-                className={`px-4 py-2 text-sm font-medium ${
-                  filter === 'unread'
-                    ? 'bg-primary-500 text-white'
-                    : 'bg-white text-text-500 hover:bg-primary-50'
-                }`}
-              >
-                Unread
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilter('read')}
-                className={`px-4 py-2 text-sm font-medium rounded-r-lg ${
-                  filter === 'read'
-                    ? 'bg-primary-500 text-white'
-                    : 'bg-white text-text-500 hover:bg-primary-50'
-                }`}
-              >
-                Read
-              </button>
+       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+            {/* Notification Header */}
+            <div className="flex items-center mb-4 md:mb-0">
+              <Bell className="h-6 w-6 text-primary-500 mr-2" />
+              <h1 className="text-2xl font-bold text-text-500">Notifications</h1>
+              {unreadCount > 0 && (
+                <span className="ml-3 px-2 py-1 bg-secondary-500 text-white text-xs font-medium rounded-full">
+                  {unreadCount} new
+                </span>
+              )}
             </div>
-            
-            {unreadCount > 0 && (
-              <button
-                onClick={markAllAsRead}
-                className="px-4 py-2 bg-white text-primary-500 border border-primary-500 rounded-lg text-sm font-medium hover:bg-primary-50 transition-colors"
-              >
-                Mark all as read
-              </button>
-            )}
+
+            {/* Filter and Action Buttons */}
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+              {/* Filter Buttons */}
+              <div className="inline-flex rounded-md shadow-sm" role="group">
+                {['all', 'unread', 'read'].map((type, index) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setFilter(type)}
+                    className={`px-4 py-2 text-sm font-medium ${
+                      filter === type
+                        ? 'bg-primary-500 text-white'
+                        : 'bg-white text-text-500 hover:bg-primary-50'
+                    } ${index === 0 ? 'rounded-l-lg' : index === 2 ? 'rounded-r-lg' : ''}`}
+                  >
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                  </button>
+                ))}
+              </div>
+
+              {/* Mark All as Read Button */}
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllAsRead}
+                  className="px-4 py-2 bg-white text-primary-500 border border-primary-500 rounded-lg text-sm font-medium hover:bg-primary-50 transition-colors"
+                >
+                  Mark all as read
+                </button>
+              )}
+            </div>
           </div>
         </div>
-        
         {filteredNotifications.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-8 text-center">
             <Bell className="h-12 w-12 text-background-600 mx-auto mb-4" />

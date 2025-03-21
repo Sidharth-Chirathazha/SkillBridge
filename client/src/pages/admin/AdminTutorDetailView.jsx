@@ -72,20 +72,36 @@ const AdminTutorDetailView = () => {
 
   return (
     <>
-      <div className="bg-background-100 p-4 md:p-8 space-y-6 md:space-y-8">
+      <div className="bg-background-100 p-4 md:p-8 space-y-6 md:space-y-8 min-h-screen">
         {/* Top Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
           {/* Left Column: Profile Details */}
-          <div className="bg-white rounded-xl shadow-sm border border-background-200 p-4 md:p-6 flex flex-col items-center">
-            <img 
-              src={singleTutor.profile_pic_url || avatar2} 
-              alt={`${singleTutor.first_name} ${singleTutor.last_name}`}
-              className="w-32 h-32 md:w-48 md:h-48 rounded-full object-cover border-4 border-primary-100 mb-4"
-            />
+          <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 border border-background-200 p-4 md:p-6 flex flex-col items-center">
+            <div className='relative'>
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-primary-300 to-primary-600 rounded-full blur opacity-70"></div>
+                <img 
+                  src={singleTutor.profile_pic_url || avatar2} 
+                  alt={`${singleTutor.full_name}`}
+                  className="relative w-32 h-32 md:w-48 md:h-48 rounded-full object-cover border-4 border-white mb-4"
+                />
+            </div>
             <h2 className="text-lg md:text-xl font-bold text-text-500 text-center">
-              {singleTutor.first_name} {singleTutor.last_name}
+              {singleTutor.full_name}
             </h2>
-            <p className="text-text-400 mb-4 md:mb-6 text-center">{singleTutor.cur_job_role}</p>
+            <p className="text-text-600 mb-4 md:mb-6 text-center font-medium">{singleTutor.cur_job_role}</p>
+            {/* Rating Display */}
+            <div className="flex items-center gap-2 mb-4 bg-background-50 px-4 py-2 rounded-full shadow-sm">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  size={20}
+                  className={i < Math.floor(singleTutor.rating) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}
+                />
+              ))}
+              <span className="text-text-600 font-medium">
+                ({singleTutor.rating?.toFixed(1)}) • {singleTutor.review_count} reviews
+              </span>
+            </div>
 
             {/* Links */}
             <div className="mt-4 md:mt-6 space-y-2 w-full">
@@ -93,7 +109,7 @@ const AdminTutorDetailView = () => {
                 href={singleTutor.linkedin_url} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="flex items-center justify-center md:justify-start text-primary-500 hover:text-primary-600 p-2 md:p-0"
+                className="flex items-center justify-center text-primary-600 hover:text-primary-700 bg-primary-50 hover:bg-primary-100 transition-colors py-3 px-4 rounded-lg shadow-sm"
               >
                 <Linkedin className="h-5 w-5 mr-2" />
                 LinkedIn Profile
@@ -102,7 +118,7 @@ const AdminTutorDetailView = () => {
                 href={singleTutor.resume_url} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="flex items-center justify-center md:justify-start text-primary-500 hover:text-primary-600 p-2 md:p-0"
+                className="flex items-center justify-center text-primary-600 hover:text-primary-700 bg-primary-50 hover:bg-primary-100 transition-colors py-3 px-4 rounded-lg shadow-sm"
               >
                 <FileText className="h-5 w-5 mr-2" />
                 View Resume
@@ -111,24 +127,30 @@ const AdminTutorDetailView = () => {
           </div>
 
           {/* Right Column: About Me */}
-          <div className="md:col-span-2 bg-white rounded-xl shadow-sm border border-background-200 p-4 md:p-6">
+          <div className="md:col-span-2 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 border border-background-200 p-4 md:p-6">
             <h3 className="text-lg md:text-xl font-semibold text-text-500 mb-4">About Me</h3>
             <p className="text-text-400 leading-relaxed mb-4 md:mb-6">
               {singleTutor.bio}
             </p>
 
             {/* Personal Details Section */}
-            <div className="border-t border-background-200 pt-4 space-y-3 md:space-y-4">
+            <div className="border-t border-background-200 pt-4 space-y-3 md:space-y-4 bg-background-50 p-4 rounded-lg shadow-inner">
               <div className="flex items-center space-x-3">
-                <Mail className="h-5 w-5 text-primary-500 flex-shrink-0" />
+                <div className="p-2 bg-primary-100 rounded-full text-primary-600">
+                  <Mail className="h-5 w-5 text-primary-500 flex-shrink-0" />
+                </div>
                 <span className="text-text-400 break-all">{singleTutor.email}</span>
               </div>
               <div className="flex items-center space-x-3">
-                <Phone className="h-5 w-5 text-primary-500 flex-shrink-0" />
+              ` <div className="p-2 bg-primary-100 rounded-full text-primary-600">
+                  <Phone className="h-5 w-5 text-primary-500 flex-shrink-0" />
+                </div>
                 <span className="text-text-400">{singleTutor.phone}</span>
               </div>
               <div className="flex items-center space-x-3">
-                <MapPin className="h-5 w-5 text-primary-500 flex-shrink-0" />
+                <div className="p-2 bg-primary-100 rounded-full text-primary-600">
+                  <MapPin className="h-5 w-5 text-primary-500 flex-shrink-0" />
+                </div>
                 <span className="text-text-400">{singleTutor.city}, {singleTutor.country}</span>
               </div>
             </div>
@@ -136,9 +158,9 @@ const AdminTutorDetailView = () => {
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-sm border border-background-200">
+        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 border border-background-200 overflow-hidden">
           {/* Tab Buttons */}
-          <div className="flex flex-col md:flex-row border-b border-background-200">
+          <div className="flex flex-col md:flex-row border-b border-background-200 bg-background-50">
             {[
               { key: 'education', label: 'Education' },
               { key: 'experience', label: 'Work Experience' },
@@ -147,7 +169,7 @@ const AdminTutorDetailView = () => {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`px-4 md:px-6 py-3 ${
+                className={`px-4 md:px-6 py-4 flex items-center justify-center md:justify-start transition-all ${
                   activeTab === tab.key 
                     ? 'border-b-2 border-primary-500 text-primary-500 font-semibold' 
                     : 'text-text-400 hover:bg-background-100'
@@ -167,14 +189,16 @@ const AdminTutorDetailView = () => {
                 {singleTutor.educations.map((edu, index) => (
                   <div 
                     key={index} 
-                    className="bg-background-50 p-4 rounded-lg border border-background-200"
+                    className="bg-background-50 p-4 rounded-lg border border-background-200 shadow-sm hover:shadow-md transition-shadow duration-300"
                   >
                     <div className="flex items-start md:items-center mb-2">
-                      <Book className="h-5 w-5 mr-3 text-primary-500 flex-shrink-0 mt-1 md:mt-0" />
+                      <div className="p-3 bg-primary-100 rounded-full text-primary-600 mr-4">
+                        <Book className="h-5 w-5 flex-shrink-0" />
+                      </div>
                       <div>
-                        <h3 className="text-text-500 font-semibold">{edu.degree}</h3>
-                        <p className="text-text-400">{edu.university}</p>
-                        <p className="text-text-400 text-sm">Graduated in {edu.year_of_passing}</p>
+                        <h3 className="text-text-500 font-semibold text-lg">{edu.degree}</h3>
+                        <p className="text-text-400 font-medium">{edu.university}</p>
+                        <p className="text-text-400 text-sm mt-1">Graduated in {edu.year_of_passing}</p>
                       </div>
                     </div>
                   </div>
@@ -187,14 +211,16 @@ const AdminTutorDetailView = () => {
                 {singleTutor.work_experiences.map((exp, index) => (
                   <div 
                     key={index} 
-                    className="bg-background-50 p-4 rounded-lg border border-background-200"
+                    className="bg-background-50 p-5 rounded-lg border border-background-200 shadow-sm hover:shadow-md transition-shadow duration-300"
                   >
                     <div className="flex items-start md:items-center mb-2">
-                      <Briefcase className="h-5 w-5 mr-3 text-primary-500 flex-shrink-0 mt-1 md:mt-0" />
+                      <div className="p-3 bg-primary-100 rounded-full text-primary-600 mr-4">
+                        <Briefcase className="h-5 w-5 flex-shrink-0" />
+                      </div>
                       <div>
-                        <h3 className="text-text-500 font-semibold">{exp.job_role}</h3>
-                        <p className="text-text-400">{exp.company}</p>
-                        <p className="text-text-400 text-sm">
+                        <h3 className="text-text-500 font-semibold text-lg">{exp.job_role}</h3>
+                        <p className="text-text-400 font-medium">{exp.company}</p>
+                        <p className="text-text-400 text-sm mt-1">
                           {exp.date_of_joining} - {exp.date_of_leaving}
                         </p>
                       </div>

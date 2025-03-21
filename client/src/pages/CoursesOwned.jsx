@@ -199,35 +199,35 @@ const CoursesOwned = ({ variant = 'student' }) => {
       ) :(
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {variant === 'tutor' && (
-            <div className="flex gap-3 mb-8">
-            <TabButton
-                label="Purchased Courses"
-                count={purchasedCoursesData?.length}
-                isActive={activeTab === 'purchased'}
-                onClick={() => setActiveTab('purchased')}
-            />
-            <TabButton
-                label="Received Trades"
-                count={receivedTrades.length}
-                isActive={activeTab === 'received'}
-                onClick={() => setActiveTab('received')}
-            />
-            <TabButton
-                label="Requested Trades"
-                count={requestedTrades.length}
-                isActive={activeTab === 'requested'}
-                onClick={() => setActiveTab('requested')}
-            />
+            <div className="flex flex-col sm:flex-row gap-3 mb-8">
+              <TabButton
+                  label="Purchased Courses"
+                  count={purchasedCoursesData?.length}
+                  isActive={activeTab === 'purchased'}
+                  onClick={() => setActiveTab('purchased')}
+              />
+              <TabButton
+                  label="Received Trades"
+                  count={receivedTrades.length}
+                  isActive={activeTab === 'received'}
+                  onClick={() => setActiveTab('received')}
+              />
+              <TabButton
+                  label="Requested Trades"
+                  count={requestedTrades.length}
+                  isActive={activeTab === 'requested'}
+                  onClick={() => setActiveTab('requested')}
+              />
             </div>
         )}
 
         {activeTab === 'purchased' ? (
             <>
-            <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Continue Learning</h1>
-                <p className="text-gray-600 text-sm sm:text-base mt-1">
+            <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Continue Learning</h1>
+              <p className="text-gray-600 text-sm sm:text-base mt-1">
                 Dive back into your courses and continue learning.
-                </p>
+              </p>
             </div>
             {isCourseLoading ? (
                 <div className="flex justify-center items-center h-screen">
@@ -272,7 +272,7 @@ const CoursesOwned = ({ variant = 'student' }) => {
             </>
         ) : activeTab === 'received' ? (
             <div className="space-y-6">
-            <div>
+             <div className="bg-white rounded-lg shadow-md p-6 mb-8">
                 <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Received Trade Requests</h1>
                 <p className="text-gray-600 text-sm sm:text-base mt-1">
                 Manage trade requests from other tutors.
@@ -284,7 +284,7 @@ const CoursesOwned = ({ variant = 'student' }) => {
             </div>
         ) : (
             <div className="space-y-6">
-            <div>
+             <div className="bg-white rounded-lg shadow-md p-6 mb-8">
                 <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Your Trade Requests</h1>
                 <p className="text-gray-600 text-sm sm:text-base mt-1">
                 Track the status of your trade requests.

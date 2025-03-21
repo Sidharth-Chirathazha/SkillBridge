@@ -4,7 +4,7 @@ from student.models import StudentProfile
 from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from .models import Skill,Notification,UserActivity
+from .models import Skill,Notification,UserActivity,Blog,Comment
 # from .utils import generate_email_otp
 from .tasks import sent_otp_email
 from cloudinary.utils import cloudinary_url
@@ -135,12 +135,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
     profile_pic_url = serializers.ImageField(required=False, allow_null=True)
     phone = serializers.CharField(required=False, allow_null=True)
     linkedin_url = serializers.CharField(required=False, allow_null=True)
+    full_name = serializers.CharField(source="get_full_name", read_only=True)
 
     class Meta:
         model = User
         fields = [
             'id','email', 'first_name', 'last_name', 'phone', 'profile_pic_url','linkedin_url', 'bio', 
-            'country', 'city', 'skills', 'role'
+            'country', 'city', 'skills', 'role', 'full_name'
         ]
         read_only_fields = ['wallet_balance', 'role', 'id']
 
@@ -198,3 +199,44 @@ class UserActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = UserActivity
         fields = ["date", "time_spent"]
+
+class BlogUserSerializer(serializers.ModelSerializer):
+    profile_pic_url = serializers.ImageField(read_only=True)
+    full_name = serializers.CharField(source="get_full_name", read_only=True)
+    class Meta:
+        model = User
+        fields = ['id', 'profile_pic_url', 'full_name']
+
+class CommentSerializer(serializers.ModelSerializer):
+    user = BlogUserSerializer(read_only=True)
+    replies = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Comment
+        fields = ['id', 'blog', 'user', 'content', 'parent', 'replies', 'created_at']
+
+    def get_replies(self, obj):
+        if isinstance(obj, Comment):
+            if obj.replies.exists():
+                return CommentSerializer(obj.replies.all(), many=True).data
+        return []
+    
+class BlogSerializer(serializers.ModelSerializer):
+    author = BlogUserSerializer(read_only=True)
+    total_likes = serializers.IntegerField(read_only=True)
+    comments = CommentSerializer(many=True, read_only=True)
+    thumbnail = serializers.ImageField(required=False)
+    class Meta:
+        model = Blog
+        fields = fields = [
+            'id',
+            'author',
+            'title',
+            'description',
+            'thumbnail',
+            'created_at',
+            'updated_at',
+            'likes',
+            'total_likes',
+            'comments',
+        ]

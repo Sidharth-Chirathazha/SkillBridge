@@ -127,18 +127,18 @@ const CourseList = () => {
         <TutorVerificationMessage/>
       ) :(
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
-          {role === "student"
-            ? "Discover Your Next Learning Adventure"
-            : "Expand Your Expertise with New Courses"}
-          </h1>
-          <p className="text-gray-600 text-sm sm:text-base mt-1">
-          {role === "student"
-            ? "Browse through diverse courses and enhance your skills today!"
-            : "Find valuable courses to strengthen your knowledge and teaching skills!"}
-          </p>
-        </div>
+          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
+                {role === "student"
+                  ? "Discover Your Next Learning Adventure"
+                  : "Expand Your Expertise with New Courses"}
+              </h1>
+              <p className="text-gray-600 text-sm sm:text-base mt-1">
+                {role === "student"
+                  ? "Browse through diverse courses and enhance your skills today!"
+                  : "Find valuable courses to strengthen your knowledge and teaching skills!"}
+              </p>
+          </div>
 
         {isCourseLoading || isCheckoutLoading ? (
             <div className="flex justify-center items-center h-screen">

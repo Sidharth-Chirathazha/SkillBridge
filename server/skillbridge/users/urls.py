@@ -1,9 +1,11 @@
 from django.urls import path,include
-from .views import UserCreationHandlerView,UserLoginView,UserProfileView,UserLogoutView,GoogleLoginView,SkillListHandleView,CustomTokenRefreshView,NotificationViewSet,UpdateLearningTimeView, UserLearningActivityView
+from .views import UserCreationHandlerView,UserLoginView,UserProfileView,UserLogoutView,GoogleLoginView,SkillListHandleView,CustomTokenRefreshView,NotificationViewSet,UpdateLearningTimeView, UserLearningActivityView,BlogViewSet,CommentViewSet
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
 router.register(r'notifications', NotificationViewSet, basename='notification')
+router.register(r'blogs', BlogViewSet, basename="blog")
+router.register(r'blog-comments', CommentViewSet, basename='blog-comment')
 
 urlpatterns = [
     path('', include(router.urls)),

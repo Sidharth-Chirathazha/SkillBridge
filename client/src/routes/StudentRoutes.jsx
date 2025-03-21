@@ -17,6 +17,7 @@ import NotificationsPage from '../pages/NotificationsPage';
 import { NotificationProvider } from '../context_providers/NotificationProvider';
 import OneToOneChatPage from '../pages/OneToOneChatPage';
 import NotFound from '../pages/NotFound';
+import BlogPage from '../pages/BlogPage';
 
 const StudentRoutes = () => {
   return (
@@ -37,6 +38,7 @@ const StudentRoutes = () => {
               <Route path="communities" element={<CommunitiesList/>}/>
               <Route path="/communities/:communityId/chat" element={<CommunityChatPage/>}/>
               <Route path="notifications" element={<NotificationsPage/>}/>
+              <Route path="blogs" element={<BlogPage/>}/>
             </Route>
           <Route path="/courses/success" element={<SuccessPage/>}/>
         </Route>

@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 
 const OtpVerificationModal = ({isOpen, onClose, email, role, password}) => {
   const [otp, setOtp] = useState(['','','','','','']);
-  const [timeLeft, setTimeLeft] = useState(30);
+  const [timeLeft, setTimeLeft] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const inputRefs = useRef([]);
   const timerRef = useRef(null);
@@ -27,14 +27,14 @@ const OtpVerificationModal = ({isOpen, onClose, email, role, password}) => {
 
   useEffect(()=>{
     if(isOpen){
-      setTimeLeft(30);
+      setTimeLeft(60);
       setCanResend(false);
 
       startTimeRef.current = Date.now();
 
       timerRef.current = setInterval(()=>{
         const elapsedSeconds = Math.floor((Date.now() - startTimeRef.current)/1000);
-        const newTimeLeft = Math.max(30 - elapsedSeconds, 0);
+        const newTimeLeft = Math.max(60 - elapsedSeconds, 0);
 
         setTimeLeft(newTimeLeft);
 
@@ -87,15 +87,34 @@ const OtpVerificationModal = ({isOpen, onClose, email, role, password}) => {
     setOtp(newOtp);
   };
 
-  const handleResend = () => {
-    setTimeLeft(30);
-    setCanResend(false);
-    startTimeRef.current = Date.now();
-    // Add your resend OTP logic here
-    dispatch(registerUser({email, role, password}))
-    toast.success("An OTP has been sent to your email from resend")
-    
+  const handleResend = async () => {
+    try {
+      const response = await dispatch(registerUser({ email, role, password })).unwrap();
+      toast.success("An OTP has been sent to your email from resend");
+  
+      // Start the timer only after successful OTP send
+      setTimeLeft(60);
+      setCanResend(false);
+      startTimeRef.current = Date.now();
+  
+      if (timerRef.current) clearInterval(timerRef.current);
+  
+      timerRef.current = setInterval(() => {
+        const elapsedSeconds = Math.floor((Date.now() - startTimeRef.current) / 1000);
+        const newTimeLeft = Math.max(60 - elapsedSeconds, 0);
+  
+        setTimeLeft(newTimeLeft);
+  
+        if (newTimeLeft === 0) {
+          setCanResend(true);
+          clearInterval(timerRef.current);
+        }
+      }, 100);
+    } catch (error) {
+      toast.error(error?.message || "Failed to resend OTP. Please try again.");
+    }
   };
+  
 
   const handleSubmit = async () => {
     const otpString = otp.join('');

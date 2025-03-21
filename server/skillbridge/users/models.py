@@ -104,3 +104,32 @@ class Notification(models.Model):
     def __str__(self):
         
         return f"{self.user} - {self.notification_type} - {self.message}"
+    
+
+
+class Blog(models.Model):
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="blogs")
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    thumbnail = cloudinary.models.CloudinaryField('image', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    likes = models.ManyToManyField(User, related_name="liked_blogs", blank=True)
+
+    def total_likes(self):
+        return self.likes.count()
+
+    def __str__(self):
+        return self.title
+    
+class Comment(models.Model):
+    blog = models.ForeignKey(Blog, on_delete=models.CASCADE, related_name="comments")
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField()
+    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name="replies")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        if self.parent:
+            return f"Reply by {self.user.get_full_name()} on {self.blog.title}"
+        return f"Comment by {self.user.get_full_name()} on {self.blog.title}"

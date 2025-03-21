@@ -12,7 +12,7 @@ const handleApiError = (error, thunkAPI)=>{
     Object.values(error.response?.data || {})[0] || // First error if object
     error.message ||
     error.toString();
-    toast.error(message)
+    // toast.error(message)
 
 return thunkAPI.rejectWithValue(message);
 }

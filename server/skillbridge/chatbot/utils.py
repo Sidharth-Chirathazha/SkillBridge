@@ -35,15 +35,6 @@ def retrieve_relevant_context(query):
             context_parts.extend(relevant_tutors)
     
     
-    # # Check for payment or purchase related queries
-    # if any(keyword in query_lower for keyword in ['payment', 'purchase', 'buy', 'cost', 'price', 'stripe']):
-    #     context_parts.append("Payment Information: SkillBridge uses Stripe for processing payments. Students can purchase courses securely through our platform using credit cards or other payment methods supported by Stripe.")
-    
-    # # Check for community related queries
-    # if any(keyword in query_lower for keyword in ['community', 'forum', 'discussion', 'group']):
-    #     context_parts.append("Community Information: Tutors can create communities on SkillBridge where both tutors and students can join for discussions, sharing resources, and collaborative learning. These communities enhance the learning experience by providing peer support and networking opportunities.")
-    
-    # If no specific context was found, provide a general response
     if not context_parts:
         context_parts.append("I couldn't find specific information related to your query in our database, but I can help based on general knowledge about SkillBridge.")
     

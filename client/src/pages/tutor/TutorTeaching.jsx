@@ -80,7 +80,16 @@ const TutorTeaching = () => {
         <TutorVerificationMessage/>
       ):(
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-          <h1 className="text-2xl font-bold text-gray-800 mb-6">My Courses - Manage & Grow Your Teaching Portfolio</h1>
+          <div className="bg-white rounded-lg shadow-md p-6 mb-8 flex flex-col md:flex-row items-center md:items-start gap-4">
+            <div className="flex-grow text-center md:text-left">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
+                Explore Your Courses
+              </h1>
+              <p className="text-gray-600 text-sm sm:text-base mt-1 mb-2">
+                Manage and update your courses. Track student engagement and grow your learning community.
+              </p>
+            </div>
+          </div>
           
           {/* Similar loading/error handling as StudentCourses */}
           {isCourseError ? (

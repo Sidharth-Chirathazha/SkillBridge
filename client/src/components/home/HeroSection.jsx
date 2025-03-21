@@ -3,11 +3,13 @@ import hero_img_3 from '../../assets/images/hero_img_3.png'
 import { FaBook, FaUserGraduate, FaChalkboardTeacher } from "react-icons/fa";
 import { ArrowRight } from "lucide-react";
 import axiosInstance from '../../api/axios.Config';
+import { useNavigate } from 'react-router-dom';
 
 
 const HeroSection = () => {
 
   const [heroSectionData, setHeroSectionData] = useState({});
+  const navigate = useNavigate();
 
   console.log("Hero section data:", heroSectionData);
   
@@ -48,7 +50,9 @@ const HeroSection = () => {
           <p className="text-lg text-white/80 mb-8 max-w-lg">
             Join thousands of students and professionals enhancing their careers through our tailored learning paths and industry-leading instructors.
           </p>
-          <button className="group flex items-center gap-2 px-8 py-3.5 bg-secondary hover:bg-secondary-600 rounded-full text-lg font-medium transition-all duration-300 hover:shadow-lg">
+          <button className="group flex items-center gap-2 px-8 py-3.5 bg-secondary hover:bg-secondary-600 rounded-full text-lg font-medium transition-all duration-300 hover:shadow-lg"
+            onClick={() => navigate('/login')}
+          >
             Start Your Journey
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </button>

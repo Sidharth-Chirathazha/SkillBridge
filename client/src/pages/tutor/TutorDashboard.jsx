@@ -12,10 +12,12 @@ import { FiDownload, FiChevronRight } from 'react-icons/fi';
 import { FaStar } from 'react-icons/fa';
 import { fetchPurchasedCourses } from "../../redux/slices/courseSlice";
 import axiosInstance from "../../api/axios.Config";
+import { useNavigate } from "react-router-dom";
 
 
 const TutorDashboard = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { userData, tutorReviewsData, role } = useSelector((state) => state.auth);
   const { purchasedCoursesData } = useSelector((state) => state.course);
   const [chartTimeframe, setChartTimeframe] = useState('week');
@@ -317,7 +319,9 @@ const TutorDashboard = () => {
           <div className="bg-white rounded-lg shadow-md p-6 mb-8 transition duration-300 ease-in-out hover:shadow-lg">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold text-text-500">Courses in Progress</h2>
-              <button className="text-primary-500 text-sm flex items-center transition duration-200 hover:text-primary-600">
+              <button className="text-primary-500 text-sm flex items-center transition duration-200 hover:text-primary-600"
+              onClick={() => navigate("/tutor/learning/")}
+              >
                 View All <FiChevronRight className="h-4 w-4 ml-1" />
               </button>
             </div>

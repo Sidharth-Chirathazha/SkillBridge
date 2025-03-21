@@ -13,7 +13,7 @@ const ForgotPasswordModal = ({isOpen, onClose}) => {
     newPassword: '',
     confirmPassword: '',
   });
-  const [timeLeft, setTimeLeft] = useState(30);
+  const [timeLeft, setTimeLeft] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const inputRefs = useRef([]);
   const timerRef = useRef(null);
@@ -27,10 +27,10 @@ const ForgotPasswordModal = ({isOpen, onClose}) => {
     // Separate useEffects for different success states
   useEffect(() => {
     if (otpRequestSuccess) {
-      toast.success('OTP sent successfully to your email');
+      // toast.success('OTP sent successfully to your email');
       setStep(2);
       startTimeRef.current = Date.now();
-      setTimeLeft(30);
+      setTimeLeft(60);
       setCanResend(false);
       dispatch(resetState());
     }
@@ -54,7 +54,6 @@ const ForgotPasswordModal = ({isOpen, onClose}) => {
   
   useEffect(() => {
     if (isError) {
-      toast.error("An error occured");
       dispatch(resetState());
     }
   }, [isError]);
@@ -63,12 +62,12 @@ useEffect(()=>{
   if(isOpen && step === 2){
     if(startTimeRef.current === null){
       startTimeRef.current = Date.now();
-      setTimeLeft(30);
+      setTimeLeft(60);
       setCanResend(false);
     }
     timerRef.current = setInterval(()=>{
       const elapsedSeconds = Math.floor((Date.now() - startTimeRef.current)/1000);
-      const newTimeLeft = Math.max(30 - elapsedSeconds, 0);
+      const newTimeLeft = Math.max(60 - elapsedSeconds, 0);
 
       setTimeLeft(newTimeLeft);
 
@@ -99,7 +98,7 @@ const handleClose = () => {
     clearInterval(timerRef.current);
   }
   startTimeRef.current = null;
-  setTimeLeft(30);
+  setTimeLeft(60);
   setCanResend(false);
   dispatch(resetState());
   onClose();
@@ -135,15 +134,20 @@ const handleClose = () => {
     setOtp(newOtp);
   };
 
-  const handleResendOTP = ()=>{
+  const handleResendOTP = async () => {
     startTimeRef.current = Date.now();
-    setTimeLeft(30);
+    setTimeLeft(60);
     setCanResend(false);
-    dispatch(requestResetPasswordOtp({email}));
-    toast.loading('Sending OTP...', {
-        duration: 2000,
-      });
+    
+    toast.loading('Sending OTP...', { duration: 2000 });
+  
+    await dispatch(requestResetPasswordOtp({ email }));
+    
+    toast.dismiss(); // Dismiss the loading toast
+    toast.success('OTP has been sent to your email');
   };
+  
+  
 
   const handleOTPSubmit = ()=>{
     const otpString = otp.join('');
@@ -309,7 +313,7 @@ const handleClose = () => {
               </label>
               <input
                 type="password"
-                name="confirmPassword"
+                name="confirmPassword"n
                 value={passwords.confirmPassword}
                 onChange={handlePasswordChange}
                 className="w-full p-2 rounded-md border-gray-200 border focus:ring-1 focus:ring-[#F23276] focus:border-[#F23276] focus:outline-none text-sm"
