@@ -12,6 +12,7 @@ const stripePromise = loadStripe('pk_test_51Qp6mdRZhgmNkKQoW8Hp4xmJjjpuuC9iwjD0s
 const CourseDetailPage = () => {
     const [loading, setLoading] = useState(true);
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const {singleCourse, isCourseLoading, isCheckoutLoading, checkoutError, checkoutSession} = useSelector((state)=>state.course);
     const {id} = useParams();
     const {role, userData} = useSelector((state)=>state.auth)
@@ -23,14 +24,14 @@ const CourseDetailPage = () => {
         await dispatch(fetchSingleCourse({id,user:true})).unwrap();
         } catch (error) {
         console.error('Failed to fetch Course:', error);
+        navigate("*");
+        
         } finally {
         setLoading(false);
         }
     };
     fetchData();
     }, [dispatch, id]);
-
-    console.log("Course detail in course detial page:", singleCourse);
     
 
     useEffect(() => {
@@ -66,9 +67,9 @@ const CourseDetailPage = () => {
 
     if (loading || !singleCourse || isCheckoutLoading) {
     return (
-        <div className="flex justify-center items-center h-screen">
-        <Loader className="animate-spin h-10 w-10 text-primary" />
-        </div>
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
     );
     }
 

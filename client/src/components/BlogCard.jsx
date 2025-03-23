@@ -8,15 +8,15 @@ import { ConfirmDialog } from './common/ui/ConfirmDialog';
 
 
 // Blog Card Component
-const BlogCard = ({ blog, currentUser, onEdit, onDelete, onLike }) => {
+const BlogCard = ({ blog, currentUser, onEdit, onDelete, onLike, isAdminView=false }) => {
     const [showComments, setShowComments] = useState(false);
     const [newComment, setNewComment] = useState('');
     const [comments, setComments] = useState(blog.comments || []);
     const [deletingCommentId, setDeletingCommentId] = useState(null);
     const [showDeleteCommentDialog, setShowDeleteCommentDialog] = useState(false);
   
-    const isAuthor = currentUser && blog?.author?.id === currentUser?.user?.id;
-    const userLiked = blog.likes.includes(currentUser?.user?.id);
+    const isAuthor = !isAdminView && currentUser && blog?.author?.id === currentUser?.user?.id;
+    const userLiked = currentUser?.user && blog.likes.includes(currentUser?.user?.id);
     
     const toggleComments = () => {
       setShowComments(!showComments);
@@ -24,6 +24,7 @@ const BlogCard = ({ blog, currentUser, onEdit, onDelete, onLike }) => {
   
     const handleAddComment = async (e) => {
       e.preventDefault();
+      if (isAdminView) return;
       if (!newComment.trim()) return;
       
       try {
@@ -71,6 +72,7 @@ const BlogCard = ({ blog, currentUser, onEdit, onDelete, onLike }) => {
     };
   
     const handleAddReply = async (parentId, content) => {
+      if (isAdminView) return;
       try {
         const response = await axiosInstance.post('/blog-comments/', {
           blog: blog.id,
@@ -122,22 +124,25 @@ const BlogCard = ({ blog, currentUser, onEdit, onDelete, onLike }) => {
                 </p>
             </div>
             
-            {isAuthor && (
-                <div className="flex gap-2">
+            <div className="flex gap-2">
+              {isAuthor && onEdit && (
                 <button 
-                    onClick={() => onEdit(blog)} 
-                    className="text-primary hover:text-primary-600 transition-colors"
+                  onClick={() => onEdit(blog)} 
+                  className="text-primary hover:text-primary-600 transition-colors"
                 >
-                    <FaEdit />
+                  <FaEdit />
                 </button>
+              )}
+              
+              {(isAuthor || isAdminView) && (
                 <button 
-                    onClick={() => onDelete(blog.id)} 
-                    className="text-red-500 hover:text-red-600 transition-colors"
+                  onClick={() => onDelete(blog.id)} 
+                  className="text-red-500 hover:text-red-600 transition-colors"
                 >
-                    <FaTrash />
+                  <FaTrash />
                 </button>
-                </div>
-            )}
+              )}
+            </div>
             </div>
             
             <h2 className="text-xl font-bold mb-3 text-text">{blog.title}</h2>
@@ -171,21 +176,23 @@ const BlogCard = ({ blog, currentUser, onEdit, onDelete, onLike }) => {
         
         {showComments && (
           <div className="p-4 border-t bg-background-100">
-            <form onSubmit={handleAddComment} className="mb-4 flex">
-              <input 
-                type="text" 
-                value={newComment} 
-                onChange={(e) => setNewComment(e.target.value)} 
-                placeholder="Add a comment..." 
-                className="flex-1 px-3 py-2 border rounded-l-lg focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-              <button 
-                type="submit" 
-                className="bg-primary text-white px-4 py-2 rounded-r-lg hover:bg-primary-600"
-              >
-                Post
-              </button>
-            </form>
+            {!isAdminView && (
+              <form onSubmit={handleAddComment} className="mb-4 flex">
+                <input 
+                  type="text" 
+                  value={newComment} 
+                  onChange={(e) => setNewComment(e.target.value)} 
+                  placeholder="Add a comment..." 
+                  className="flex-1 px-3 py-2 border rounded-l-lg focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+                <button 
+                  type="submit" 
+                  className="bg-primary text-white px-4 py-2 rounded-r-lg hover:bg-primary-600"
+                >
+                  Post
+                </button>
+              </form>
+            )}
             
             {comments.length > 0 ? (
               <div className="space-y-4">
@@ -196,6 +203,7 @@ const BlogCard = ({ blog, currentUser, onEdit, onDelete, onLike }) => {
                     currentUser={currentUser}
                     onDelete={handleConfirmDeleteComment}
                     onReply={handleAddReply}
+                    isAdminView={isAdminView}
                   />
                 ))}
               </div>

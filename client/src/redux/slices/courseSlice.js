@@ -1,11 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import * as courseService from '../services/courseService';
-import toast from "react-hot-toast";
 
 
 const handleApiError = (error, thunkAPI)=>{
   const message = error.response?.data?.detail || error.response?.data?.error || error.message;
-  // toast.error(message)
   return thunkAPI.rejectWithValue(message);
 }
 
@@ -15,7 +13,6 @@ export const fetchCategories = createAsyncThunk(
   "/course/fetchCategories",
   async ({categoryPage, pageSize}, thunkAPI) => {
     try {
-      console.log("Inside fetch categories in thunk");
       return await courseService.fetchCategories(categoryPage, pageSize);
     } catch (error) {
       return handleApiError(error, thunkAPI);
@@ -112,8 +109,6 @@ export const fetchTutorCourses = createAsyncThunk(
 export const updateCourse = createAsyncThunk(
   "/course/updateCourse",
   async ({id, updateData}, thunkAPI) => {
-    console.log(id);
-    
     try {
       return await courseService.updateCourse(id,updateData);
     } catch (error) {
@@ -199,7 +194,6 @@ export const markModuleCompleted = createAsyncThunk(
  export const fetchSingleCourse = createAsyncThunk(
   "/course/fetchSingleCourse",
   async ({id, user}, thunkAPI) => {
-    console.log(id);
     
     try {
       return await courseService.fetchSingleCourse(id,user);
@@ -641,8 +635,6 @@ const courseSlice = createSlice({
       .addCase(initiateCheckout.fulfilled, (state, action) => {
         state.isCheckoutLoading = false;
         state.checkoutSession = action.payload;
-        console.log(state.checkoutSession);
-        
       })
       .addCase(initiateCheckout.rejected, (state, action) => {
         state.isCheckoutLoading = false;

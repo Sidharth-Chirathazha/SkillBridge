@@ -609,7 +609,6 @@ const PersonalSection = ({errors}) => (
   );
 
   const onError = (errors) => {
-    console.log('Form errors:', errors);
     toast.error('Please fix the errors in the form');
   };
 
@@ -631,8 +630,8 @@ const PersonalSection = ({errors}) => (
         company: exp.company,
         job_role: exp.job_role,
         // Keep dates as strings in YYYY-MM-DD format
-        date_of_joining: exp.date_of_joining,  // Already in correct format
-        date_of_leaving: exp.date_of_leaving   // Already in correct format
+        date_of_joining: exp.date_of_joining,  
+        date_of_leaving: exp.date_of_leaving   
       }))
     };
   

@@ -32,24 +32,6 @@ const LoginPage = () => {
       });
   };
 
-  // useEffect(() => {
-  //   if (isError) {
-  //     toast.error(message);
-  //     dispatch(resetState());
-  //   }
-  // }, [isError, message, dispatch]);
-
-  // useEffect(() => {
-  //   dispatch(resetState());
-  //   if (role === 'student') {
-  //     navigate('/student/dashboard');
-  //     toast.success("Logged in successfully");
-  //   } else if (role === 'tutor') {
-  //     navigate('/tutor/dashboard');
-  //     toast.success("Logged in successfully");
-  //   }
-  // }, [isSuccess, role, navigate, dispatch]);
-
   useEffect(()=>{
     dispatch(resetState());
     
@@ -84,11 +66,6 @@ const LoginPage = () => {
       {/* Left Section - Full Background */}
       <div className="absolute inset-0 bg-primary-500 lg:block">
         <div className="absolute inset-0 bg-black/20" />
-        {/* <img 
-          src={background_img} 
-          alt="Background" 
-          className="w-full h-full object-cover opacity-20"
-        /> */}
       </div>
 
       {/* Content Container */}

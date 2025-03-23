@@ -12,13 +12,11 @@ class TutorEducationSerializer(serializers.ModelSerializer):
     class Meta:
         model = TutorEducation
         fields = ['id', 'university', 'degree', 'year_of_passing']
-        # read_only_fields = ['id']
 
 class TutorWorkExperienceSerializer(serializers.ModelSerializer):
     class Meta:
         model = TutorWorkExperience
         fields = ['id', 'company', 'job_role', 'date_of_joining', 'date_of_leaving']
-        # read_only_fields = ['id']
 
 class TutorProfileSerializer(serializers.ModelSerializer):
     user = UserProfileSerializer()
@@ -43,10 +41,8 @@ class TutorProfileSerializer(serializers.ModelSerializer):
         user_data = validated_data.pop('user',{})
         educations_data = validated_data.pop('educations', [])
         work_experiences_data = validated_data.pop('work_experiences', [])
-        # social_media_data = validated_data.pop('social_media_profiles', [])
         resume = validated_data.pop('resume_url', None)
 
-        # print("Inside tutor serializer:",user_data['profile_pic_url'])
         user_instance = instance.user
 
 
@@ -58,7 +54,6 @@ class TutorProfileSerializer(serializers.ModelSerializer):
 
         if 'profile_pic_url' in user_data:
             profile_pic = user_data.pop('profile_pic_url')
-            print("Inside pro if serializer:", profile_pic)
             user_instance.profile_pic_url = profile_pic
             user_instance.save()
 
@@ -70,9 +65,7 @@ class TutorProfileSerializer(serializers.ModelSerializer):
 
 
         if resume:
-             print("Inside resume in serialzier",resume )
              cloudinary_response = cloudinary_upload(resume, resource_type="raw")
-             print("Cloudinary Response:", cloudinary_response)  # Debugging
              instance.resume_url = cloudinary_response.get('public_id')
         
         for field, value in validated_data.items():
@@ -93,9 +86,6 @@ class TutorProfileSerializer(serializers.ModelSerializer):
             TutorWorkExperience(tutor_profile=instance, **exp) for exp in work_experiences_data 
         ], ignore_conflicts=True)
 
-        # # Update Social Media Profiles
-        # for social in social_media_data:
-        #     SocialMediaPlatform.objects.create(tutor_profile=instance, **social)
 
         instance.save()
 

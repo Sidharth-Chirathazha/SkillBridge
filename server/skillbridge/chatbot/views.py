@@ -8,6 +8,23 @@ from .constants import WEBSITE_OVERVIEW, GENERAL_QUERIES_INFO
 
 
 class ChatbotView(APIView):
+    """
+        Chatbot API view for handling user queries using the Gemini AI model.
+
+        This endpoint accepts user messages via a POST request, retrieves relevant context 
+        from the database using the `retrieve_relevant_context()` function, and sends a prompt 
+        to the Gemini AI model for generating a response. The generated response is then returned 
+        to the user.
+
+        Attributes:
+        permission_classes (list): Allows unrestricted access to this API using `AllowAny`.
+    
+        Methods:
+            post(request):
+                Handles POST requests with a user message, generates a response using the Gemini AI, 
+                and returns the AI's response in JSON format.
+    """
+
     permission_classes = [AllowAny]
     def post(self, request):
         user_message = request.data.get('message')

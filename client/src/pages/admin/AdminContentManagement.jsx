@@ -22,9 +22,6 @@ const AdminContentManagement = () => {
   const { skillsData, isLoading, isSuccess, currentSkillsPage, totalSkillsPages } = useSelector((state) => state.auth);
   const { categoriesData, isCategoryLoading, currentCategoryPage, totalCategoryPages } = useSelector((state) => state.course);
 
-  console.log("Skills data:", skillsData);
-  
-
   useEffect(() => {
     dispatch(fetchCategories({categoryPage, pageSize}));
   }, [dispatch, categoryPage]);
@@ -41,7 +38,7 @@ const AdminContentManagement = () => {
     try {
       await dispatch(addCategory({ name: newCategory })).unwrap();
       setNewCategory("");
-      dispatch(fetchCategories());
+      dispatch(fetchCategories({categoryPage, pageSize}));
       toast.success("Category added successfully");
     } catch (error) {
       toast.error("Error While Adding Category.");
@@ -56,7 +53,7 @@ const AdminContentManagement = () => {
       await dispatch(
         updateCategory({ id: categoryId, updateData: { is_active: !isActive } })
       ).unwrap();
-      dispatch(fetchCategories());
+      dispatch(fetchCategories({categoryPage, pageSize}));
       toast.success("Category status updated!");
     } catch (error) {
       toast.error("Error while updating category status.");
@@ -67,7 +64,7 @@ const AdminContentManagement = () => {
   const handleDeleteCategory = async (categoryId) => {
     try {
       await dispatch(deleteCategory(categoryId)).unwrap();
-      dispatch(fetchCategories());
+      dispatch(fetchCategories({categoryPage, pageSize}));
       toast.success("Category deleted successfully!");
     } catch (error) {
       toast.error("Error while deleting category.");
@@ -83,7 +80,7 @@ const AdminContentManagement = () => {
     try {
       await dispatch(addSkill({ skill_name: newSkill })).unwrap();
       setNewSkill('');
-      dispatch(fetchSkills());
+      dispatch(fetchSkills({skillPage, pageSize}));
       toast.success("Skill added successfully");
     } catch (error) {
       toast.error("Error while adding skill");
@@ -96,7 +93,7 @@ const AdminContentManagement = () => {
   const handleDeleteSkill = async (skillId) => {
     try {
       await dispatch(deleteSkill(skillId)).unwrap();
-      dispatch(fetchSkills());
+      dispatch(fetchSkills({skillPage, pageSize}));
       toast.success("Skill deleted successfully!");
     } catch (error) {
       toast.error("Error while deleting skill.");

@@ -38,11 +38,11 @@ const StudentRoutes = () => {
               <Route path="communities" element={<CommunitiesList/>}/>
               <Route path="/communities/:communityId/chat" element={<CommunityChatPage/>}/>
               <Route path="notifications" element={<NotificationsPage/>}/>
-              <Route path="blogs" element={<BlogPage/>}/>
+              <Route path="blogs" element={<BlogPage isAdminView={false}/>}/>
             </Route>
           <Route path="/courses/success" element={<SuccessPage/>}/>
         </Route>
-        <Route path="*" element={<NotFound/>} />
+        <Route path="*" element={<NotFound isAuthenticated={true}/>} />
       </Routes>
     </NotificationProvider>
   )

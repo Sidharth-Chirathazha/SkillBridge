@@ -80,7 +80,7 @@ function App() {
               <Route element={<UserPrivateRoute />}>
                   <Route path="/video-call/:roomId" element={<VideoCallPage />} />
               </Route>
-              <Route path="*" element={<NotFound/>} />
+              <Route path="*" element={<NotFound isAuthenticated={false}/>} />
             </Routes>
         </BrowserRouter>
       </ThemeProvider>

@@ -43,12 +43,9 @@ const CommunityChatPage = () => {
             requiresAuth: true
         });
         setMessages(messagesResponse.data);
-        // toast.success("Connected to chat room");
-        console.log("Connected to chat room");
         
       } catch (error) {
         console.error('Error fetching data:', error);
-        toast.error("Failed to connect to chat room");
       }
     };
 
@@ -90,7 +87,6 @@ const CommunityChatPage = () => {
 
     ws.current.onmessage = (e) => {
       const messageData = JSON.parse(e.data);
-      console.log("inside chat page message data type:", messageData?.type);
       
       if(messageData.type === 'chat_message'){
         setMessages(prev => [...prev, 
@@ -107,11 +103,9 @@ const CommunityChatPage = () => {
       }
       else if(messageData.type === 'online_users'){
         const onlineIds = (messageData.users || []).map(u => String(u.id));
-        console.log('Received online users:', onlineIds);
         setOnlineUsers(onlineIds);
       }
 
-      console.log("Inside members list online users:", onlineUsers);
     };
 
     return () => ws.current?.close();

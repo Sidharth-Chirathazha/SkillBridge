@@ -29,8 +29,6 @@ const AdminCourseManagement = () => {
   );
 
    useEffect(() => {
-    console.log("Categories fetched");
-    
       dispatch(fetchCategories({categoryPage:1, pageSize:100}));
     }, [dispatch]);
   

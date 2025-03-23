@@ -60,7 +60,7 @@ class AdminTutorSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "skills",
-            "profile_pic_url",  # Directly included if already storing as URL
+            "profile_pic_url", 
             "linkedin_url",
             "bio",
             "country",
@@ -138,7 +138,7 @@ class AdminStudentSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "skills",
-            "profile_pic_url",  # Directly included if already storing as URL
+            "profile_pic_url",  
             "linkedin_url",
             "bio",
             "country",

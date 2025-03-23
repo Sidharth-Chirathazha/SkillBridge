@@ -16,7 +16,6 @@ const CourseCard = ({
   const navigate = useNavigate();
   const [isTradeModalOpen, setIsTradeModalOpen] = useState(false);
 
-  // console.log("Course details in card:", course);
   
   const handleCardClick = () => {
     if (isPublicView) {

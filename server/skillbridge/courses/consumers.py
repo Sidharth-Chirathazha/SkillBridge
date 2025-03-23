@@ -10,7 +10,10 @@ from rest_framework_simplejwt.tokens import AccessToken
 from .models import ChatMessage, ChatRoom
 from users.models import Notification
 from channels.layers import get_channel_layer
+import logging
 
+
+logger = logging.getLogger(__name__)
 User = get_user_model()
 redis_client = redis.StrictRedis(host="127.0.0.1", port=6379, db=0, decode_responses=True)
 
@@ -98,7 +101,6 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
         )
         online_user_ids = [uid for uid, cnt in online_users.items() if int(cnt) > 0]
 
-        print("Online user ids:", online_user_ids)
         
         await self.channel_layer.group_send(
             self.room_group_name,
@@ -137,7 +139,7 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
                     }
                 )
         except Exception as e:
-            print("WebSocket receive error:", e)
+           logger.error(f"WebSocket receive error: {e}", exc_info=True)
 
     @database_sync_to_async
     def save_message(self, sender_id, message, chat_room_id):
@@ -163,8 +165,6 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
                 "notification_type": "message"
             }
         )
-
-        print("Message saved to db")
 
 
     async def chat_message(self, event):

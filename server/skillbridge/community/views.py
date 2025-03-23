@@ -51,7 +51,8 @@ class CommunityViewSet(ModelViewSet):
     def perform_create(self, serializer):
         try:
             if not serializer.is_valid():
-                print("serializer errors:", serializer.errors)
+                logger.error(f"Serializer errors: {serializer.errors}")
+                return Response({"detail": "Invalid data provided", "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
             community = serializer.save(creator=self.request.user)
 
             CommunityMember.objects.create(user=self.request.user, community=community)
@@ -59,7 +60,7 @@ class CommunityViewSet(ModelViewSet):
             return Response({"detail": "An error occurred while creating the community ", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
     def update(self, request, *args, **kwargs):
-        if not request.user.is_staff:  # Ensure only admins can update is_active status
+        if not request.user:  # Ensure only admins can update is_active status
             return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
         return super().update(request, *args, **kwargs)
 

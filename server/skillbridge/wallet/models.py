@@ -11,12 +11,10 @@ class Wallet(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now_add=True)
 
-
     def __str__(self):
          return f"{self.user.first_name} {self.user.last_name} - Wallet Balance: {self.balance}"
     
 class Transaction(models.Model):
-    
     wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, related_name="transactions")
     purchase = models.ForeignKey(Purchase, on_delete=models.CASCADE, related_name="transactions", null=True, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)

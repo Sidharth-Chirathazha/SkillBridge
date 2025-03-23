@@ -153,8 +153,7 @@ class EarningsOverviewView(APIView):
                     else:  # 20 <= hour < 24
                         chart_data[5]["earnings"] += amount
                     
-                    # Debug print
-                    print(f"Transaction at {transaction.created_at}, hour: {hour}, amount: {amount}, assigned to: {chart_data[hour // 4]['name']}")
+                    
                     
             elif timeframe == "week":
                 # Last 7 days

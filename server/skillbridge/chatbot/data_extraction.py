@@ -2,6 +2,7 @@ from courses.models import Course, Category
 from tutor.models import TutorProfile
 
 
+"""This function fetches the course data from database and returns it for creating promt for Gemini API with course information"""
 def extract_courses_data():
     courses = Course.objects.all()
     courses_data = []
@@ -23,6 +24,7 @@ def extract_courses_data():
     
     return courses_data
 
+"""This function fetches the tutors data from the database and returns it for creating promt for Gemini API with tutor information """
 def extract_tutors_data():
     tutors = TutorProfile.objects.all()
     tutors_data = []

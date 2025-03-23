@@ -1,7 +1,7 @@
 from .data_extraction import extract_courses_data, extract_tutors_data
 
 def retrieve_relevant_context(query):
-    """Improved keyword-based retrieval system"""
+    """Retrieves relevant course or tutor information based on the user's query using a keyword-based retrieval system."""
     context_parts = []
     query_lower = query.lower()
     

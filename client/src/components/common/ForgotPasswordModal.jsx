@@ -212,14 +212,6 @@ const handleClose = () => {
           </button>
         </div>
 
-        {/* {(isError || validationError) && (
-          <Alert variant="destructive" className="mb-4 flex items-center gap-2 text-red-500 border-red-500 bg-red-50">
-            <XCircle className="h-4 w-4 flex-shrink-0 mt-1" />
-            <AlertDescription className="text-sm leading-tight mt-1.5">
-              {validationError || message}
-            </AlertDescription>
-          </Alert>
-        )} */}
 
         {/* Step 1: Email Input */}
         {step === 1 && (

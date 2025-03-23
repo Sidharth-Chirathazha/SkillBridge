@@ -10,6 +10,16 @@ const Navbar = () => {
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
+  const scrollToSection = (id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({behavior:'smooth'});
+    }
+    if(isMenuOpen){
+      setIsMenuOpen(false);
+    } 
+  };
+
   return (
     <nav className="sticky top-0 z-50 bg-white shadow-lg backdrop-blur-md bg-white/95">
       <div className="container mx-auto flex items-center justify-between py-4 px-6">
@@ -35,18 +45,26 @@ const Navbar = () => {
           </li>
           <li>
             <a
-              href="#about"
+              href="#courses"
               className="relative py-2 hover:text-secondary transition-all duration-200 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-secondary after:transition-all after:duration-300 hover:after:w-full"
+              onClick={(e) => {
+                e.preventDefault();
+                scrollToSection('courses-section');
+              }}
             >
-              About Us
+              Courses
             </a>
           </li>
           <li>
             <a
-              href="#categories"
+              href="#tutors"
               className="relative py-2 hover:text-secondary transition-all duration-200 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-secondary after:transition-all after:duration-300 hover:after:w-full"
+              onClick={(e) => {
+                e.preventDefault();
+                scrollToSection('tutors-section');
+              }}
             >
-              Categories
+              Tutors
             </a>
           </li>
         </ul>
@@ -91,13 +109,23 @@ const Navbar = () => {
             </a>
           </li>
           <li>
-            <a href="#about" className="block py-2 text-text-500 hover:text-secondary">
-              About Us
+            <a href="#courses" className="block py-2 text-text-500 hover:text-secondary"
+             onClick={(e) => {
+              e.preventDefault();
+              scrollToSection('courses-section');
+            }}
+            >
+              Courses
             </a>
           </li>
           <li>
-            <a href="#categories" className="block py-2 text-text-500 hover:text-secondary">
-              Categories
+            <a href="#tutors" className="block py-2 text-text-500 hover:text-secondary"
+            onClick={(e) => {
+              e.preventDefault();
+              scrollToSection('tutors-section');
+            }}
+            >
+              Tutors
             </a>
           </li>
           <li className="pt-4 flex flex-col space-y-3">

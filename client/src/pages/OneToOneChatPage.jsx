@@ -60,7 +60,6 @@ const OneToOneChatPage = () => {
     );
   });
 
-  console.log("Current user in one to one:", currentUser);
 
   useEffect(() => {
     const handleActivity = () => setIsActive(true);
@@ -145,14 +144,10 @@ const OneToOneChatPage = () => {
 
     const wsUrl = `ws://localhost:8000/ws/chat/${chatRoomId}/?token=${token}`;
 
-    console.log("Ws url:", wsUrl);
-    
-
     ws.current = new WebSocket(wsUrl);
 
     ws.current.onopen = () =>{
       setIsConnected(true);
-      console.log("Websocket connected");
       
     };
 
@@ -184,7 +179,6 @@ const OneToOneChatPage = () => {
 
     ws.current.onclose = () => {
       setIsConnected(false);
-      console.log('WebSocket disconnected');
     };
 
     return () => ws.current?.close();
@@ -243,8 +237,6 @@ const OneToOneChatPage = () => {
   const toggleSidebar = () => {
     setShowSidebar(!showSidebar);
   };
-
-  console.log("Messages in one to one chat:", messages);
   
 
   return (

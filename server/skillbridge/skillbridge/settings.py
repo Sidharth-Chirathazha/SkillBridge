@@ -58,9 +58,9 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),  
     'REFRESH_TOKEN_LIFETIME': timedelta(minutes=300),  
-    'ROTATE_REFRESH_TOKENS': False,                # Optional: Set True to use rotating refresh tokens
-    'BLACKLIST_AFTER_ROTATION': True,              # Required for blacklist functionality
-    'ALGORITHM': 'HS256',                          # Default: Modify if needed
+    'ROTATE_REFRESH_TOKENS': False,                
+    'BLACKLIST_AFTER_ROTATION': True,             
+    'ALGORITHM': 'HS256',                          
     'SIGNING_KEY': SECRET_KEY,
     'AUTH_HEADER_TYPES': ('Bearer',),
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
@@ -69,7 +69,7 @@ SIMPLE_JWT = {
 
 
 AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',  # Default authentication
+    'django.contrib.auth.backends.ModelBackend', 
 ]
 
 # Application definition
@@ -87,7 +87,6 @@ INSTALLED_APPS = [
     'users',
     'tutor',
     'student',
-    'socialmedia',
     'sbAdmin',
     'courses',
     'wallet',
@@ -98,7 +97,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
-    'django.contrib.sites',  # Required by allauth
+    'django.contrib.sites',  
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
@@ -184,7 +183,6 @@ DATABASES = {
 
 # Email settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# Looking to send emails in production? Check out our Email API/SMTP product!
 EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
@@ -267,26 +265,14 @@ AUTH_USER_MODEL = 'users.User'
 
 
 cloudinary.config(
-    cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),  # Replace with your Cloudinary cloud name
-    api_key=os.getenv('CLOUDINARY_API_KEY'),       # Replace with your Cloudinary API key
-    api_secret=os.getenv('CLOUDINARY_API_SECRET')  # Replace with your Cloudinary API secret
+    cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),  
+    api_key=os.getenv('CLOUDINARY_API_KEY'),       
+    api_secret=os.getenv('CLOUDINARY_API_SECRET')  
 )
 
 
 ZEGO_APP_ID =  os.getenv('ZEGO_APP_ID')
 ZEGO_SERVER_SECRET =  os.getenv('ZEGO_SERVER_SECRET')
-
-# CLOUDINARY_STORAGE = {
-#     'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),    # Replace with your Cloudinary cloud name
-#     'API_KEY': os.getenv('CLOUDINARY_API_KEY'),       # Replace with your Cloudinary API key
-#     'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),   # Replace with your Cloudinary API secret
-#     'UPLOAD_OPTIONS': {
-#         'resource_type': 'raw',
-#         'use_filename': True,          # Preserve original filename
-#         'unique_filename': False,       # Avoid unique hashes
-#         'use_original_extension': True  # Keep file extensions
-#     }
-# }
 
 
 CORS_ALLOWED_ORIGINS = [  

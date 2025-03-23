@@ -1,3 +1,7 @@
+import jwt
+import datetime
+import json
+import logging
 from .serializers import UserCreationSerializer,UserLoginSerializer, SkillSerializer, NotificationSerializer, UserActivitySerializer, BlogSerializer, CommentSerializer
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
@@ -13,9 +17,6 @@ from django.utils.decorators import method_decorator
 from student.serializers import StudentProfileSerializer
 from tutor.serializers import TutorProfileSerializer
 from rest_framework.parsers import MultiPartParser,FormParser,JSONParser
-import jwt
-import datetime
-import json
 from datetime import date
 from datetime import timedelta
 from django.utils.timezone import now
@@ -28,8 +29,8 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from base.custom_pagination import CustomPagination
 from django.conf import settings
-import logging
-from celery import shared_task
+from base.custom_pagination import BlogPagination
+
 
 
 
@@ -46,10 +47,6 @@ class CustomTokenRefreshView(TokenRefreshView):
 class UserCreationHandlerView(APIView):
     permission_classes = [AllowAny]
 
-    @shared_task
-    def test_task():
-        print("Test task executed successfully")
-        return True
 
     def post(self, request, *args, **kwargs):
         try:
@@ -131,31 +128,23 @@ class UserProfileView(APIView):
             else:
                 json_data = {}
 
-            print("inside put :", json_data)
-            print("Inside put",user.role)
             # Include file data if available
             if 'profile_pic' in request.FILES:
-                print("Inside if in put",request.FILES['profile_pic'])
                 json_data['user'] = json_data.get('user', {})
                 json_data['user']['profile_pic_url'] = request.FILES['profile_pic']
-                print(json_data['user']['profile_pic_url'])
             
             # Include file data if available
             if 'resume' in request.FILES:
-                print("Inside if of resume in put",request.FILES['resume'])
                 json_data['resume_url'] = request.FILES['resume']
-                print(json_data['resume_url'])
 
             if user.role == 'tutor':
                 serializer = TutorProfileSerializer(user.tutor_profile, data=json_data, partial=True, context={'request': request})
             elif user.role == 'student':
-                print("Inside view of role student")
                 serializer = StudentProfileSerializer(user.student_profile, data=json_data, partial=True, context={'request': request})
             else:
                 return Response({'error': 'Invalid role'}, status=status.HTTP_400_BAD_REQUEST)
             
             if serializer.is_valid():
-                print("serializer is valid")
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
             
@@ -376,6 +365,7 @@ class BlogViewSet(ModelViewSet):
     queryset = Blog.objects.all().order_by('-created_at')
     serializer_class = BlogSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
+    pagination_class = BlogPagination
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -393,7 +383,7 @@ class BlogViewSet(ModelViewSet):
         
     def perform_destroy(self, instance):
         try:
-            if instance.author != self.request.user:
+            if instance.author != self.request.user and not self.request.user.is_superuser:
                 raise PermissionDenied("You do not have permission to delete this blog.")
             instance.delete()
         except Exception as e:

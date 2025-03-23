@@ -20,10 +20,6 @@ const CommunitiesList = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const pageSize = 6;
 
-  // console.log("UserData in CommunitiesList:", userData);
-  // console.log("CurrentUserId being passed:", userData?.user?.id);
-  // console.log("Communities Array:", communities);
-
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -41,16 +37,15 @@ const CommunitiesList = () => {
   }, [dispatch, page, searchQuery]);
 
   const handleSearch = (query) => {
-    setPage(1);
     setSearchQuery(query);
   };
 
 
   if (loading) {
     return (
-        <div className="flex justify-center items-center h-screen">
-        <Loader className="animate-spin h-10 w-10 text-primary" />
-        </div>
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
     );
     }
 

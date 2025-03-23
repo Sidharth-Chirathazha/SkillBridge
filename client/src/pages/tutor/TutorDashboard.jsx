@@ -50,8 +50,6 @@ const TutorDashboard = () => {
       console.error('Error fetching earnings data:', err);
       setError('Failed to load earnings data');
       
-      // // Fallback to dummy data in case of error
-      // setChartData(generateFallbackData(timeframe));
     } finally {
       setIsLoading(false);
     }

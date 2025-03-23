@@ -17,7 +17,6 @@ export const fetchCommunities = async(page, pageSize, search=null)=>{
 //Create Community
 export const createCommunity = async(communityInfo)=>{
 
-    // console.log("Sending FormData:", [...communityInfo.entries()]);
     
     const config = {
         requiresAuth: true,

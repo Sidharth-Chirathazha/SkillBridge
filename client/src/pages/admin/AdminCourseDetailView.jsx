@@ -12,8 +12,6 @@ const AdminCourseDetailView = () => {
     const dispatch = useDispatch();
     const {singleCourse, isCourseLoading} = useSelector((state)=>state.course);
     const {id} = useParams();
-
-    console.log("Id:", id);
     
     useEffect(() => {
     const fetchData = async () => {

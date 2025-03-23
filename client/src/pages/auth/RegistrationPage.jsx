@@ -112,11 +112,6 @@ const RegistrationPage = () => {
       {/* Left Section - Full Background */}
       <div className="absolute inset-0 bg-primary-500 lg:block">
         <div className="absolute inset-0 bg-black/20" />
-        {/* <img 
-          src={background_img} 
-          alt="Background" 
-          className="w-full h-full object-cover opacity-20"
-        /> */}
       </div>
 
       {/* Content Container */}

@@ -60,13 +60,8 @@ const AdminLoginPage = () => {
   return (
     <div className="min-h-screen w-full flex relative">
       {/* Left Section - Full Background */}
-      <div className="absolute inset-0 bg-primary-700 lg:block">
+      <div className="absolute inset-0 bg-background-700 lg:block">
         <div className="absolute inset-0 bg-black/20" />
-        {/* <img 
-          src={background_img} 
-          alt="Background" 
-          className="w-full h-full object-cover opacity-20"
-        /> */}
       </div>
 
       {/* Content Container */}
@@ -83,10 +78,6 @@ const AdminLoginPage = () => {
           </div>
           
           <h1 className="text-3xl lg:text-5xl font-bold text-white mb-4 lg:mb-6">Admin Portal</h1>
-          {/* <p className="text-base lg:text-xl text-background-100 max-w-xl">
-            Your gateway to endless learning possibilities. Join our community of learners 
-            and discover new horizons in education.
-          </p> */}
         </div>
 
         {/* Right Content - Login Form */}
@@ -94,8 +85,8 @@ const AdminLoginPage = () => {
           <div className="w-full max-w-md lg:max-w-lg bg-white rounded-xl  lg:rounded-2xl shadow-lg lg:shadow-2xl p-6 lg:p-8">
 
             <div className="lg:hidden flex items-center justify-center mb-6">
-              <GraduationCap size={40} className="text-primary-600 mr-2" />
-              <span className="text-2xl font-bold text-primary-600">SkillBridge</span>
+              <GraduationCap size={40} className="text-text-600 mr-2" />
+              <span className="text-2xl font-bold text-text-600">SkillBridge</span>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -106,7 +97,7 @@ const AdminLoginPage = () => {
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 text-sm lg:text-base rounded-lg border border-background-300 focus:outline-none focus:ring-2 focus:ring-primary-600 peer"
+                    className="w-full px-4 py-3 text-sm lg:text-base rounded-lg border border-background-300 focus:outline-none focus:ring-2 focus:ring-text-600 peer"
                     placeholder=" " 
                   />
                   <label className="absolute left-4 top-3 text-text-400 text-sm pointer-events-none transition-all duration-200 
@@ -123,7 +114,7 @@ const AdminLoginPage = () => {
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 text-sm lg:text-base rounded-lg border border-background-300 focus:outline-none focus:ring-2 focus:ring-primary-600 peer"
+                    className="w-full px-4 py-3 text-sm lg:text-base rounded-lg border border-background-300 focus:outline-none focus:ring-2 focus:ring-text-600 peer"
                     placeholder=" "
                   />
                   <label className="absolute left-4 top-3 text-text-400 text-sm pointer-events-none transition-all duration-200 
@@ -138,7 +129,7 @@ const AdminLoginPage = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className={`w-full py-2.5 rounded-lg bg-primary-600 hover:bg-primary-700 text-white font-medium transition-colors ${
+                className={`w-full py-2.5 rounded-lg bg-text-600 hover:bg-text-700 text-white font-medium transition-colors ${
                   isLoading ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >

@@ -9,6 +9,8 @@ User = get_user_model()
 # Create your models here.
 
 class Community(models.Model):
+    """Model representing the community created by a tutor"""
+
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name="created_communities")
     title = models.CharField(max_length=250, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
@@ -22,6 +24,8 @@ class Community(models.Model):
         return self.title
 
 class CommunityMember(models.Model):
+    """Model representing the community members of a specific community"""
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     joined_at = models.DateTimeField(auto_now_add=True)
@@ -31,6 +35,8 @@ class CommunityMember(models.Model):
 
 
 class Message(models.Model):
+    """Model representing the messages in a specific community"""
+
     sender = models.ForeignKey(User, on_delete=models.CASCADE)
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name="messages")
     text = models.TextField()

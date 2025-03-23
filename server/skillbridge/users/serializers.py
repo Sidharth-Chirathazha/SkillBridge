@@ -5,12 +5,14 @@ from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from .models import Skill,Notification,UserActivity,Blog,Comment
-# from .utils import generate_email_otp
 from .tasks import sent_otp_email
-from cloudinary.utils import cloudinary_url
 from cloudinary.uploader import upload as cloudinary_upload
 from wallet.models import Wallet
+import logging
 
+
+
+logger = logging.getLogger(__name__)
 User = get_user_model()
 
 # Serializer for User Registration 
@@ -39,7 +41,6 @@ class UserCreationSerializer(serializers.Serializer):
 
             # Check if the OTP is correct
             cached_otp = cache.get(f'otp_{email}')
-            print(f"OTP Cached for {email}: {cache.get(f'otp_{email}')}") 
             if cached_otp is None:
                 raise serializers.ValidationError("Otp has expired. Please request for a new OTP.")
             if int(otp) != cached_otp:
@@ -63,24 +64,21 @@ class UserCreationSerializer(serializers.Serializer):
             Wallet.objects.create(user=user)
             if role == 'student':
                 StudentProfile.objects.create(user=user)
-                print("Student created")
             elif role == 'tutor':
                 TutorProfile.objects.create(user=user)
-                print("Tutor created")
             cache.delete(f'otp_{email}') # Remove OTP after successful verification
             return {"message": "User created successfully."}
         
         elif email and password and role:
             subject = "Registration"
-            print(f"Preparing to send OTP to {email} with subject {subject}")
             try:
                 if isinstance(email, str) and isinstance(subject, str):
                     task = sent_otp_email.delay(email, subject)
-                    print(f"Task sent with id: {task.id}")
+                    logger.info(f"OTP email task sent for {email}")
                 else:
-                    print(f"Invalid email or subject: email={type(email)}, subject={type(subject)}")
+                     logger.warning(f"Invalid email or subject: email={type(email)}, subject={type(subject)}")
             except Exception as e:
-                print(f"Error sending task: {e}")
+                 logger.error(f"Error sending OTP email task: {e}", exc_info=True)
             return {"message": "OTP sent for registration.", "email": email}
         
         elif email and not(password or role or otp or new_password):
@@ -147,26 +145,22 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     
     def validate_phone(self, value):
-        print("Inside validate_phone")
         user = self.context.get('request').user
 
         if value == user.phone:
             return value
         
         if User.objects.filter(phone=value).exclude(id=user.id).exists():
-            print("Inside If")
             raise serializers.ValidationError("This phone number is already in use.")
         return value
     
     def validate_linkedin_url(self, value):
-        print("Inside validate_linkedin_url")
         user = self.context.get('request').user
 
         if value == user.linkedin_url:
             return value
         
         if User.objects.filter(linkedin_url=value).exclude(id=user.id).exists():
-            print("Inside If")
             raise serializers.ValidationError("This linkedin url is already in use.")
         return value
     
@@ -216,15 +210,15 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ['id', 'blog', 'user', 'content', 'parent', 'replies', 'created_at']
 
     def get_replies(self, obj):
-        if isinstance(obj, Comment):
-            if obj.replies.exists():
-                return CommentSerializer(obj.replies.all(), many=True).data
-        return []
+        # Recursively serialize replies
+        replies = Comment.objects.filter(parent=obj).order_by('created_at')
+        serializer = CommentSerializer(replies, many=True)
+        return serializer.data
     
 class BlogSerializer(serializers.ModelSerializer):
     author = BlogUserSerializer(read_only=True)
     total_likes = serializers.IntegerField(read_only=True)
-    comments = CommentSerializer(many=True, read_only=True)
+    comments = serializers.SerializerMethodField()
     thumbnail = serializers.ImageField(required=False)
     class Meta:
         model = Blog
@@ -240,3 +234,9 @@ class BlogSerializer(serializers.ModelSerializer):
             'total_likes',
             'comments',
         ]
+
+    def get_comments(self, obj):
+        # Only get top-level comments (no parent)
+        comments = Comment.objects.filter(blog=obj, parent=None).order_by('-created_at')
+        serializer = CommentSerializer(comments, many=True)
+        return serializer.data

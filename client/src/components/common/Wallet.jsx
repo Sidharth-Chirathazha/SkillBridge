@@ -3,9 +3,7 @@ import { CreditCard, ArrowUpRight, ArrowDownLeft, Calendar } from 'lucide-react'
 import {format} from 'date-fns'
 
 const WalletComponent = ({ userRole, walletData, transactions }) => {
-  // Dummy data for transactions
  
-  // Dynamic styles based on user role
   const isAdmin = userRole === 'admin';
   const themeStyles = {
     background: isAdmin ? 'bg-background-100' : 'bg-background-500',

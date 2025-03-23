@@ -11,9 +11,15 @@ const LandingPage = () => {
   return (
     <> 
       <Navbar/>
-      <HeroSection/>
-      <TopCourses/>
-      <TopTutors/>
+      <div id="home">
+        <HeroSection/>
+      </div>
+      <div id="courses-section">
+        <TopCourses/>
+      </div>
+      <div id="tutors-section">
+        <TopTutors/>
+      </div>
       <Footer/>
       <ChatBot/>
     </>

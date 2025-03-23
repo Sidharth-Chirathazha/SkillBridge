@@ -78,10 +78,6 @@ const AdminTutorsManagement = () => {
   };
   
 
-  console.log("Active status:", selectedActiveStatus);
-  
-
-
   if (loading || !adminTutorsData) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -156,12 +152,6 @@ const AdminTutorsManagement = () => {
                       >
                         <Eye className="h-5 w-5" />
                       </button>
-                      {/* <button 
-                        className="text-text-400 hover:bg-background-200 p-2 rounded-full transition-all duration-300 hover:shadow-md"
-                        title="More Options"
-                      >
-                        <MoreVertical className="h-5 w-5" />
-                      </button> */}
                     </div>
                   </td>
                 </tr>

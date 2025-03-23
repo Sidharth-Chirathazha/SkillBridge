@@ -33,15 +33,13 @@ const CourseList = () => {
 
   useEffect(() => {
     if (!tutorId) return;
-    console.log(tutorId);
 
     const fetchData = async()=>{
       try{
         await dispatch(fetchTutorCourses({ tutorId, statues:"Approved" }));
-        console.log("Courses Fetched Successfully");
         
       }catch(error){
-       console.log("Failed to fetch Courses");
+       console.error("Failed to fetch Courses");
        
       }
     }
@@ -67,8 +65,6 @@ const CourseList = () => {
     
   }, [dispatch, page, searchQuery, selectedCategory]);
 
-  // console.log("All Course details in course list:", coursesData);
-  // console.log("Categories data in course list:", categoriesData);
   
 
   useEffect(() => {
@@ -96,9 +92,7 @@ const CourseList = () => {
     redirectToCheckout();
   }, [checkoutSession, dispatch])
 
-  const handleLike = (courseId) => {
-    // Handle like logic
-  };
+
 
   const handleSearch = (query) => {
     // setPage(1);
@@ -111,8 +105,6 @@ const CourseList = () => {
   };
 
   const handleBuy = async (courseId) => {
-    console.log("Inside handle buy",courseId);
-    
     try{
       await dispatch(initiateCheckout(courseId));
     }catch(error){
@@ -141,9 +133,9 @@ const CourseList = () => {
           </div>
 
         {isCourseLoading || isCheckoutLoading ? (
-            <div className="flex justify-center items-center h-screen">
-            <Loader className="animate-spin h-10 w-10 text-primary" />
-                </div>
+            <div className="flex justify-center items-center min-h-screen">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            </div>
         ) : checkoutError?(
               <div className="text-red-500 mb-4">
               Error: {checkoutError}

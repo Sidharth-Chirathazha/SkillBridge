@@ -26,10 +26,6 @@ const CoursesOwned = ({ variant = 'student' }) => {
 
   const {role, userData} = useSelector((state)=>state.auth)
 
-  console.log("Requested trades", requestedTrades);
-  console.log("Received trades", receivedTrades);
-  console.log("Purchased Courses Data", purchasedCoursesData);
-
    useEffect(() => {
       dispatch(fetchCategories({categoryPage:1, pageSize:100}));
     }, [dispatch]);
@@ -70,13 +66,12 @@ const CoursesOwned = ({ variant = 'student' }) => {
 
   const handleTradeAction = async (tradeId, action) => {
         try{
-            console.log("Dispatching trade action:", { tradeId, action });
             await dispatch(updateTradeRequest({tradeId, action})).unwrap();
             await dispatch(fetchTradeRequests()).unwrap();
             dispatch(fetchPurchasedCourses({ page, pageSize, search:searchQuery, categoryId:selectedCategory}));
             toast.success("Course traded successfully");
         }catch(error){
-            console.log("Trade action error:", error);
+            console.error("Trade action error:", error);
             
             toast.error("An error occured while updating");
         }
@@ -230,8 +225,8 @@ const CoursesOwned = ({ variant = 'student' }) => {
               </p>
             </div>
             {isCourseLoading ? (
-                <div className="flex justify-center items-center h-screen">
-                <Loader className="animate-spin h-10 w-10 text-primary" />
+                <div className="flex justify-center items-center min-h-screen">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
                 </div>
             ) : !purchasedCoursesData ? (
               <div className="flex justify-center items-center h-96">

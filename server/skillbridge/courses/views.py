@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404
+from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -29,8 +30,10 @@ from users.models import Notification
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 import traceback
+import logging
 
 
+logger = logging.getLogger(__name__)
 User = get_user_model()
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -124,6 +127,10 @@ class CourseViewSet(ModelViewSet):
             ).select_related("tutor__user")
 
             return get_object_or_404(queryset, pk=self.kwargs['pk'])
+        except Http404:
+            raise NotFound({"detail": "Course not found."})
+        except DatabaseError as e:
+            raise APIException(f"Database error: {str(e)}")
         except Exception as e:
             raise APIException(f"Error in get_object: {str(e)}")
     
@@ -321,7 +328,7 @@ class CreateCheckoutSession(APIView):
 
             return Response({'sessionId':checkout_session.id})
         except Exception as e:
-            print(str(e))
+            logger.error(f"An error occurred: {e}", exc_info=True)
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
 
@@ -354,7 +361,6 @@ class StripeWebhookView(APIView):
 
                 tutor_share = course_price * TUTOR_SHARE_PERCENT
                 admin_share = course_price * ADMIN_SHARE_PERCENT
-                print(f"Tutor Share:{tutor_share}, Admin Share:{admin_share}")
 
                 with transaction.atomic():
                     purchase, created = Purchase.objects.get_or_create(
@@ -394,10 +400,9 @@ class StripeWebhookView(APIView):
                         transaction_type="credit",
                         description=f"Admin commission for course: {course.title}"
                     )
-                    print("Wallet and transaction updated successfully")
 
                 except Exception as e:
-                    print(f"Error updating wallet/transaction: {e}")
+                    logger.error(f"Error updating wallet/transaction: {e}", exc_info=True)
                     return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
                 
                 student = get_object_or_404(User, id=user_id)
@@ -408,17 +413,13 @@ class StripeWebhookView(APIView):
                     course=course
                 )
 
-                if created:
-                    print(f"Chat Room Created: {chat_room}")
-                
-                print(f"Webhook Event: {event}")
 
                 return Response({'status': 'success'}, status=status.HTTP_200_OK)
             
             except IntegrityError:
                 return Response({"error": "Duplicate purchase detected"}, status=status.HTTP_400_BAD_REQUEST)
             except Exception as e:
-                print("Webhook Error:", str(e))
+                logger.error(f"Webhook Error: {e}", exc_info=True)
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         
@@ -635,7 +636,7 @@ class GetChatRoomAPIView(APIView):
             serializer = ChatRoomSerializer(chat_room)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
-            print("Error Traceback:", traceback.format_exc())  
+            logger.error(f"Error occurred: {e}\nTraceback: {traceback.format_exc()}")
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
 class GetChatRoomByIdAPIView(APIView):
@@ -682,5 +683,5 @@ class GetChatMessageAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         except Exception as e:
-            print("Error Traceback:", traceback.format_exc())
+            logger.error(f"Error occurred: {e}\nTraceback: {traceback.format_exc()}")
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

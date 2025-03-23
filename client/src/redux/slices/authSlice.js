@@ -152,12 +152,8 @@ export const updateUser = createAsyncThunk(
   
   "/updateUser",
   async(formData, thunkAPI)=>{
-    console.log("Inside Update uer thunk");
       try{
-        console.log("Request Data:", formData);
-        
         const response = await authService.updateUser(formData);
-        console.log(response.data);
         return response.data
           
       }catch(error){
@@ -430,14 +426,10 @@ const authSlice = createSlice({
           state.message = "";
         })
         .addCase(fetchUser.fulfilled, (state, action) => {
-          console.log('Previous state:', state);
-          console.log('Payload:', action.payload);
           state.isLoading = false;
           state.isSuccess = true;
           state.message = "";
           state.userData = action.payload;
-          console.log(state.userData);
-          
         })
         .addCase(fetchUser.rejected, (state, action) => {
           state.isError = true;
@@ -458,7 +450,6 @@ const authSlice = createSlice({
           state.isError = true;
           state.isUpdateError = true;
           state.message = action.payload;
-          console.log("updateUser slice:",state.message);
         })
         .addCase(fetchSkills.pending, (state)=>{
           state.isLoading = true;

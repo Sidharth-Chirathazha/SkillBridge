@@ -14,9 +14,11 @@ const NotificationsPage = () => {
   const ws = useRef(null);
   const { notificationCount, setNotificationCount } = useNotification();
   const {userData, role} = useSelector((state)=>state.auth)
+  const [loading, setLoading] = useState(true);
   
   const fetchNotifications = async() => {
     try{
+      setLoading(true)
       const response = await axiosInstance.get("/notifications/",{requiresAuth: true});
       const transformedData = response.data.map(notification => ({
         id: notification.id,
@@ -27,10 +29,12 @@ const NotificationsPage = () => {
         type: notification.notification_type === 'message' ? 'message' : 'course',
         icon: notification.notification_type === 'message' ? MessageSquare : BookOpen,
       }));
+      setLoading(false);
       setNotifications(transformedData);
     }catch(error){
       console.error('Error fetching notifications:', error);
       toast.error('Error fetching notifications:', error)
+      setLoading(false);
     }
   }
 
@@ -98,6 +102,14 @@ const NotificationsPage = () => {
     : filter === 'unread' 
       ? notifications.filter(notification => !notification.read)
       : notifications.filter(notification => notification.read);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <>

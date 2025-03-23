@@ -44,15 +44,12 @@ class AdminLogoutView(APIView):
         try:
             refresh_token = request.data.get('refresh')
             if not refresh_token:
-                print("Refresh Token Missing")
                 return Response({"error":"Refresh token missing"}, status=status.HTTP_400_BAD_REQUEST)
             else:
-                print("Refresh token is present")
                 token = RefreshToken(refresh_token)
                 token.blacklist()
                 return Response({"detail": "Successfully logged out."}, status=status.HTTP_200_OK)
         except Exception as e:
-            print("Invalid token")
             return Response({"error": "Invalid token or token already blacklisted."}, status=status.HTTP_400_BAD_REQUEST)
         
 class AdminDetailsView(APIView):

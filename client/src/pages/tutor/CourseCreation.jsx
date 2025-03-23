@@ -9,7 +9,6 @@ import { addCourse, addModule, fetchCategories, fetchModules,
   fetchTutorCourses} from '../../redux/slices/courseSlice';
 import toast from 'react-hot-toast';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ConfirmDialog } from '../../components/common/ui/ConfirmDialog';
 import TutorVerificationMessage from '../../components/tutor/TutorVerificationMessage';
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
@@ -28,8 +27,6 @@ const CourseCreation = () => {
   const tutorId = userData?.id;
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  console.log("Categories in course creation", categoriesData);
   
   const courseSchema = Joi.object({
     title: Joi.string().min(1).required().messages({
@@ -159,13 +156,6 @@ const CourseCreation = () => {
     }
   }, [singleCourse, isEditMode, setCourseValue]);
 
-  // const handleEditModule = (module) => {
-  //   setEditingModuleId(module.id);
-  //   setModuleValue('title', module.title);
-  //   setModuleValue('description', module.description);
-  //   setModuleValue('duration', module.duration);
-  //   // Note: Files can't be set programmatically
-  // };
 
   const handleTabChange = (newValue) => {
     if (newValue === 1 && !urlCourseId) return;
@@ -183,25 +173,18 @@ const CourseCreation = () => {
         }
       });
 
-      console.log("Inside the course creation submit course, formData:");
-
-      formData.forEach((value, key) => {
-        console.log(`${key}:`, value);
-      });
     
       if(isEditMode){
-        console.log(urlCourseId);
         
         await dispatch(updateCourse({id: urlCourseId, updateData: formData})).unwrap();
         setIsEditing(false);
-        await dispatch(fetchTutorCourses({tutorId,page:1, pageSize:8}));
+        dispatch(fetchTutorCourses({tutorId,page:1, pageSize:8}));
         toast.success('Course updated successfully!');
       }else{
         const response = await dispatch(addCourse(formData)).unwrap();
-        console.log("Inside course createtion tesing response:", response);
         
         navigate(`/tutor/teaching/edit/${response.id}`)
-        await dispatch(fetchTutorCourses({tutorId, page:1, pageSize:8}));
+        dispatch(fetchTutorCourses({tutorId, page:1, pageSize:8}));
         toast.success('Course created successfully!');
       }
     }catch(error){
@@ -243,17 +226,6 @@ const CourseCreation = () => {
       toast.error(error.message || 'Module operation failed');
     }
   };
-
-  // const handleDeleteModule = async(moduleId) =>{
-  //   try{
-  //     await dispatch(deleteModule(moduleId)).unwrap();
-  //     dispatch(fetchModules(urlCourseId));
-  //     setEditingModuleId(null);
-  //     toast.success("Module deleted successfully")
-  //   }catch(error){
-  //     toast.error("Error while deleting module")
-  //   }
-  // }
 
 
   const FormInput = ({ label, name, control, error, type = 'text', className = '', as = 'input' }) => (
@@ -686,22 +658,6 @@ const CourseCreation = () => {
                           >
                             {isEditingModule && editingModuleId === module.id ? 'Cancel' : 'Edit'}
                           </button>
-                          {/* <ConfirmDialog
-                            trigger={(open) => (
-                              <button
-                                onClick={open}
-                                className="text-secondary-600 hover:text-secondary-700 text-xs"
-                              >
-                                Delete
-                              </button>
-                            )}
-                            title="Delete Module"
-                            description={`Are you sure you want to delete the module "${module.title}"? This action cannot be undone.`}
-                            confirmText="Delete"
-                            destructive
-                            onConfirm={() => handleDeleteModule(module.id)}
-                            variant="user"
-                          /> */}
                         </div>
                       )}
                     </div>

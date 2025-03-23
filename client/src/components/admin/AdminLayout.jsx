@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, Bell, LogOut, ChevronDown, ChevronsLeft, ChevronsRight, GraduationCap, Loader, Menu, X, Wallet } from 'lucide-react';
-import { FaChalkboardTeacher, FaBook } from "react-icons/fa";
+import { FaChalkboardTeacher,FaBlogger, FaBook } from "react-icons/fa";
 import { PiStudent } from "react-icons/pi";
 import { MdDashboard, MdContentCopy } from "react-icons/md";
 import { RiUserCommunityFill } from "react-icons/ri";
@@ -35,6 +35,7 @@ const AdminLayout = () => {
     { name: 'Courses', icon: FaBook,  path:'/admin/courses/' },
     { name: 'Content Management', icon: MdContentCopy,  path:'/admin/contentManagement/' },
     { name: 'Communities', icon: RiUserCommunityFill,  path:'/admin/communities/' },
+    { name: 'Blogs', icon: FaBlogger,  path:'/admin/blogs/' },
   ];
 
 
@@ -71,7 +72,7 @@ const AdminLayout = () => {
     const refresh_token = localStorage.getItem("refresh_token")
     
     if(!refresh_token){
-        console.log("Refresh token missing");
+        console.error("Refresh token missing");
         return;   
     }
 
@@ -236,7 +237,6 @@ const AdminLayout = () => {
             {/* Notifications */}
             <button className="relative p-2 hover:bg-background-100 rounded-full">
               <Bell className="h-6 w-6 text-text-400" />
-              <span className="absolute top-1 right-1 h-2 w-2 bg-secondary-500 rounded-full"></span>
             </button>
 
             {/* Profile Dropdown */}
@@ -308,7 +308,7 @@ const AdminLayout = () => {
       {/* Render the sidebar logout dialog outside of the sidebar */}
       {showSidebarLogoutDialog && (
         <ConfirmDialog
-          trigger={(open) => null} // We don't need a trigger since we're controlling it with state
+          trigger={(open) => null} 
           title="Logout"
           description={`Are you sure you want to logout?`}
           confirmText='Confirm'

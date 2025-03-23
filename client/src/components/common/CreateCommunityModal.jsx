@@ -1,5 +1,5 @@
-// CreateCommunityModal.jsx
-import React, { useEffect } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import Joi from 'joi';
 import { joiResolver } from '@hookform/resolvers/joi';
@@ -19,6 +19,7 @@ const schema = Joi.object({
 
 const CreateCommunityModal = ({ isOpen, onClose, community }) => {
   const dispatch = useDispatch();
+  const [localLoading, setLocalLoading] = useState(false);
   const { control, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: joiResolver(schema),
     defaultValues: community || {
@@ -49,32 +50,28 @@ const CreateCommunityModal = ({ isOpen, onClose, community }) => {
     if (data.thumbnail && data.thumbnail instanceof File) {
      formData.append('thumbnail', data.thumbnail);
     }
+    formData.append("is_active", true)
 
-    // console.log("FormData entries:", [...formData.entries()]);
+    setLocalLoading(true);
 
-    if (isEditMode) {
-      dispatch(updateCommunity({ id: community.id, updateData: formData }))
-          .unwrap()  // Ensures the action completes before continuing
-          .then(() => {
-              toast.success("Community updated successfully");
-              dispatch(fetchCommunities()); // Now fetch the updated list
-          })
-          .catch((error) => {
-              toast.error("Failed to update community");
-              console.error(error);
-          });
-    } else {
-        dispatch(createCommunity(formData))
-          .unwrap()
-          .then(() => {
-              toast.success("Community added successfully");
-              dispatch(fetchCommunities());
-          })
-          .catch((error) => {
-              toast.error("Failed to add community");
-              console.error(error);
-          });
-    }
+    const action = isEditMode
+      ? updateCommunity({ id: community.id, updateData: formData })
+      : createCommunity(formData);
+  
+    dispatch(action)
+      .unwrap()
+      .then(() => {
+        toast.success(isEditMode ? "Community updated successfully" : "Community added successfully");
+        dispatch(fetchCommunities({ page: 1, pageSize: 6 }));
+        onClose();
+      })
+      .catch((error) => {
+        toast.error(isEditMode ? "Failed to update community" : "Failed to add community");
+        console.error(error);
+      })
+      .finally(() => {
+        setLocalLoading(false);
+      });
 
     reset();
     onClose(); 
@@ -82,13 +79,20 @@ const CreateCommunityModal = ({ isOpen, onClose, community }) => {
 
   if (!isOpen) return null;
 
+  {localLoading && (
+    <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-secondary"></div>
+    </div>
+  )}
+  
+
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50">
       <div className="flex items-center justify-center min-h-screen p-4">
         <div className="inline-block w-full max-w-md p-6 overflow-hidden text-left align-middle transition-all transform bg-white rounded-xl shadow-xl">
           {/* Modal Header */}
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-medium text-text-500">
+            <h3 className="text-xl font-bold text-text">
               {isEditMode ? 'Edit Community' : 'Create New Community'}
             </h3>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-500 focus:outline-none">
@@ -136,15 +140,15 @@ const CreateCommunityModal = ({ isOpen, onClose, community }) => {
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                className="px-4 py-2 border border-text-300 rounded-lg hover:bg-background transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600"
+                className="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary-600 transition-colors"
               >
-                {isEditMode ? 'Update Community' : 'Create Community'}
+                {isEditMode ? 'Update' : 'Create'}
               </button>
             </div>
           </form>

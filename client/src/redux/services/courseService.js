@@ -86,7 +86,6 @@ export const fetchCourses = async(page, pageSize, status=null, user=null, search
 
 //Fetch tutor courses
 export const fetchTutorCourses = async(tutorId, page=null, pageSize=null, status=null, search=null, categoryId=null)=>{
-    console.log(tutorId);
     const searchQuery = encodeURIComponent(search);
     let params = new URLSearchParams();
     params.append("tutor_id", tutorId);
@@ -140,8 +139,6 @@ export const fetchSingleCourse = async(id,user=null)=>{
 
 //Update Course
 export const updateCourse = async(id, updateData)=>{
-
-    console.log(id);
     
     const config = {
         requiresAuth: true,
@@ -224,7 +221,6 @@ export const markModuleCompleted = async(moduleId)=>{
 
 //Stripe Checkout
 export const createCheckoutSession = async(courseId)=>{
-    console.log(courseId);
     
     const response = await axiosInstance.post("/courses/create-checkout-session/",
         {course_id: courseId},

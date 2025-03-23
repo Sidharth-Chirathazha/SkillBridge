@@ -1,7 +1,10 @@
 import React from 'react';
+import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 
-const NotFound = () => {
+const NotFound = ({isAuthenticated=false}) => {
+
+  const {role} = useSelector((state)=>state.auth)
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 text-text">
       <div className="w-full max-w-md md:max-w-2xl text-center">
@@ -26,7 +29,7 @@ const NotFound = () => {
         </div>
         
         {/* Back to Home Button */}
-        <Link to="/" className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white bg-primary-500 rounded-md shadow-md hover:bg-primary-600 transition-colors duration-300 ease-in-out">
+        <Link to={isAuthenticated ? `/${role}/dashboard/` : "/"} className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white bg-primary-500 rounded-md shadow-md hover:bg-primary-600 transition-colors duration-300 ease-in-out">
           Back to Home
         </Link>
         

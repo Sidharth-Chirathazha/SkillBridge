@@ -99,7 +99,7 @@ const AdminTutorDetailView = () => {
                 />
               ))}
               <span className="text-text-600 font-medium">
-                ({singleTutor.rating?.toFixed(1)}) • {singleTutor.review_count} reviews
+                ({singleTutor.rating?.toFixed(1)}) • {singleTutor.total_reviews} reviews
               </span>
             </div>
 
@@ -234,12 +234,12 @@ const AdminTutorDetailView = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="bg-background-50 p-4 rounded-lg border border-background-200 text-center">
                   <Book className="h-6 w-6 mx-auto mb-2 text-primary-500" />
-                  <h3 className="text-text-500 font-semibold">0</h3>
+                  <h3 className="text-text-500 font-semibold">{singleTutor.total_courses}</h3>
                   <p className="text-text-400 text-sm">Total Courses</p>
                 </div>
                 <div className="bg-background-50 p-4 rounded-lg border border-background-200 text-center">
                   <User className="h-6 w-6 mx-auto mb-2 text-primary-500" />
-                  <h3 className="text-text-500 font-semibold">0</h3>
+                  <h3 className="text-text-500 font-semibold">{singleTutor.total_students}</h3>
                   <p className="text-text-400 text-sm">Total Students</p>
                 </div>
                 <div className="bg-background-50 p-4 rounded-lg border border-background-200 text-center sm:col-span-2 md:col-span-1">

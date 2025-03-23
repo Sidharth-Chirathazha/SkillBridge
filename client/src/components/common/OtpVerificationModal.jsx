@@ -19,12 +19,6 @@ const OtpVerificationModal = ({isOpen, onClose, email, role, password}) => {
   const navigate = useNavigate();
   const { isLoading, isError, message } = useSelector(state => state.auth);
 
-  // useEffect(()=>{
-  //   if (isError && message){
-  //     toast.error(message);
-  //   }
-  // }, [isError, message]);
-
   useEffect(()=>{
     if(isOpen){
       setTimeLeft(60);
@@ -58,7 +52,7 @@ const OtpVerificationModal = ({isOpen, onClose, email, role, password}) => {
 
 
   const handleChange = (index,value)=>{
-    if (value.length > 1) return;// Prevent multiple digits
+    if (value.length > 1) return;
 
     const newOtp = [...otp];
     newOtp[index] = value;

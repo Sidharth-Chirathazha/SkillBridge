@@ -11,9 +11,6 @@ const HeroSection = () => {
   const [heroSectionData, setHeroSectionData] = useState({});
   const navigate = useNavigate();
 
-  console.log("Hero section data:", heroSectionData);
-  
-
   useEffect(()=>{
     const fetchHeroSectionData = async () =>{
 

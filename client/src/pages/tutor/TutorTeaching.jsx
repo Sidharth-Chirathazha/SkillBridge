@@ -13,7 +13,6 @@ import DropdownMenu from '../../components/common/ui/DropdownMenu';
 
 const TutorTeaching = () => {
 
-  // const [isCoursesAvailable, setIsCoursesAvailable] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
@@ -35,15 +34,13 @@ const TutorTeaching = () => {
 
   useEffect(() => {
     if (!tutorId) return;
-    console.log(tutorId);
 
     const fetchData = async()=>{
       try{
         await dispatch(fetchTutorCourses({ tutorId, page, pageSize, status:null, search:searchQuery, categoryId:selectedCategory }));
-        console.log("Courses Fetched Successfully");
         
       }catch(error){
-       console.log("Failed to fetch Courses");
+       console.error("Failed to fetch Courses");
        
       }
     }
@@ -97,8 +94,8 @@ const TutorTeaching = () => {
             <h1 className='text-lg text-text-600'>You haven't added any courses yet.</h1>
           </div>
           ) : isCourseLoading? (
-            <div className="flex justify-center items-center h-screen">
-              <Loader className="animate-spin h-10 w-10 text-primary" />
+            <div className="flex justify-center items-center min-h-screen">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
             </div>
           ) : (
               <>

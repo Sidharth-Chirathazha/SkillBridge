@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchTransactions, fetchWallet } from '../../redux/slices/authSlice';
-import { Loader } from 'lucide-react';
 import WalletComponent from '../../components/common/Wallet';
 import Pagination from '../../components/common/ui/Pagination';
 import TutorVerificationMessage from '../../components/tutor/TutorVerificationMessage';
@@ -36,9 +35,9 @@ const TutorWallet = () => {
 
     if (loading || !walletData || !transactionsData) {
         return (
-            <div className="flex justify-center items-center h-screen">
-                <Loader className="animate-spin h-10 w-10 text-primary" />
-            </div>
+          <div className="flex justify-center items-center min-h-screen">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          </div>
         );
     }
   

@@ -83,8 +83,8 @@ class User(AbstractBaseUser):
     
 class UserActivity(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="activities")
-    date = models.DateField(auto_now_add=True)  # Stores when the activity happened
-    time_spent = models.IntegerField(default=0)  # Time spent in seconds
+    date = models.DateField(auto_now_add=True)  
+    time_spent = models.IntegerField(default=0)  
 
     class Meta:
         unique_together = ("user", "date")  # Ensures one entry per user per day

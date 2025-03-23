@@ -1,5 +1,5 @@
 // SuccessPage.js
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { verifyPurchaseStatus } from '../redux/slices/courseSlice';
@@ -11,9 +11,11 @@ const SuccessPage = () => {
   const location = useLocation();
   const sessionId = new URLSearchParams(location.search).get('session_id');
   const courseTitle = new URLSearchParams(location.search).get('course_title');
+  const hasVerified = useRef(false);
 
   useEffect(() => {
-    if (sessionId) {
+    if (sessionId && !hasVerified.current) {
+      hasVerified.current = true;
       dispatch(verifyPurchaseStatus(sessionId))
         .unwrap()
         .then(() => {
@@ -30,7 +32,7 @@ const SuccessPage = () => {
           toast.error("Some error occured with purchase verification")
         });
     }
-  }, [sessionId, dispatch]);
+  }, [sessionId, dispatch, navigate]);
 
   return (
     <div className="text-center mt-10">

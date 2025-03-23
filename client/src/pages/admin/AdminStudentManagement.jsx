@@ -76,8 +76,6 @@ const AdminStudentManagement = () => {
         );
     }
     
-    console.log(adminStudentsData);
-
   return (
      <>
     <div className="bg-background-50 p-4 md:p-6 rounded-lg shadow-lg">

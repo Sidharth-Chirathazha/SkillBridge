@@ -15,7 +15,6 @@ import { Dialog } from '@headlessui/react';
 import { fetchAdminTutors } from '../../redux/slices/adminSlice';
 import { fetchTutorReviews, postTutorReview } from '../../redux/slices/authSlice';
 import toast from 'react-hot-toast';
-import { Loader } from 'lucide-react';
 
 
 const StudentTutorDetailView = () => {
@@ -78,8 +77,8 @@ const StudentTutorDetailView = () => {
 
   if (loading || !singleTutor) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <Loader className="animate-spin h-10 w-10 text-primary" />
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -119,14 +118,6 @@ const StudentTutorDetailView = () => {
               ({singleTutor.rating?.toFixed(1)}) • {singleTutor.review_count} reviews
             </span>
           </div>
-
-          {/* Report Button */}
-          <button
-            onClick={() => console.log('Report tutor')}
-            className="text-red-600 hover:text-red-700 text-sm font-medium hover:underline transition-all"
-          >
-            Report Tutor
-          </button>
 
           {/* LinkedIn Link */}
           <div className="mt-6 w-full">

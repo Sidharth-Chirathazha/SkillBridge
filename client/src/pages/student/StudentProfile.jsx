@@ -86,8 +86,6 @@ const StudentProfile = () => {
     dispatch(fetchSkills({ skillPage: 1, pageSize: 100 }));
   }, [dispatch]);
 
-  console.log("User profile skills:", skillsData);
-  
 
   useEffect(() => {
     if (userData) {

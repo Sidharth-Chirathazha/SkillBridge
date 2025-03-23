@@ -3,12 +3,12 @@ import {FaTrash, FaReply} from 'react-icons/fa';
 
 
 // Comment Component
-const Comment = ({ comment, currentUser, onDelete, onReply, depth = 0 }) => {
+const Comment = ({ comment, currentUser, onDelete, onReply, depth = 0, isAdminView = false }) => {
     const [showReplies, setShowReplies] = useState(false);
     const [replyText, setReplyText] = useState('');
     const [isReplying, setIsReplying] = useState(false);
     
-    const isCommentOwner = currentUser && comment.user.id === currentUser.user.id;
+    const isCommentOwner = !isAdminView &&  currentUser && comment.user.id === currentUser.user.id;
     const hasReplies = comment.replies && comment.replies.length > 0;
     const maxDepth = 3; // Limit nesting depth
     
@@ -17,6 +17,7 @@ const Comment = ({ comment, currentUser, onDelete, onReply, depth = 0 }) => {
     };
     
     const toggleReplyForm = () => {
+      if (isAdminView) return;
       setIsReplying(!isReplying);
       setReplyText('');
     };
@@ -51,7 +52,7 @@ const Comment = ({ comment, currentUser, onDelete, onReply, depth = 0 }) => {
             </div>
             
             <div className="flex items-center mt-1 ml-1 text-sm">
-              {depth < maxDepth && (
+              {!isAdminView &&  depth < maxDepth && (
                 <button 
                   onClick={toggleReplyForm} 
                   className="text-text-400 hover:text-primary mr-3 flex items-center"
@@ -107,6 +108,7 @@ const Comment = ({ comment, currentUser, onDelete, onReply, depth = 0 }) => {
                     onDelete={onDelete}
                     onReply={onReply}
                     depth={depth + 1}
+                    isAdminView={isAdminView}
                   />
                 ))}
               </div>

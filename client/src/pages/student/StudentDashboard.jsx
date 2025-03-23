@@ -153,6 +153,7 @@ const StudentDashboard = () => {
         setSummaryData(response.data);
         setCompletedPercent(response.data.completed_percentage)
         setRemainingPercent(response.data.completed_percentage > 0 ? 100 - response.data.completed_percentage : 0)
+        
       }catch (error){
         console.error("Error fetching dashboard summary:", error);
       }

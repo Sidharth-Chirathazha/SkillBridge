@@ -14,6 +14,8 @@ import AdminWallet from '../pages/admin/AdminWallet'
 import AdminLayout from '../components/admin/AdminLayout'
 import AdminCommunityManagement from '../pages/admin/AdminCommunityManagement'
 import NotFound from '../pages/NotFound'
+import BlogPage from '../pages/BlogPage'
+
 
 const AdminRoutes = () => {
   return (
@@ -31,6 +33,7 @@ const AdminRoutes = () => {
             <Route path="courses" element={<AdminCourseManagement/>}/>
             <Route path="/courses/:id" element={<AdminCourseDetailView/>}/>
             <Route path="wallet" element={<AdminWallet/>}/>
+            <Route path="blogs" element={<BlogPage isAdminView={true}/>}/>
           </Route>
         </Route>
         <Route path="*" element={<NotFound/>} />

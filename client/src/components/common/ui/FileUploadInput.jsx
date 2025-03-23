@@ -1,4 +1,4 @@
-// FileUploadInput.jsx
+
 import React from 'react';
 import { Controller } from 'react-hook-form';
 import { AdvancedImage } from '@cloudinary/react';

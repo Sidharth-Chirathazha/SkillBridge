@@ -47,9 +47,7 @@ class ModuleSerializer(serializers.ModelSerializer):
         tasks = validated_data.pop("tasks", None)
 
         if tasks:
-            print("Inside tasks in serializer", tasks)
             cloudinary_response = cloudinary_upload(tasks, resource_type="raw")
-            print("Cloudinary Response:", cloudinary_response)  # Debugging
             validated_data["tasks"] = cloudinary_response.get('public_id')  
 
         return super().create(validated_data)  
