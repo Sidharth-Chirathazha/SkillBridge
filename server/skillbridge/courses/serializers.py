@@ -3,9 +3,9 @@ from .models import Module,Course,Category, Review, Comment, CourseTradeModel, M
 from tutor.models import TutorProfile
 from django.contrib.auth import get_user_model
 from cloudinary.utils import cloudinary_url
-from cloudinary.models import CloudinaryField
 import cloudinary.uploader
 from django.db.models import Q
+from cloudinary.uploader import upload as cloudinary_upload
 
 User = get_user_model()
 
@@ -37,24 +37,22 @@ class ModuleSerializer(serializers.ModelSerializer):
         if user.is_authenticated:
             return ModuleCompletion.objects.filter(user=user, module=obj).exists()
         return False
+    
+    def get_tasks(self, obj):
+        if obj.tasks:
+            return f"https://res.cloudinary.com/dz9kgofdy/raw/upload/{obj.tasks}.pdf"  
+        return None
 
-    def create(self, validated_data):
-        file = validated_data.get("tasks")
+    def create(self, validated_data): 
+        tasks = validated_data.pop("tasks", None)
 
-        if file:
-            upload_result = cloudinary.uploader.upload(
-                file,
-                resource_type="raw", 
-                use_filename=True,
-                unique_filename=False,
-                use_original_filename=True,
-                invalidate=True
-            )
+        if tasks:
+            cloudinary_response = cloudinary_upload(tasks, resource_type="raw")
+            validated_data["tasks"] = cloudinary_response.get('public_id')  
 
-            
-            validated_data["tasks"] = upload_result["secure_url"].replace("/upload/", "/dl/upload/")
+        return super().create(validated_data)  
 
-        return super().create(validated_data)
+
 
     def update(self, instance, validated_data):
         file = validated_data.get("tasks")
@@ -107,6 +105,7 @@ class CourseSerializer(serializers.ModelSerializer):
     total_modules = serializers.IntegerField(read_only=True)
     total_duration = serializers.IntegerField(read_only=True)
     total_purchases = serializers.IntegerField(read_only=True)
+    total_reviews = serializers.SerializerMethodField(read_only=True)
     is_under_trade = serializers.SerializerMethodField(read_only=True)
     progress = serializers.SerializerMethodField(read_only=True)
     completed = serializers.SerializerMethodField(read_only=True)
@@ -116,7 +115,7 @@ class CourseSerializer(serializers.ModelSerializer):
         model = Course
         fields = ['id', 'tutor', 'category', 'slug', 'title', 'description', 'thumbnail', 
                   'total_enrollment', 'status', 'skill_level', 'price', 'is_active', 
-                  'rating', 'modules', 'total_modules', 'total_duration', 'total_purchases', "is_under_trade", "progress", "completed",  'category_details']
+                  'rating', 'modules', 'total_modules', 'total_duration', 'total_purchases','total_reviews', 'is_under_trade', 'progress', 'completed',  'category_details']
         
     def get_is_under_trade(self, obj):
         request = self.context.get("request")
@@ -151,6 +150,9 @@ class CourseSerializer(serializers.ModelSerializer):
             return purchase.completed
         except Purchase.DoesNotExist:
             return None
+        
+    def get_total_reviews(self, obj):
+        return obj.reviews.count()
 
 """Serializer to include user first name and profile pic to the review"""
 class UserSerializer(serializers.ModelSerializer):

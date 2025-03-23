@@ -16,6 +16,7 @@ import StatusCell from '../../components/common/ui/StatusCell';
 import Pagination from '../../components/common/ui/Pagination';
 import SearchBar from '../../components/common/ui/SearchBar';
 import DropdownMenu from '../../components/common/ui/DropdownMenu';
+import avatar2 from '../../assets/images/avatar2.jpg'
 
 const AdminTutorsManagement = () => {
 
@@ -77,10 +78,6 @@ const AdminTutorsManagement = () => {
   };
   
 
-  console.log("Active status:", selectedActiveStatus);
-  
-
-
   if (loading || !adminTutorsData) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -136,7 +133,7 @@ const AdminTutorsManagement = () => {
                   <td className="p-4">
                     <div className="h-10 w-10 rounded-full overflow-hidden shadow-md transition-transform duration-300 hover:scale-110">
                       <img 
-                        src={tutor.profile_pic_url} 
+                        src={tutor.profile_pic_url || avatar2} 
                         alt={tutor.full_name} 
                         className="h-full w-full object-cover"
                       />
@@ -155,12 +152,6 @@ const AdminTutorsManagement = () => {
                       >
                         <Eye className="h-5 w-5" />
                       </button>
-                      {/* <button 
-                        className="text-text-400 hover:bg-background-200 p-2 rounded-full transition-all duration-300 hover:shadow-md"
-                        title="More Options"
-                      >
-                        <MoreVertical className="h-5 w-5" />
-                      </button> */}
                     </div>
                   </td>
                 </tr>

@@ -1,5 +1,4 @@
 import { Star, Edit, Trash, Clock, BookOpen, Shield, UserCheck, XCircle, CheckCircle, LayoutGrid, Users } from 'lucide-react';
-import { ConfirmDialog } from './ConfirmDialog';
 
 const ManagementCourseCard = ({ 
   course, 
@@ -97,24 +96,6 @@ const ManagementCourseCard = ({
                 <span>Edit</span>
               </button>
               
-              {/* Commented out ConfirmDialog for now, as it was in the original component */}
-              {/* <ConfirmDialog
-                trigger={(open) => (
-                  <button
-                    onClick={open}
-                    className="flex-1 flex items-center justify-center bg-secondary text-white px-4 py-2 rounded-full hover:bg-secondary-600 transition-colors"
-                  >
-                    <Trash size={18} className="mr-2" />
-                    <span>Delete</span>
-                  </button>
-                )}
-                title="Delete Course"
-                description={`Are you sure you want to delete the course "${course.title}"? This action cannot be undone.`}
-                confirmText='Delete'
-                destructive
-                onConfirm={() => onDelete(course.id)}
-                variant='user' 
-              /> */}
             </div>
           ) : (
             <button

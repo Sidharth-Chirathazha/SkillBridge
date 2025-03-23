@@ -1,34 +1,24 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  Search, 
-  HomeIcon, 
-  Users, 
-  Settings, 
-  Bell, 
-  Database, 
-  FileText, 
-  LogOut, 
-  ChevronDown,
-  ChevronsLeft,
-  ChevronsRight, 
-  GraduationCap,
-  Loader,
-  Menu,
-  X, 
-  Wallet
-} from 'lucide-react';
+import { Search, Bell, LogOut, ChevronDown, ChevronsLeft, ChevronsRight, GraduationCap, Loader, Menu, X, Wallet } from 'lucide-react';
+import { FaChalkboardTeacher,FaBlogger, FaBook } from "react-icons/fa";
+import { PiStudent } from "react-icons/pi";
+import { MdDashboard, MdContentCopy } from "react-icons/md";
+import { RiUserCommunityFill } from "react-icons/ri";
 import { useDispatch, useSelector } from 'react-redux';
 import { adminLogout, fetchAdmin } from '../../redux/slices/adminSlice';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import avatar from '../../assets/images/avatar.jpg'
+import { ConfirmDialog } from '../common/ui/ConfirmDialog';
 
-const AdminLayout = ({ children }) => {
+
+const AdminLayout = () => {
   const [activePage, setActivePage] = useState('');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showSidebarLogoutDialog, setShowSidebarLogoutDialog] = useState(false);
 
   const dropdownRef = useRef(null);
   const sidebarRef = useRef(null);
@@ -39,13 +29,13 @@ const AdminLayout = ({ children }) => {
   const location = useLocation();
 
   const navItems = [
-    { name: 'Dashboard', icon: HomeIcon, path:'/admin/dashboard/' },
-    { name: 'Students', icon: Users,  path:'/admin/students/' },
-    { name: 'Tutors', icon: FileText,  path:'/admin/tutors/' },
-    { name: 'Courses', icon: FileText,  path:'/admin/courses/' },
-    { name: 'Content Management', icon: FileText,  path:'/admin/contentManagement/' },
-    { name: 'Communities', icon: Database,  path:'/admin/dashboard/' },
-    { name: 'Settings', icon: Settings,  path:'/admin/dashboard/' },
+    { name: 'Dashboard', icon: MdDashboard, path:'/admin/dashboard/' },
+    { name: 'Students', icon: PiStudent,  path:'/admin/students/' },
+    { name: 'Tutors', icon: FaChalkboardTeacher,  path:'/admin/tutors/' },
+    { name: 'Courses', icon: FaBook,  path:'/admin/courses/' },
+    { name: 'Content Management', icon: MdContentCopy,  path:'/admin/contentManagement/' },
+    { name: 'Communities', icon: RiUserCommunityFill,  path:'/admin/communities/' },
+    { name: 'Blogs', icon: FaBlogger,  path:'/admin/blogs/' },
   ];
 
 
@@ -82,7 +72,7 @@ const AdminLayout = ({ children }) => {
     const refresh_token = localStorage.getItem("refresh_token")
     
     if(!refresh_token){
-        console.log("Refresh token missing");
+        console.error("Refresh token missing");
         return;   
     }
 
@@ -212,12 +202,17 @@ const AdminLayout = ({ children }) => {
         </nav>
 
         {/* Logout Button */}
-        <button onClick={handleLogout} className="w-full flex items-center px-4 py-3.5 text-sm font-medium text-text-400 hover:bg-background-100 hover:text-secondary-500 transition-all duration-500">
-          <LogOut className="h-5 w-5 min-w-[1.25rem]" />
-          <span className={`ml-3 ${!isMobile && !isSidebarOpen ? 'lg:hidden' : ''}`}>
-            Logout
-          </span>
-        </button>
+          <button 
+            onClick={() => {
+              setShowSidebarLogoutDialog(true);
+            }} 
+            className="w-full flex items-center px-4 py-3.5 text-sm font-medium text-text-400 hover:bg-background-100 hover:text-secondary-500 transition-all duration-500"
+          >
+            <LogOut className="h-5 w-5 min-w-[1.25rem]" />
+            <span className={`ml-3 ${!isMobile && !isSidebarOpen ? 'lg:hidden' : ''}`}>
+              Logout
+            </span>
+          </button>
       </div>
 
       {/* Main Content Area */}
@@ -242,7 +237,6 @@ const AdminLayout = ({ children }) => {
             {/* Notifications */}
             <button className="relative p-2 hover:bg-background-100 rounded-full">
               <Bell className="h-6 w-6 text-text-400" />
-              <span className="absolute top-1 right-1 h-2 w-2 bg-secondary-500 rounded-full"></span>
             </button>
 
             {/* Profile Dropdown */}
@@ -275,9 +269,23 @@ const AdminLayout = ({ children }) => {
                       <span>Wallet</span>
                     </button>
                     <div className="border-t border-background-200"></div>
-                    <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 text-sm text-secondary-500 hover:bg-background-100 flex items-center space-x-2">
-                      Sign out
-                    </button>
+                    <ConfirmDialog
+                      trigger={(open) => (
+                        <button
+                          onClick={open}
+                          className="w-full text-left px-4 py-2.5 text-sm text-secondary-500 hover:bg-background-100 flex items-center space-x-2"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          <span>Sign out</span>
+                        </button>
+                      )}
+                      title="Logout"
+                      description={`Are you sure you want to logout?`}
+                      confirmText='Confirm'
+                      destructive
+                      onConfirm={() => handleLogout()}
+                      variant='admin'
+                    />
                   </div>
                 </div>
               )}
@@ -295,6 +303,21 @@ const AdminLayout = ({ children }) => {
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-30 transition-opacity duration-300"
           onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      {/* Render the sidebar logout dialog outside of the sidebar */}
+      {showSidebarLogoutDialog && (
+        <ConfirmDialog
+          trigger={(open) => null} 
+          title="Logout"
+          description={`Are you sure you want to logout?`}
+          confirmText='Confirm'
+          destructive
+          onConfirm={() => handleLogout()}
+          onCancel={() => setShowSidebarLogoutDialog(false)}
+          isOpen={showSidebarLogoutDialog}
+          setIsOpen={setShowSidebarLogoutDialog}
+          variant='admin'
         />
       )}
     </div>

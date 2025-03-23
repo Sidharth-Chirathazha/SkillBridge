@@ -7,6 +7,8 @@ import { Upload, PlusCircle, Trash2, FileText, Edit, ChevronLeft, ChevronRight, 
 import { fetchSkills, fetchUser, updateUser } from '../../redux/slices/authSlice';
 import toast from 'react-hot-toast';
 import FormInput from '../../components/common/ui/FormInput';
+import avatar2 from '../../assets/images/avatar2.jpg'
+
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
@@ -188,7 +190,7 @@ const PersonalSection = ({errors}) => (
       <div className="flex justify-center mb-4">
           <div className="relative">
               <img
-                  src={filePreviews.profile_pic || userData?.user?.profile_pic_url}
+                  src={filePreviews.profile_pic || userData?.user?.profile_pic_url || avatar2}
                   className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-white"
                   alt="Profile"
               />
@@ -607,7 +609,6 @@ const PersonalSection = ({errors}) => (
   );
 
   const onError = (errors) => {
-    console.log('Form errors:', errors);
     toast.error('Please fix the errors in the form');
   };
 
@@ -629,8 +630,8 @@ const PersonalSection = ({errors}) => (
         company: exp.company,
         job_role: exp.job_role,
         // Keep dates as strings in YYYY-MM-DD format
-        date_of_joining: exp.date_of_joining,  // Already in correct format
-        date_of_leaving: exp.date_of_leaving   // Already in correct format
+        date_of_joining: exp.date_of_joining,  
+        date_of_leaving: exp.date_of_leaving   
       }))
     };
   
@@ -663,26 +664,27 @@ const PersonalSection = ({errors}) => (
   return (
     <>
         <div className="max-w-4xl mx-auto p-4 sm:p-6">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-                <div>
-                    <h1 className="text-lg sm:text-xl font-bold text-gray-800">
-                        {isEditMode ? 'Edit Profile' : 'My Profile'}
-                    </h1>
-                    <p className="text-gray-600 text-xs sm:text-sm mt-1">
-                        {isEditMode ? 'Update your profile information' : 'View your profile information'}
-                    </p>
-                </div>
-                <button
-                    onClick={toggleEditMode}
-                    className={`w-full sm:w-auto px-4 py-2 text-sm rounded-lg border-2 ${
-                        isEditMode 
-                            ? 'bg-text-50 text-text-600 rounded-lg hover:bg-text-100'
-                            : 'bg-secondary-500 text-white rounded-lg hover:bg-secondary-600'
-                    }`}
-                >
-                    {isEditMode ? 'Cancel Editing' : 'Edit Profile'}
-                </button>
+          <div className="bg-white rounded-lg shadow-md p-6 mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+              <div>
+                <h1 className="text-lg sm:text-xl font-bold text-gray-800">
+                  {isEditMode ? 'Edit Profile' : 'My Profile'}
+                </h1>
+                <p className="text-gray-600 text-xs sm:text-sm mt-1">
+                  {isEditMode ? 'Update your profile information' : 'View your profile information'}
+                </p>
+              </div>
+              <button
+                onClick={toggleEditMode}
+                className={`px-4 py-2 text-sm font-semibold rounded-lg border-2 transition-all duration-300 ${
+                  isEditMode 
+                    ? 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200' 
+                    : 'bg-secondary-500 text-white border-secondary-500 hover:bg-secondary-600'
+                }`}
+              >
+                {isEditMode ? 'Cancel Editing' : 'Edit Profile'}
+              </button>
             </div>
+
 
             <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4">
               <div className="grid grid-cols-3 gap-2 mb-4 sm:flex sm:gap-4 sm:border-b sm:border-gray-200">

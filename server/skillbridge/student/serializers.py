@@ -9,14 +9,14 @@ from django.db.models import Count
 
 class StudentProfileSerializer(serializers.ModelSerializer):
     user = UserProfileSerializer()
-    # social_media_platforms = SocialMediaPlatformSerializer(many=True, required=False)
+
     class Meta:
         model = StudentProfile
         fields = ['user']
 
     def update(self, instance, validated_data):
         user_data = validated_data.pop('user',{})
-        # social_media_data = validated_data.pop('social_media_profiles',[])
+       
 
         user_instance = instance.user
 
@@ -26,14 +26,11 @@ class StudentProfileSerializer(serializers.ModelSerializer):
                 setattr(user_instance, field, value)
         user_instance.save()
 
-        # If the profile_pic_url is provided, save it separately to Cloudinary
         if 'profile_pic_url' in user_data:
             profile_pic = user_data.pop('profile_pic_url')
-            print("Inside pro if serializer:", profile_pic)
             user_instance.profile_pic_url = profile_pic
             user_instance.save()
 
-        # Update Skills
         skill_ids = user_data.get('skills', [])
         if skill_ids:
             skill_ids = [skill.id if hasattr(skill, 'id') else skill for skill in skill_ids]

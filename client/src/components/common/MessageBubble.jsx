@@ -2,10 +2,30 @@ import React, { useState } from 'react';
 
 const MessageBubble = ({ message, isCurrentUser }) => {
   const [imageError, setImageError] = useState(false);
+  const messageDate = new Date(message.created_at || message.timestamp);
   const messageTime = new Date(message.created_at || message.timestamp).toLocaleTimeString([], { 
     hour: '2-digit', 
     minute: '2-digit' 
   });
+
+  // Format date using logic for today, yesterday, or actual date
+  const formatDate = (date) => {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+      return 'Today';
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    } else {
+      return date.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
+    }
+  };
   
   const handleImageError = () => {
     setImageError(true);
@@ -33,7 +53,7 @@ const MessageBubble = ({ message, isCurrentUser }) => {
           )}
           <span className={`text-xs font-medium ${isCurrentUser ? 'text-right text-text-400' : 'text-text-400'}`}>
             {!isCurrentUser && message.sender_name}
-            {isCurrentUser ? 'You' : ''} • {messageTime}
+            {isCurrentUser ? 'You' : ''} • {formatDate(messageDate)}, {messageTime}
           </span>
         </div>
         

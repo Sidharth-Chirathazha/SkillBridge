@@ -9,7 +9,6 @@ import { addCourse, addModule, fetchCategories, fetchModules,
   fetchTutorCourses} from '../../redux/slices/courseSlice';
 import toast from 'react-hot-toast';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ConfirmDialog } from '../../components/common/ui/ConfirmDialog';
 import TutorVerificationMessage from '../../components/tutor/TutorVerificationMessage';
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
@@ -28,13 +27,10 @@ const CourseCreation = () => {
   const tutorId = userData?.id;
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  console.log("Categories in course creation", categoriesData);
   
   const courseSchema = Joi.object({
     title: Joi.string().min(1).required().messages({
       'string.empty': 'Title is required',
-      'string.min': 'Title must be at least 1 character'
     }),
     description: Joi.string().min(1).required().messages({
       'string.empty': 'Description is required',
@@ -160,13 +156,6 @@ const CourseCreation = () => {
     }
   }, [singleCourse, isEditMode, setCourseValue]);
 
-  // const handleEditModule = (module) => {
-  //   setEditingModuleId(module.id);
-  //   setModuleValue('title', module.title);
-  //   setModuleValue('description', module.description);
-  //   setModuleValue('duration', module.duration);
-  //   // Note: Files can't be set programmatically
-  // };
 
   const handleTabChange = (newValue) => {
     if (newValue === 1 && !urlCourseId) return;
@@ -184,25 +173,18 @@ const CourseCreation = () => {
         }
       });
 
-      console.log("Inside the course creation submit course, formData:");
-
-      formData.forEach((value, key) => {
-        console.log(`${key}:`, value);
-      });
     
       if(isEditMode){
-        console.log(urlCourseId);
         
         await dispatch(updateCourse({id: urlCourseId, updateData: formData})).unwrap();
         setIsEditing(false);
-        dispatch(fetchTutorCourses({tutorId}));
+        dispatch(fetchTutorCourses({tutorId,page:1, pageSize:8}));
         toast.success('Course updated successfully!');
       }else{
         const response = await dispatch(addCourse(formData)).unwrap();
-        console.log("Inside course createtion tesing response:", response);
         
         navigate(`/tutor/teaching/edit/${response.id}`)
-        dispatch(fetchTutorCourses({tutorId}));
+        dispatch(fetchTutorCourses({tutorId, page:1, pageSize:8}));
         toast.success('Course created successfully!');
       }
     }catch(error){
@@ -244,17 +226,6 @@ const CourseCreation = () => {
       toast.error(error.message || 'Module operation failed');
     }
   };
-
-  const handleDeleteModule = async(moduleId) =>{
-    try{
-      await dispatch(deleteModule(moduleId)).unwrap();
-      dispatch(fetchModules(urlCourseId));
-      setEditingModuleId(null);
-      toast.success("Module deleted successfully")
-    }catch(error){
-      toast.error("Error while deleting module")
-    }
-  }
 
 
   const FormInput = ({ label, name, control, error, type = 'text', className = '', as = 'input' }) => (
@@ -303,22 +274,22 @@ const CourseCreation = () => {
         <TutorVerificationMessage/>
       ) :(
       <div className="max-w-4xl mx-auto p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div className="mb-2 sm:mb-0">
             <h1 className="text-lg sm:text-xl font-bold text-gray-800">
-              {isEditMode ? 'Edit Course' : 'Create Course'}
+              {isEditMode ? 'Update your course details' : 'Create Your Course'}
             </h1>
             <p className="text-gray-600 text-xs sm:text-sm mt-1">
-                    {isEditMode ? 'Update your course details' : 'Create a new course'}
-                </p>
+               Help learners grow by sharing your expertise. Create a course or make updates effortlessly.
+            </p>
           </div>
           {isEditMode && (
             <button
               onClick={()=> setIsEditing(!isEditing)}
-              className={`w-full sm:w-auto px-4 py-2 text-sm rounded-lg border-2 transition-colors ${
+              className={`px-4 py-2 text-sm font-semibold rounded-lg border-2 transition-all duration-300 ${
                 isEditing 
-                  ? 'bg-text-50 text-text-600 hover:bg-text-100'
-                  : 'bg-secondary-500 text-white hover:bg-secondary-600'
+                  ? 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
+                  : 'bg-secondary-500 text-white border-secondary-500 hover:bg-secondary-600'
               }`}
             >
               {isEditing ? 'Cancel Editing' : 'Edit Course'}
@@ -479,7 +450,13 @@ const CourseCreation = () => {
                     type="submit"
                     className="w-full sm:w-auto px-6 py-2 bg-secondary-500 text-white rounded-lg hover:bg-secondary-600 transition-colors text-sm"
                   >
-                    {isEditing ? 'Save Changes' : 'Create Course'}
+                    {isCourseLoading ? (
+                      <>
+                        <Loader className="animate-spin h-4 w-4 mr-2" />
+                      </>
+                    ) : (
+                      isEditing ? 'Save Changes' : 'Create Course'
+                    )}
                   </button>
                 </div>
                 )}
@@ -681,22 +658,6 @@ const CourseCreation = () => {
                           >
                             {isEditingModule && editingModuleId === module.id ? 'Cancel' : 'Edit'}
                           </button>
-                          <ConfirmDialog
-                            trigger={(open) => (
-                              <button
-                                onClick={open}
-                                className="text-secondary-600 hover:text-secondary-700 text-xs"
-                              >
-                                Delete
-                              </button>
-                            )}
-                            title="Delete Module"
-                            description={`Are you sure you want to delete the module "${module.title}"? This action cannot be undone.`}
-                            confirmText="Delete"
-                            destructive
-                            onConfirm={() => handleDeleteModule(module.id)}
-                            variant="user"
-                          />
                         </div>
                       )}
                     </div>

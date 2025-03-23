@@ -7,19 +7,23 @@ import { Upload, PlusCircle, Linkedin } from 'lucide-react';
 import { fetchUser, updateUser, fetchSkills } from '../../redux/slices/authSlice';
 import toast from 'react-hot-toast';
 import FormInput from '../../components/common/ui/FormInput';
+import avatar2 from '../../assets/images/avatar2.jpg'
+import { Loader } from 'lucide-react';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
 const schema = Joi.object({
   user: Joi.object({
-    first_name: Joi.string().min(2).required().messages({
+    first_name: Joi.string().min(2).regex(/^[A-Za-z]+$/).required().messages({
       'string.min': 'First name must be at least 2 characters',
-      'string.empty': 'First name is required'
+      'string.empty': 'First name is required',
+      'string.pattern.base': 'First name should only contain alphabets'
     }),
-    last_name: Joi.string().min(1).required().messages({
+    last_name: Joi.string().min(1).regex(/^[A-Za-z]+$/).required().messages({
       'string.min': 'Last name is required',
-      'string.empty': 'Last name is required'
+      'string.empty': 'Last name is required',
+      'string.pattern.base': 'First name should only contain alphabets'
     }),
     phone: Joi.string().regex(/^[0-9]{10}$/).required().messages({
       'string.pattern.base': 'Invalid phone number'
@@ -62,7 +66,7 @@ const schema = Joi.object({
 
 const StudentProfile = () => {
   const dispatch = useDispatch();
-  const { userData, skillsData, isUpdateError } = useSelector((state) => state.auth);
+  const { userData, skillsData, isUpdateError, isLoading } = useSelector((state) => state.auth);
   const [filePreviews, setFilePreviews] = useState({ profile_pic: null });
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -82,8 +86,6 @@ const StudentProfile = () => {
     dispatch(fetchSkills({ skillPage: 1, pageSize: 100 }));
   }, [dispatch]);
 
-  console.log("User profile skills:", skillsData);
-  
 
   useEffect(() => {
     if (userData) {
@@ -152,32 +154,33 @@ const StudentProfile = () => {
 
   return (
       <div className="max-w-4xl mx-auto p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-            <div>
-                <h1 className="text-lg sm:text-xl font-bold text-gray-800">
-                    {isEditMode ? 'Edit Profile' : 'My Profile'}
-                </h1>
-                <p className="text-gray-600 text-xs sm:text-sm mt-1">
-                    {isEditMode ? 'Update your profile information' : 'View your profile information'}
-                </p>
-            </div>
-            <button
-                onClick={toggleEditMode}
-                className={`w-full sm:w-auto px-4 py-2 text-sm rounded-lg border-2 ${
-                    isEditMode 
-                        ? 'bg-text-50 text-text-600 rounded-lg hover:bg-text-100'
-                        : 'bg-secondary-500 text-white rounded-lg hover:bg-secondary-600'
-                }`}
-            >
-                {isEditMode ? 'Cancel Editing' : 'Edit Profile'}
-            </button>
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
+              {isEditMode ? 'Edit Your Profile' : 'My Profile'}
+            </h1>
+            <p className="text-gray-600 text-sm sm:text-base mt-1">
+              {isEditMode ? 'Update your profile information' : 'View your profile details here'}
+            </p>
+          </div>
+          <button
+            onClick={toggleEditMode}
+            className={`px-4 py-2 text-sm font-semibold rounded-lg border-2 transition-all duration-300 ${
+              isEditMode
+                ? 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
+                : 'bg-secondary-500 text-white border-secondary-500 hover:bg-secondary-600'
+            }`}
+          >
+            {isEditMode ? 'Cancel Editing' : 'Edit Profile'}
+          </button>
         </div>
+
         <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4">
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="flex justify-center mb-4">
                 <div className="relative">
                   <img
-                      src={filePreviews.profile_pic || userData?.user?.profile_pic_url}
+                      src={filePreviews.profile_pic || userData?.user?.profile_pic_url || avatar2}
                       className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-white"
                       alt="Profile"
                   />
@@ -315,8 +318,15 @@ const StudentProfile = () => {
                   <button
                       type="submit"
                       className="w-full sm:w-auto px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 text-sm transition-colors duration-200"
+                      disabled={isLoading}
                   >
-                      Save Profile
+                     {isLoading ? (
+                      <>
+                        <Loader className="animate-spin h-4 w-4 mr-2" />
+                      </>
+                    ) : (
+                      "Save Profile"
+                    )}
                   </button>
               )}
           </div>

@@ -6,7 +6,6 @@ import toast from 'react-hot-toast';
 import { GoogleLogin } from '@react-oauth/google';
 import Joi from 'joi';
 import OtpVerificationModal from '../../components/common/OtpVerificationModal';
-import background_img from '../../assets/images/background_img.jpg'
 import { GraduationCap } from 'lucide-react';
 
 const RegistrationPage = () => {
@@ -80,6 +79,8 @@ const RegistrationPage = () => {
       .unwrap()
       .then(() => {
         toast.success('OTP has been successfully sent to your email.');
+        console.log("Called register uesr in register page");
+        
         setOtpModalData({ email: formData.email, password: formData.password });
         setIsOtpModalOpen(true);
       })
@@ -96,7 +97,7 @@ const RegistrationPage = () => {
   useEffect(() => {
     if (isGoogleSuccess) {
       navigate(`/${userType}/dashboard`);
-      toast.success(message);
+      toast.success("Logged in successfully");
     }
   }, [isGoogleSuccess, userType, navigate, message]);
 
@@ -111,11 +112,6 @@ const RegistrationPage = () => {
       {/* Left Section - Full Background */}
       <div className="absolute inset-0 bg-primary-500 lg:block">
         <div className="absolute inset-0 bg-black/20" />
-        {/* <img 
-          src={background_img} 
-          alt="Background" 
-          className="w-full h-full object-cover opacity-20"
-        /> */}
       </div>
 
       {/* Content Container */}

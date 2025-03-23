@@ -20,10 +20,6 @@ const CommunitiesList = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const pageSize = 6;
 
-  // console.log("UserData in CommunitiesList:", userData);
-  // console.log("CurrentUserId being passed:", userData?.user?.id);
-  // console.log("Communities Array:", communities);
-
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -41,16 +37,15 @@ const CommunitiesList = () => {
   }, [dispatch, page, searchQuery]);
 
   const handleSearch = (query) => {
-    setPage(1);
     setSearchQuery(query);
   };
 
 
   if (loading) {
     return (
-        <div className="flex justify-center items-center h-screen">
-        <Loader className="animate-spin h-10 w-10 text-primary" />
-        </div>
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
     );
     }
 
@@ -60,20 +55,23 @@ const CommunitiesList = () => {
         <TutorVerificationMessage/>
       ) :(
       <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Explore & Connect</h1>
-          <p className="text-gray-600 text-sm sm:text-base mt-1">Join communities, share knowledge, and grow together!</p>
-        </div>
+       <div className="bg-white rounded-lg shadow-md p-6 mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Explore & Connect</h1>
+            <p className="text-gray-600 text-sm sm:text-base mt-1">
+              Join communities, share knowledge, and grow together!
+            </p>
+          </div>
           {role === 'tutor' && (
             <button
               onClick={() => setShowCreateModal(true)}
-              className="bg-secondary-500 hover:bg-secondary-600 text-white text-sm px-3 py-1.5 rounded-md"
+              className="bg-secondary text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-secondary-600 transition-colors"
             >
               Create Community
             </button>
           )}
-        </div>
+      </div>
+
 
         {isCommunityLoading ? (
           <div className="text-center">Loading...</div>

@@ -94,7 +94,6 @@ const handleApiError = (error, thunkAPI)=>{
         })
 
         .addCase(joinCommunity.fulfilled,(state, action)=>{
-          console.log(action.payload);
           const {communityId, userId} = action.payload
           const community = state.communities.find(c=>c.id === communityId)
           if (community) {

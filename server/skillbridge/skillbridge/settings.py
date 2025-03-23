@@ -58,9 +58,9 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),  
     'REFRESH_TOKEN_LIFETIME': timedelta(minutes=300),  
-    'ROTATE_REFRESH_TOKENS': False,                # Optional: Set True to use rotating refresh tokens
-    'BLACKLIST_AFTER_ROTATION': True,              # Required for blacklist functionality
-    'ALGORITHM': 'HS256',                          # Default: Modify if needed
+    'ROTATE_REFRESH_TOKENS': False,                
+    'BLACKLIST_AFTER_ROTATION': True,             
+    'ALGORITHM': 'HS256',                          
     'SIGNING_KEY': SECRET_KEY,
     'AUTH_HEADER_TYPES': ('Bearer',),
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
@@ -69,7 +69,7 @@ SIMPLE_JWT = {
 
 
 AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',  # Default authentication
+    'django.contrib.auth.backends.ModelBackend', 
 ]
 
 # Application definition
@@ -87,17 +87,17 @@ INSTALLED_APPS = [
     'users',
     'tutor',
     'student',
-    'socialmedia',
     'sbAdmin',
     'courses',
     'wallet',
+    'chatbot',
     'cloudinary',
     'community',
     'rest_framework',
     'corsheaders',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
-    'django.contrib.sites',  # Required by allauth
+    'django.contrib.sites',  
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
@@ -150,7 +150,19 @@ CHANNEL_LAYERS = {
     },
 }
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/0',
+    }
+}
+
 CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 
 
@@ -171,7 +183,6 @@ DATABASES = {
 
 # Email settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# Looking to send emails in production? Check out our Email API/SMTP product!
 EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
@@ -221,6 +232,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SITE_ID = 1
 
+GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
+
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'APP': {
@@ -246,30 +259,20 @@ STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY')
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
 STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
 
+GEMINI_API_KEY=os.getenv('GEMINI_API_KEY')
+
 AUTH_USER_MODEL = 'users.User'
 
 
 cloudinary.config(
-    cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),  # Replace with your Cloudinary cloud name
-    api_key=os.getenv('CLOUDINARY_API_KEY'),       # Replace with your Cloudinary API key
-    api_secret=os.getenv('CLOUDINARY_API_SECRET')  # Replace with your Cloudinary API secret
+    cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),  
+    api_key=os.getenv('CLOUDINARY_API_KEY'),       
+    api_secret=os.getenv('CLOUDINARY_API_SECRET')  
 )
 
 
 ZEGO_APP_ID =  os.getenv('ZEGO_APP_ID')
 ZEGO_SERVER_SECRET =  os.getenv('ZEGO_SERVER_SECRET')
-
-# CLOUDINARY_STORAGE = {
-#     'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),    # Replace with your Cloudinary cloud name
-#     'API_KEY': os.getenv('CLOUDINARY_API_KEY'),       # Replace with your Cloudinary API key
-#     'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),   # Replace with your Cloudinary API secret
-#     'UPLOAD_OPTIONS': {
-#         'resource_type': 'raw',
-#         'use_filename': True,          # Preserve original filename
-#         'unique_filename': False,       # Avoid unique hashes
-#         'use_original_extension': True  # Keep file extensions
-#     }
-# }
 
 
 CORS_ALLOWED_ORIGINS = [  

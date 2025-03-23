@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, HomeIcon,Bell, Users, GraduationCap, Book, MessageSquare, Star, UserRoundPen, LogOut, PlusCircle, 
- BookCopy, ChevronDown, Loader, Menu, X, ChevronsLeft, ChevronsRight, User, Wallet,Library } from 'lucide-react';
+import { Search ,Bell, GraduationCap, LogOut, PlusCircle, 
+ BookCopy, ChevronDown, Loader, Menu, X, ChevronsLeft, ChevronsRight, User, Wallet,Library, Clock, Calendar } from 'lucide-react';
+ import { RiUserCommunityFill } from "react-icons/ri";
+ import { FaChalkboardTeacher, FaBook, FaGraduationCap, FaUsers } from "react-icons/fa";
+ import { FaRegMessage } from "react-icons/fa6";
+ import { IoNotifications } from "react-icons/io5";
+ import { MdDashboard, MdAccountCircle} from "react-icons/md";
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import { fetchUser, logoutUser } from '../../redux/slices/authSlice';
@@ -11,42 +16,44 @@ import { persistor } from '../../redux/store';
 import axiosInstance from '../../api/axios.Config';
 import { useNotification } from '../../context_providers/NotificationProvider'
 import { ConfirmDialog } from './ui/ConfirmDialog';
+import avatar2 from '../../assets/images/avatar2.jpg'
 
 const UserLayout = () => {
   const [activePage, setActivePage] = useState('Dashboard');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
   const sidebarRef = useRef(null);
   const {notificationCount, setNotificationCount} = useNotification();
   const [showSidebarLogoutDialog, setShowSidebarLogoutDialog] = useState(null);
   const ws = useRef(null);
 
-  const { userData } = useSelector((state) => state.auth);
+  const { userData, role } = useSelector((state) => state.auth);
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
 
   const tutorNavItems = [
-    { name: 'Dashboard', icon: HomeIcon, path: '/tutor/dashboard/' },
-    { name: 'Teaching', icon: BookCopy, path: '/tutor/teaching/' },
-    { name: 'Courses', icon: GraduationCap, path: '/tutor/courses/' },
-    { name: 'Learning', icon: Library, path: '/tutor/learning/' },
-    { name: 'Community', icon: Users, path: '/tutor/communities/' },
-    { name: 'Chat Room', icon: MessageSquare, path: '/tutor/chatroom/' },
-    { name: 'Notifications', icon: Bell, path: '/tutor/notifications/' },
-    { name: 'Account', icon: UserRoundPen, path: '/tutor/profile/' },
+    { name: 'Dashboard', icon:  MdDashboard, path: '/tutor/dashboard/' },
+    { name: 'Teaching', icon: FaBook, path: '/tutor/teaching/' },
+    { name: 'Courses', icon: FaGraduationCap, path: '/tutor/courses/' },
+    { name: 'Learning', icon: FaChalkboardTeacher, path: '/tutor/learning/' },
+    { name: 'Community', icon: RiUserCommunityFill, path: '/tutor/communities/' },
+    { name: 'Chat Room', icon: FaRegMessage, path: '/tutor/chatroom/' },
+    { name: 'Notifications', icon: IoNotifications, path: '/tutor/notifications/' },
+    { name: 'Account', icon: MdAccountCircle, path: '/tutor/profile/' },
   ];
 
   const studentNavItems = [
-    { name: 'Dashboard', icon: HomeIcon, path: '/student/dashboard/' },
-    { name: 'Courses', icon: GraduationCap, path: '/student/courses/' },
-    { name: 'My Learning', icon: Book, path: '/student/learning/' },
-    { name: 'Tutors', icon: BookCopy, path: '/student/tutors/' },
-    { name: 'Community', icon: Users, path: '/student/communities/' },
-    { name: 'Chat Room', icon: MessageSquare, path: '/student/chatroom/' },
-    { name: 'Notifications', icon: Bell, path: '/student/notifications/' },
-    { name: 'Account', icon: UserRoundPen, path: '/student/profile/' },
+    { name: 'Dashboard', icon:  MdDashboard, path: '/student/dashboard/' },
+    { name: 'Courses', icon: FaGraduationCap, path: '/student/courses/' },
+    { name: 'My Learning', icon: FaChalkboardTeacher, path: '/student/learning/' },
+    { name: 'Tutors', icon: FaUsers, path: '/student/tutors/' },
+    { name: 'Community', icon: RiUserCommunityFill, path: '/student/communities/' },
+    { name: 'Chat Room', icon: FaRegMessage, path: '/student/chatroom/' },
+    { name: 'Notifications', icon: IoNotifications, path: '/student/notifications/' },
+    { name: 'Account', icon: MdAccountCircle, path: '/student/profile/' },
   ];
 
   const navigate = useNavigate();
@@ -170,14 +177,12 @@ const UserLayout = () => {
     }
   };
 
-  // if (!userData || !userData.user) {
-  //   return <p>No user data available.</p>;
-  // }
+  
 
   if (loading || !userData) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <Loader className="animate-spin h-10 w-10 text-primary" />
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -188,8 +193,8 @@ const UserLayout = () => {
       {isMobile && (
         <button
           onClick={() => setSidebarOpen(!isSidebarOpen)}
-          className={`fixed top-4 left-4 z-50 p-2 rounded-md ${
-            isSidebarOpen ? 'left-64 text-white hover:text-text-50' : 'left-4 text-primary-500 hover:text-primary-700 transition-all duration-300 '
+          className={`fixed top-4 z-50 p-2 rounded-md ${
+            isSidebarOpen ? 'left-64 text-white hover:text-text-50' : 'left-4 text-primary-500 hover:text-primary-700 transition-all duration-300'
           }`}
           style={{ transition: 'left 0.3s ease' }}
         >
@@ -271,8 +276,6 @@ const UserLayout = () => {
         {/* Logout Button - Modified to improve dialog positioning */}
         <button
           onClick={() => {
-            // Set a state to trigger the logout confirmation dialog
-            // This is a new approach: the dialog will be rendered in the main content area
             setShowSidebarLogoutDialog(true);
           }}
           className="w-full flex items-center px-4 py-3.5 text-sm font-medium text-background-50 hover:text-secondary-500 transition-colors duration-500"
@@ -287,131 +290,230 @@ const UserLayout = () => {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
-        <header className="bg-background-50 border-b border-background-200 h-16 flex items-center justify-between px-4 sm:px-6">
-          {/* Search Bar */}
-          <div className="flex-1 max-w-2xl lg:ml-0">
-            <div className="relative ml-10">
-              <input
-                type="text"
-                placeholder="Search..."
-                className="w-full pl-10 pr-4 py-2 rounded-lg border border-background-200 
-                focus-visible:outline-none focus:ring-1 
-                focus:ring-primary-500 
-                placeholder:text-text-300"
-              />
-              <Search className="absolute left-3 top-2.5 h-5 w-5 text-text-300 
-                group-focus-within:text-primary-500 transition-colors duration-300" />
-            </div>
-          </div>
-  
-          <div className="flex items-center gap-4 sm:gap-4 ml-2">
-            {/* Notification Icon */}
-            <button
-              className="relative p-2 rounded-full hover:bg-background-100 
-              text-text-500 hover:text-primary-500 transition-colors duration-300"
-              onClick={() => navigate(`/${userData?.user?.role}/notifications/`)}
-            >
-              <Bell className="h-5 w-5 text-text-500 hover:text-secondary-500 transition-colors duration-300" />
-              {notificationCount > 0 && (
-                <span className="absolute top-0 right-0 bg-secondary-500 text-white 
-                rounded-full text-xs w-5 h-5 flex items-center justify-center">
-                  {notificationCount}
-                </span>
-              )}
-            </button>
-            {userData.user.role === "tutor" && (
-              <Button
-                startIcon={<PlusCircle className="h-5 w-5" />}
-                variant="contained"
-                color={userData?.is_verified ? "primary" : "inherit"}
-                disabled={!userData?.is_verified}
-                onClick={() => userData?.is_verified && navigate("/tutor/teaching/new")}
-                sx={{
-                  minWidth: 'auto',
-                  "&.Mui-disabled": {
-                    backgroundColor: "gray",
-                    color: "white",
-                    cursor: "not-allowed",
-                  },
-                }}
-              >
-                <span className="hidden sm:inline">Add Course</span>
-              </Button>
-            )}
-  
-            {/* Profile Dropdown */}
-            <div className="relative z-50" ref={dropdownRef}>
-              <button
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="flex items-center space-x-2 focus:outline-none"
-              >
-                <img
-                  src={userData.user.profile_pic_url}
-                  alt="Profile"
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-background-200"
-                />
-                <div className="hidden sm:flex items-center">
-                  <span className="text-sm font-medium text-text-500 mr-1 sm:mr-2 truncate max-w-[120px]">
-                    {userData?.user?.first_name || userData?.user?.email || 'Nil'}
-                  </span>
-                  <ChevronDown
-                    className={`h-4 w-4 text-text-400 transition-transform ${
-                      isProfileOpen ? 'transform rotate-180' : ''
-                    }`}
-                  />
+        <header className="bg-background-50 border-b border-background-200 h-16 flex items-center px-4 sm:px-6">
+          {/* Three-column layout: left space, center nav, right actions */}
+          <div className="w-full grid grid-cols-3 items-center">
+            {/* Left section - Brand name positioning fixed for mobile */}
+            <div className="flex justify-start">
+              {!isSidebarOpen && (
+                <div className={`flex items-center space-x-2 ${isMobile ? 'ml-10' : ''}`}>
+                  <span className="text-primary-500 text-xl font-bold">SkillBridge</span>
                 </div>
+              )}
+            </div>
+            
+            {/* Center section - navigation (desktop only) */}
+            <div className="hidden md:flex justify-center">
+              {/* Desktop Nav Menu - Centered */}
+              <nav className="flex items-center justify-center space-x-6">
+                <button 
+                  onClick={() => navigate(`/${role}/dashboard/`)}
+                  className={`relative text-sm font-medium px-2 py-1 transition-all duration-200 hover:text-secondary 
+                            after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-secondary after:transition-all 
+                            after:duration-300  ${
+                    location.pathname.includes('/dashboard/') 
+                      ? 'text-secondary after:w-full' 
+                      : 'text-text-500 hover:after:w-full'
+                  }`}
+                >
+                  Home
+                </button>
+                <button 
+                  onClick={() => navigate(`/${role}/courses/`)}
+                  className={`relative text-sm font-medium px-2 py-1 transition-all duration-200 hover:text-secondary 
+                            after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-secondary after:transition-all 
+                            after:duration-300 ${
+                    location.pathname.includes('/courses/') 
+                      ? 'text-secondary after:w-full' 
+                      : 'text-text-500 hover:after:w-full'
+                  }`}
+                >
+                  Courses
+                </button>
+                <button 
+                  onClick={() => navigate(`/${role}/blogs/`)}
+                  className={`relative text-sm font-medium px-2 py-1 transition-all duration-200 hover:text-secondary 
+                            after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-secondary after:transition-all 
+                            after:duration-300 ${
+                    location.pathname.includes('/blogs/') 
+                      ? 'text-secondary after:w-full' 
+                      : 'text-text-500 hover:after:w-full'
+                  }`}
+                >
+                  Blogs
+                </button>
+              </nav>
+            </div>
+            
+            {/* Mobile navigation menu */}
+            <div className="md:hidden flex justify-center">
+              <button className="text-primary-500 hover:text-secondary-500 transition-colors duration-300" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+                <ChevronDown className={`h-5 w-5 ${isMobileMenuOpen ? 'transform rotate-180' : ''}`} />
               </button>
+            </div>
+            
+            {/* Right section - user actions */}
+            <div className="flex items-center justify-end gap-4">
+              {/* Notification Icon */}
+              <button
+                className="relative p-2 rounded-full hover:bg-background-100 
+                text-text-500 hover:text-primary-500 transition-colors duration-300"
+                onClick={() => navigate(`/${userData?.user?.role}/notifications/`)}
+              >
+                <Bell className="h-5 w-5 text-text-500 hover:text-secondary-500 transition-colors duration-300" />
+                {notificationCount > 0 && (
+                  <span className="absolute top-0 right-0 bg-secondary-500 text-white 
+                  rounded-full text-xs w-5 h-5 flex items-center justify-center">
+                    {notificationCount}
+                  </span>
+                )}
+              </button>
+              
+              {userData.user.role === "tutor" && (
+                <Button
+                  startIcon={<PlusCircle className="h-5 w-5" />}
+                  variant="contained"
+                  color={userData?.is_verified ? "primary" : "inherit"}
+                  disabled={!userData?.is_verified}
+                  onClick={() => userData?.is_verified && navigate("/tutor/teaching/new")}
+                  sx={{
+                    minWidth: 'auto',
+                    "&.Mui-disabled": {
+                      backgroundColor: "gray",
+                      color: "white",
+                      cursor: "not-allowed",
+                    },
+                  }}
+                >
+                  <span className="hidden sm:inline">Add Course</span>
+                </Button>
+              )}
   
-              {/* Dropdown Menu */}
-              {isProfileOpen && (
-                <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-background-50 ring-1 ring-black ring-opacity-5 origin-top-right">
-                  <div className="py-1" role="menu">
-                    <button
-                      className="w-full text-left px-4 py-2.5 text-sm text-text-500 hover:bg-background-100 flex items-center space-x-2"
-                      role="menuitem"
-                      onClick={() => navigate(`/${userData?.user?.role}/profile`)}
-                    >
-                      <User className="h-4 w-4" />
-                      <span>Profile</span>
-                    </button>
-                    <button
-                      className="w-full text-left px-4 py-2.5 text-sm text-text-500 hover:bg-background-100 flex items-center space-x-2"
-                      role="menuitem"
-                      onClick={() =>{
-                        if(userData?.user?.role === 'tutor'){
-                          navigate('/tutor/wallet')
-                        }
-                      }}
-                    >
-                      <Wallet className="h-4 w-4" />
-                      <span>Wallet</span>
-                    </button>
-                    <div className="border-t border-background-200 my-1"></div>
-                    <ConfirmDialog
-                      trigger={(open) =>(
-                        <button
-                          onClick={open}
-                          className="w-full text-left px-4 py-2.5 text-sm text-secondary-500 hover:bg-background-100 flex items-center space-x-2"
-                          role="menuitem"
-                        >
-                          <LogOut className="h-4 w-4" />
-                          <span>Sign out</span>
-                        </button>
-                      )}
-                      title="Logout"
-                      description={`Are you sure you want to logout?`}
-                      confirmText='Confirm'
-                      destructive
-                      onConfirm={() => handleLogout()}
-                      variant='user' 
+              {/* Profile Dropdown - Mobile-friendly */}
+              <div className="relative z-50" ref={dropdownRef}>
+                <button
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="flex items-center focus:outline-none"
+                >
+                  <img
+                    src={userData.user.profile_pic_url || avatar2}
+                    alt="Profile"
+                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-background-200"
+                  />
+                  <div className="hidden sm:flex items-center ml-2">
+                    <span className="text-sm font-medium text-text-500 mr-1 sm:mr-2 truncate max-w-[120px]">
+                      {userData?.user?.first_name || userData?.user?.email || 'Nil'}
+                    </span>
+                    <ChevronDown
+                      className={`h-4 w-4 text-text-400 transition-transform ${
+                        isProfileOpen ? 'transform rotate-180' : ''
+                      }`}
                     />
                   </div>
-                </div>
-              )}
+                </button>
+  
+                {/* Dropdown Menu - Enhanced for mobile */}
+                {isProfileOpen && (
+                  <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-background-50 ring-1 ring-black ring-opacity-5 origin-top-right">
+                    <div className="py-1" role="menu">
+                      {/* Mobile-only view of user name */}
+                      <div className="sm:hidden px-4 py-2 text-sm font-medium text-text-500 border-b border-background-200">
+                        {userData?.user?.first_name || userData?.user?.email || 'Nil'}
+                      </div>
+                      <button
+                        className="w-full text-left px-4 py-2.5 text-sm text-text-500 hover:bg-background-100 flex items-center space-x-2"
+                        role="menuitem"
+                        onClick={() => navigate(`/${userData?.user?.role}/profile`)}
+                      >
+                        <User className="h-4 w-4" />
+                        <span>Profile</span>
+                      </button>
+                      <button
+                        className="w-full text-left px-4 py-2.5 text-sm text-text-500 hover:bg-background-100 flex items-center space-x-2"
+                        role="menuitem"
+                        onClick={() => {
+                          if (userData?.user?.role === 'tutor') {
+                            navigate('/tutor/wallet')
+                          }
+                        }}
+                      >
+                        <Wallet className="h-4 w-4" />
+                        <span>Wallet</span>
+                      </button>
+                      <div className="border-t border-background-200 my-1"></div>
+                      <ConfirmDialog
+                        trigger={(open) => (
+                          <button
+                            onClick={open}
+                            className="w-full text-left px-4 py-2.5 text-sm text-secondary-500 hover:bg-background-100 flex items-center space-x-2"
+                            role="menuitem"
+                          >
+                            <LogOut className="h-4 w-4" />
+                            <span>Sign out</span>
+                          </button>
+                        )}
+                        title="Logout"
+                        description={`Are you sure you want to logout?`}
+                        confirmText='Confirm'
+                        destructive
+                        onConfirm={() => handleLogout()}
+                        variant='user' 
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </header>
   
+        {/* Mobile Navigation Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden bg-background-50 border-b border-background-200 shadow-md">
+            <nav className="flex flex-col">
+              <button 
+                onClick={() => {
+                  navigate(`/${role}/dashboard/`);
+                  setIsMobileMenuOpen(false);
+                }}
+                className={`w-full text-left px-4 py-3 text-sm font-medium ${
+                  location.pathname.includes('/dashboard/') 
+                    ? 'text-secondary bg-background-100' 
+                    : 'text-text-500'
+                }`}
+              >
+                Home
+              </button>
+              <button 
+                onClick={() => {
+                  navigate(`/${role}/courses/`);
+                  setIsMobileMenuOpen(false);
+                }}
+                className={`w-full text-left px-4 py-3 text-sm font-medium ${
+                  location.pathname.includes('/courses/') 
+                    ? 'text-secondary bg-background-100' 
+                    : 'text-text-500'
+                }`}
+              >
+                Courses
+              </button>
+              <button 
+                onClick={() => {
+                  navigate(`/${role}/learning/`);
+                  setIsMobileMenuOpen(false);
+                }}
+                className={`w-full text-left px-4 py-3 text-sm font-medium ${
+                  location.pathname.includes('/learning/') 
+                    ? 'text-secondary bg-background-100' 
+                    : 'text-text-500'
+                }`}
+              >
+                My Learning
+              </button>
+            </nav>
+          </div>
+        )}
+    
         {/* Page Content */}
         <main className='flex-1 overflow-auto p-4 sm:p-6 bg-background-500'>
           <Outlet />  {/* This renders the current page */}

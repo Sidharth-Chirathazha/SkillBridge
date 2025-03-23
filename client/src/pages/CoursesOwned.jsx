@@ -26,10 +26,6 @@ const CoursesOwned = ({ variant = 'student' }) => {
 
   const {role, userData} = useSelector((state)=>state.auth)
 
-  console.log("Requested trades", requestedTrades);
-  console.log("Received trades", receivedTrades);
-  console.log("Purchased Courses Data", purchasedCoursesData);
-
    useEffect(() => {
       dispatch(fetchCategories({categoryPage:1, pageSize:100}));
     }, [dispatch]);
@@ -37,7 +33,7 @@ const CoursesOwned = ({ variant = 'student' }) => {
   
   useEffect(() => {
     dispatch(fetchPurchasedCourses({ page, pageSize, search:searchQuery, categoryId:selectedCategory}));
-  }, [dispatch, page, searchQuery, selectedCategory]);
+  }, [dispatch, page, searchQuery, selectedCategory, receivedTrades]);
 
   // Fetch course data
     useEffect(() => {
@@ -70,13 +66,12 @@ const CoursesOwned = ({ variant = 'student' }) => {
 
   const handleTradeAction = async (tradeId, action) => {
         try{
-            console.log("Dispatching trade action:", { tradeId, action });
             await dispatch(updateTradeRequest({tradeId, action})).unwrap();
             await dispatch(fetchTradeRequests()).unwrap();
             dispatch(fetchPurchasedCourses({ page, pageSize, search:searchQuery, categoryId:selectedCategory}));
             toast.success("Course traded successfully");
         }catch(error){
-            console.log("Trade action error:", error);
+            console.error("Trade action error:", error);
             
             toast.error("An error occured while updating");
         }
@@ -199,39 +194,39 @@ const CoursesOwned = ({ variant = 'student' }) => {
       ) :(
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {variant === 'tutor' && (
-            <div className="flex gap-3 mb-8">
-            <TabButton
-                label="Purchased Courses"
-                count={purchasedCoursesData?.length}
-                isActive={activeTab === 'purchased'}
-                onClick={() => setActiveTab('purchased')}
-            />
-            <TabButton
-                label="Received Trades"
-                count={receivedTrades.length}
-                isActive={activeTab === 'received'}
-                onClick={() => setActiveTab('received')}
-            />
-            <TabButton
-                label="Requested Trades"
-                count={requestedTrades.length}
-                isActive={activeTab === 'requested'}
-                onClick={() => setActiveTab('requested')}
-            />
+            <div className="flex flex-col sm:flex-row gap-3 mb-8">
+              <TabButton
+                  label="Purchased Courses"
+                  count={purchasedCoursesData?.length}
+                  isActive={activeTab === 'purchased'}
+                  onClick={() => setActiveTab('purchased')}
+              />
+              <TabButton
+                  label="Received Trades"
+                  count={receivedTrades.length}
+                  isActive={activeTab === 'received'}
+                  onClick={() => setActiveTab('received')}
+              />
+              <TabButton
+                  label="Requested Trades"
+                  count={requestedTrades.length}
+                  isActive={activeTab === 'requested'}
+                  onClick={() => setActiveTab('requested')}
+              />
             </div>
         )}
 
         {activeTab === 'purchased' ? (
             <>
-            <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Continue Learning</h1>
-                <p className="text-gray-600 text-sm sm:text-base mt-1">
+            <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Continue Learning</h1>
+              <p className="text-gray-600 text-sm sm:text-base mt-1">
                 Dive back into your courses and continue learning.
-                </p>
+              </p>
             </div>
             {isCourseLoading ? (
-                <div className="flex justify-center items-center h-screen">
-                <Loader className="animate-spin h-10 w-10 text-primary" />
+                <div className="flex justify-center items-center min-h-screen">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
                 </div>
             ) : !purchasedCoursesData ? (
               <div className="flex justify-center items-center h-96">
@@ -272,7 +267,7 @@ const CoursesOwned = ({ variant = 'student' }) => {
             </>
         ) : activeTab === 'received' ? (
             <div className="space-y-6">
-            <div>
+             <div className="bg-white rounded-lg shadow-md p-6 mb-8">
                 <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Received Trade Requests</h1>
                 <p className="text-gray-600 text-sm sm:text-base mt-1">
                 Manage trade requests from other tutors.
@@ -284,7 +279,7 @@ const CoursesOwned = ({ variant = 'student' }) => {
             </div>
         ) : (
             <div className="space-y-6">
-            <div>
+             <div className="bg-white rounded-lg shadow-md p-6 mb-8">
                 <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Your Trade Requests</h1>
                 <p className="text-gray-600 text-sm sm:text-base mt-1">
                 Track the status of your trade requests.

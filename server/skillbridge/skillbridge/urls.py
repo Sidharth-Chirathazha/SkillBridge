@@ -25,6 +25,7 @@ urlpatterns = [
     path('api/tutor/',include('tutor.urls')),
     path('api/student/',include('student.urls')),
     path('api/wallet/',include('wallet.urls')),
-    path('api/community/',include('community.urls'))
+    path('api/community/',include('community.urls')),
+    path('api/chatbot/',include('chatbot.urls'))
 
 ]

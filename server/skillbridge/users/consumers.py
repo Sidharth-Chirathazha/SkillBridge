@@ -21,15 +21,12 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             except Exception:
                 self.scope["user"] = AnonymousUser()
 
-        print(f"User connecting: {self.scope['user']}")
 
         if self.scope["user"].is_authenticated:
             self.group_name = f"notifications_{self.scope['user'].id}"
-            print(f"Adding to group: {self.group_name}")
             await self.channel_layer.group_add(self.group_name, self.channel_name)
             await self.accept()
         else:
-            print("User not authenticated. Closing WebSocket.")
             await self.close()
 
     async def disconnect(self, close_code):

@@ -9,11 +9,10 @@ export const ConfirmDialog = ({
   onConfirm,
   variant = 'admin',
   destructive = false,
-  isOpen: controlledIsOpen, // New prop
-  setIsOpen: controlledSetIsOpen, // New prop
-  onCancel, // New prop for external cancel handler
+  isOpen: controlledIsOpen,
+  setIsOpen: controlledSetIsOpen, 
+  onCancel, 
 }) => {
-  // Use controlled state if provided, otherwise use internal state
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
   const setIsOpen = controlledSetIsOpen || setInternalIsOpen;

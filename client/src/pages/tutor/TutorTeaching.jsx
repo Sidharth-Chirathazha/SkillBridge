@@ -13,7 +13,6 @@ import DropdownMenu from '../../components/common/ui/DropdownMenu';
 
 const TutorTeaching = () => {
 
-  // const [isCoursesAvailable, setIsCoursesAvailable] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
@@ -35,21 +34,19 @@ const TutorTeaching = () => {
 
   useEffect(() => {
     if (!tutorId) return;
-    console.log(tutorId);
 
     const fetchData = async()=>{
       try{
         await dispatch(fetchTutorCourses({ tutorId, page, pageSize, status:null, search:searchQuery, categoryId:selectedCategory }));
-        console.log("Courses Fetched Successfully");
         
       }catch(error){
-       console.log("Failed to fetch Courses");
+       console.error("Failed to fetch Courses");
        
       }
     }
     fetchData();
 
-  }, [dispatch, page, tutorId, searchQuery, selectedCategory]);
+  }, [dispatch, page, tutorId, searchQuery, selectedCategory, navigate]);
 
   const handleSearch = (query) => {
     setPage(1);
@@ -80,7 +77,16 @@ const TutorTeaching = () => {
         <TutorVerificationMessage/>
       ):(
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-          <h1 className="text-2xl font-bold text-gray-800 mb-6">My Courses - Manage & Grow Your Teaching Portfolio</h1>
+          <div className="bg-white rounded-lg shadow-md p-6 mb-8 flex flex-col md:flex-row items-center md:items-start gap-4">
+            <div className="flex-grow text-center md:text-left">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
+                Explore Your Courses
+              </h1>
+              <p className="text-gray-600 text-sm sm:text-base mt-1 mb-2">
+                Manage and update your courses. Track student engagement and grow your learning community.
+              </p>
+            </div>
+          </div>
           
           {/* Similar loading/error handling as StudentCourses */}
           {isCourseError ? (
@@ -88,8 +94,8 @@ const TutorTeaching = () => {
             <h1 className='text-lg text-text-600'>You haven't added any courses yet.</h1>
           </div>
           ) : isCourseLoading? (
-            <div className="flex justify-center items-center h-screen">
-              <Loader className="animate-spin h-10 w-10 text-primary" />
+            <div className="flex justify-center items-center min-h-screen">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
             </div>
           ) : (
               <>

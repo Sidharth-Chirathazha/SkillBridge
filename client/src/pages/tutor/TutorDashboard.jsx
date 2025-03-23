@@ -12,10 +12,12 @@ import { FiDownload, FiChevronRight } from 'react-icons/fi';
 import { FaStar } from 'react-icons/fa';
 import { fetchPurchasedCourses } from "../../redux/slices/courseSlice";
 import axiosInstance from "../../api/axios.Config";
+import { useNavigate } from "react-router-dom";
 
 
 const TutorDashboard = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { userData, tutorReviewsData, role } = useSelector((state) => state.auth);
   const { purchasedCoursesData } = useSelector((state) => state.course);
   const [chartTimeframe, setChartTimeframe] = useState('week');
@@ -48,8 +50,6 @@ const TutorDashboard = () => {
       console.error('Error fetching earnings data:', err);
       setError('Failed to load earnings data');
       
-      // // Fallback to dummy data in case of error
-      // setChartData(generateFallbackData(timeframe));
     } finally {
       setIsLoading(false);
     }
@@ -78,7 +78,7 @@ const TutorDashboard = () => {
       let csvContent = "data:text/csv;charset=utf-8,";
 
       // Add CSV header
-      csvContent += "Course Name,User Name,Purchase Date,Purchase Type,Course Price,Purchase Amount\n";
+      csvContent += "Course Name,Purchased By,Purchase Date,Purchase Type,Course Price,Admin Share,Credited Amount\n";
 
       // Add data rows
       purchaseData.forEach(purchase => {
@@ -88,7 +88,8 @@ const TutorDashboard = () => {
           purchase.purchase_date,
           purchase.purchase_type,
           purchase.course_price,
-          purchase.transaction_amount
+          purchase.opposite_share,
+          purchase.credited_amount
         ].join(",");
         csvContent += row + "\n";
       });
@@ -316,7 +317,9 @@ const TutorDashboard = () => {
           <div className="bg-white rounded-lg shadow-md p-6 mb-8 transition duration-300 ease-in-out hover:shadow-lg">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold text-text-500">Courses in Progress</h2>
-              <button className="text-primary-500 text-sm flex items-center transition duration-200 hover:text-primary-600">
+              <button className="text-primary-500 text-sm flex items-center transition duration-200 hover:text-primary-600"
+              onClick={() => navigate("/tutor/learning/")}
+              >
                 View All <FiChevronRight className="h-4 w-4 ml-1" />
               </button>
             </div>

@@ -1,0 +1,17 @@
+.chat-rooms-container {
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: #d1d5db transparent; /* Firefox */
+  }
+  
+  .chat-rooms-container::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .chat-rooms-container::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .chat-rooms-container::-webkit-scrollbar-thumb {
+    background-color: #d1d5db;
+    border-radius: 20px;
+  }

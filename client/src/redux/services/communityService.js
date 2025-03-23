@@ -10,14 +10,13 @@ export const fetchCommunities = async(page, pageSize, search=null)=>{
         url += `&search=${searchQuery}`;
     }
     
-    const response = await axiosInstance.get(url);
+    const response = await axiosInstance.get(url, {requiresAuth:true});
     return response.data;
 }
 
 //Create Community
 export const createCommunity = async(communityInfo)=>{
 
-    // console.log("Sending FormData:", [...communityInfo.entries()]);
     
     const config = {
         requiresAuth: true,

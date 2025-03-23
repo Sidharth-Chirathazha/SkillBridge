@@ -17,7 +17,8 @@ import CommunityChatPage from '../pages/CommunityChatPage';
 import NotificationsPage from '../pages/NotificationsPage';
 import { NotificationProvider } from '../context_providers/NotificationProvider';
 import OneToOneChatPage from '../pages/OneToOneChatPage';
-
+import NotFound from '../pages/NotFound';
+import BlogPage from '../pages/BlogPage';
 
 
 const TutorRoutes = () => {
@@ -41,9 +42,11 @@ const TutorRoutes = () => {
               <Route path="communities" element={<CommunitiesList/>}/>
               <Route path="notifications" element={<NotificationsPage/>}/>
               <Route path="/communities/:communityId/chat" element={<CommunityChatPage/>}/>
+              <Route path="blogs" element={<BlogPage isAdminView={false}/>}/>
             </Route>
           <Route path="/courses/success" element={<SuccessPage/>}/>
         </Route>
+        <Route path="*" element={<NotFound isAuthenticated={true}/>} />
       </Routes>
     </NotificationProvider>
   )

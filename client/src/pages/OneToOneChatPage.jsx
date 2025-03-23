@@ -7,6 +7,7 @@ import axiosInstance from '../api/axios.Config';
 import ChatRoomItem from '../components/common/ChatRoomItem';
 import WelcomeView from '../components/common/WelcomeView';
 import TutorVerificationMessage from '../components/tutor/TutorVerificationMessage';
+import '../assets/styles/ChatroomSidebar.css'
 
 const OneToOneChatPage = () => {
 
@@ -25,6 +26,7 @@ const OneToOneChatPage = () => {
   const messageContainerRef = useRef(null);
   const [startTime, setStartTime] = useState(Date.now());
   const [isActive, setIsActive] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const ws = useRef(null);
   const {userData, role} = useSelector((state)=>state.auth);
 
@@ -49,7 +51,15 @@ const OneToOneChatPage = () => {
     fetchChatRooms();
   }, [currentUser]);
 
-  console.log("Current user in one to one:", currentUser);
+  const filteredChatRooms = chatRooms.filter(room => {
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      room.course_title.toLowerCase().includes(searchLower) ||
+      room.student.full_name.toLowerCase().includes(searchLower) ||
+      room.tutor.full_name.toLowerCase().includes(searchLower)
+    );
+  });
+
 
   useEffect(() => {
     const handleActivity = () => setIsActive(true);
@@ -134,14 +144,10 @@ const OneToOneChatPage = () => {
 
     const wsUrl = `ws://localhost:8000/ws/chat/${chatRoomId}/?token=${token}`;
 
-    console.log("Ws url:", wsUrl);
-    
-
     ws.current = new WebSocket(wsUrl);
 
     ws.current.onopen = () =>{
       setIsConnected(true);
-      console.log("Websocket connected");
       
     };
 
@@ -173,7 +179,6 @@ const OneToOneChatPage = () => {
 
     ws.current.onclose = () => {
       setIsConnected(false);
-      console.log('WebSocket disconnected');
     };
 
     return () => ws.current?.close();
@@ -232,184 +237,181 @@ const OneToOneChatPage = () => {
   const toggleSidebar = () => {
     setShowSidebar(!showSidebar);
   };
-
-  console.log("Messages in one to one chat:", messages);
   
 
   return (
     <>
-    { role === "tutor" && userData?.is_verified === false ? (
-        <TutorVerificationMessage/>
-      ) :(
-      <div className="flex h-screen bg-background-100">
-      {/* Chat rooms sidebar */}
-      <div className={`${showSidebar ? 'w-80' : 'w-0'} md:w-80 bg-white border-r border-background-300 transition-width duration-300 overflow-hidden flex flex-col`}>
-        <div className="p-4 border-b border-background-300">
-          <h2 className="text-lg font-semibold text-text-600">Messages</h2>
-        </div>
-        <div className="flex-1 overflow-y-auto">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-32 text-text-400 p-4">
-              Loading chat rooms...
+      {role === "tutor" && userData?.is_verified === false ? (
+        <TutorVerificationMessage />
+      ) : (
+        <div className="flex h-screen bg-background-100 overflow-hidden">
+          
+          {/* Chat rooms sidebar */}
+          <div className={`${showSidebar ? 'w-80' : 'w-0'} md:w-80 bg-background-50 border-r border-background-300 transition-width duration-300 overflow-hidden flex flex-col h-full`}>
+            <div className="p-4 border-b border-background-300 bg-primary-600 mb-3">
+              <h2 className="text-lg font-semibold text-background-50">Messages</h2>
             </div>
-          ) : chatRooms.length === 0 ? (
-            <div className="flex items-center justify-center h-32 text-text-400 p-4">
-              No chat rooms available.
-            </div>
-          ) : (
-            chatRooms.map((room) => (
-              <ChatRoomItem
-                key={room.id}
-                chatRoom={room}
-                isActive={room.id === parseInt(chatRoomId)}
-                onClick={() => handleChatRoomSelect(room.id)}
-              />
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* Chat section */}
-      <div className="flex-1 flex flex-col h-full relative">
-        {!chatRoomId ? (
-          // Welcome screen when no chat is selected
-          <WelcomeView 
-            chatRooms={chatRooms} 
-            onSelectChatRoom={handleChatRoomSelect} 
-          />
-        ) : (
-          // Regular chat interface when a chat is selected
-          <>
-            {/* Chat Header with toggle sidebar button, opposite user info and video call button */}
-            <div className="bg-white border-b border-background-300 shadow-sm py-3 px-4 flex items-center justify-between">
-              <div className="flex items-center">
-                <button 
-                  onClick={toggleSidebar}
-                  className="md:hidden mr-3 p-1 rounded-full hover:bg-background-100"
-                >
-                  {showSidebar ? (
-                    <XMarkIcon className="h-5 w-5 text-text-500" />
-                  ) : (
-                    <ChatBubbleLeftIcon className="h-5 w-5 text-text-500" />
-                  )}
-                </button>
-                {oppositeUser && (
-                  <div className="flex items-center">
-                    <div className="relative mr-3">
-                      <img 
-                        src={oppositeUser.profile_pic} 
-                        alt={oppositeUser.name} 
-                        className="h-10 w-10 rounded-full"
-                      />
-                      {oppositeUser.isOnline && (
-                        <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-white"></span>
-                      )}
-                    </div>
-                    <div>
-                      <h1 className="text-text-500 font-semibold">{oppositeUser.name}</h1>
-                      <p className="text-xs text-text-400">
-                        {oppositeUser.isOnline ? 'Online' : 'Offline'}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <span className={`text-sm ${isConnected ? 'text-green-500' : 'text-red-500'}`}>
-                  {isConnected ? 'Connected' : 'Disconnected'}
-                </span>
-                {isTutor && (
-                <button 
-                  onClick={startCall}
-                  className="p-2 rounded-full bg-primary-500 text-white hover:bg-primary-600"
-                  disabled={!oppositeUser}
-                >
-                  <VideoCameraIcon className="h-5 w-5" />
-                </button>
-              )}
-              </div>
-            </div>
-
-            {/* Messages area */}
-            <div 
-              ref={messageContainerRef}
-              className="flex-1 overflow-y-auto py-4 px-3 md:px-6 bg-background-50"
-            >
-              {isLoading ? (
-                <div className="flex items-center justify-center h-32 text-text-400">
-                  Loading messages...
-                </div>
-              ) : (
-                <div className="max-w-4xl mx-auto space-y-4">
-                  {messages.length === 0 ? (
-                    <div className="flex items-center justify-center h-32 text-text-400">
-                      No messages yet. Start the conversation!
-                    </div>
-                  ) : (
-                    
-                    messages.map((msg) => (
-                      
-                      <MessageBubble 
-                        key={msg.id}
-                        message={msg}
-                        isCurrentUser={msg.sender === currentUser?.id}
-                      />
-                    ))
-                  )}
-                  <div ref={messagesEndRef} />
-                </div>
-              )}
-            </div>
-            
-            {/* Message input */}
-            <div className="bg-white border-t border-background-300 p-3 md:p-4">
-              <form 
-                onSubmit={handleSendMessage} 
-                className="max-w-4xl mx-auto flex items-center gap-2"
-              >
+            <div className="flex-1 overflow-y-auto chat-rooms-container bg-background-100">
+              {/* Add search bar */}
+              <div className="p-3 border-b border-background-200">
                 <input
                   type="text"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type your message..."
-                  className="flex-1 py-3 px-4 bg-background-100 border-0 rounded-full focus:ring-2 focus:ring-primary-300 focus:outline-none text-text-500 placeholder-text-300"
-                  // disabled={!isConnected}
+                  placeholder="Search chat rooms..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-background-50 border border-background-200 focus:outline-none focus:ring-2 focus:ring-primary-300 text-sm text-text-500"
                 />
-                <button
-                  type="submit"
-                  className="p-3 rounded-full bg-primary-500 text-white hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-300 transition-colors disabled:bg-primary-300 disabled:cursor-not-allowed"
-                  disabled={!newMessage.trim() }
-                >
-                  <PaperAirplaneIcon className="h-5 w-5 transform -rotate-90" />
-                </button>
-              </form>
+              </div>
+
+              {isLoading ? (
+                <div className="flex items-center justify-center h-32 text-text-400 p-4">
+                  Loading chat rooms...
+                </div>
+              ) : filteredChatRooms.length === 0 ? (
+                <div className="flex items-center justify-center h-32 text-text-400 p-4">
+                  {chatRooms.length === 0 ? 'No chat rooms available.' : 'No matching chat rooms found.'}
+                </div>
+              ) : (
+                filteredChatRooms.map((room) => (
+                  <ChatRoomItem
+                    key={room.id}
+                    chatRoom={room}
+                    isActive={room.id === parseInt(chatRoomId)}
+                    onClick={() => handleChatRoomSelect(room.id)}
+                  />
+                ))
+              )}
             </div>
-          </>
-        )}
-
-        {/* Mobile sidebar toggle button when sidebar is closed */}
-        {!showSidebar && (
-          <button
-            onClick={toggleSidebar}
-            className="md:hidden absolute top-4 left-4 p-2 rounded-full bg-primary-500 text-white shadow-md"
-          >
-            <ChatBubbleLeftIcon className="h-5 w-5" />
-          </button>
-        )}
-
-      </div>
-    </div>
+          </div>
+  
+          {/* Chat section */}
+          <div className="flex-1 flex flex-col max-h-screen">
+            {!chatRoomId ? (
+              // Welcome screen when no chat is selected
+              <WelcomeView 
+                chatRooms={chatRooms} 
+                onSelectChatRoom={handleChatRoomSelect} 
+              />
+            ) : (
+              // Regular chat interface when a chat is selected
+              <>
+                {/* Chat Header with toggle sidebar button, opposite user info and video call button */}
+                <div className="bg-white border-b border-background-300 shadow-sm py-3 px-4 flex items-center justify-between flex-shrink-0">
+                  <div className="flex items-center">
+                    <button 
+                      onClick={toggleSidebar}
+                      className="md:hidden mr-3 p-1 rounded-full hover:bg-background-100"
+                    >
+                      {showSidebar ? (
+                        <XMarkIcon className="h-5 w-5 text-text-500" />
+                      ) : (
+                        <ChatBubbleLeftIcon className="h-5 w-5 text-text-500" />
+                      )}
+                    </button>
+                    {oppositeUser && (
+                      <div className="flex items-center">
+                        <div className="relative mr-3">
+                          <img 
+                            src={oppositeUser.profile_pic} 
+                            alt={oppositeUser.name} 
+                            className="h-10 w-10 rounded-full"
+                          />
+                          {oppositeUser.isOnline && (
+                            <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-white"></span>
+                          )}
+                        </div>
+                        <div>
+                          <h1 className="text-text-500 font-semibold">{oppositeUser.name}</h1>
+                          <p className="text-xs text-text-400">
+                            {oppositeUser.isOnline ? 'Online' : 'Offline'}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-sm ${isConnected ? 'text-green-500' : 'text-red-500'}`}>
+                      {isConnected ? 'Connected' : 'Disconnected'}
+                    </span>
+                    {isTutor && (
+                      <button 
+                        onClick={startCall}
+                        className="p-2 rounded-full bg-primary-500 text-white hover:bg-primary-600"
+                        disabled={!oppositeUser}
+                      >
+                        <VideoCameraIcon className="h-5 w-5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+  
+                {/* Messages area */}
+                <div 
+                  ref={messageContainerRef}
+                  className="flex-1 overflow-y-auto py-4 px-3 md:px-6 bg-background-50"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center justify-center h-32 text-text-400">
+                      Loading messages...
+                    </div>
+                  ) : (
+                    <div className="max-w-4xl mx-auto space-y-4">
+                      {messages.length === 0 ? (
+                        <div className="flex items-center justify-center h-32 text-text-400">
+                          No messages yet. Start the conversation!
+                        </div>
+                      ) : (
+                        messages.map((msg) => (
+                          <MessageBubble 
+                            key={msg.id}
+                            message={msg}
+                            isCurrentUser={msg.sender === currentUser?.id}
+                          />
+                        ))
+                      )}
+                      <div ref={messagesEndRef} />
+                    </div>
+                  )}
+                </div>
+                
+                {/* Message input */}
+                <div className="bg-white border-t border-background-300 p-3 md:p-4 flex-shrink-0">
+                  <form 
+                    onSubmit={handleSendMessage} 
+                    className="max-w-4xl mx-auto flex items-center gap-2"
+                  >
+                    <input
+                      type="text"
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      placeholder="Type your message..."
+                      className="flex-1 py-3 px-4 bg-background-100 border-0 rounded-full focus:ring-2 focus:ring-primary-300 focus:outline-none text-text-500 placeholder-text-300"
+                    />
+                    <button
+                      type="submit"
+                      className="p-3 rounded-full bg-primary-500 text-white hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-300 transition-colors disabled:bg-primary-300 disabled:cursor-not-allowed"
+                      disabled={!newMessage.trim()}
+                    >
+                      <PaperAirplaneIcon className="h-5 w-5 transform -rotate-90" />
+                    </button>
+                  </form>
+                </div>
+              </>
+            )}
+  
+            {/* Mobile sidebar toggle button when sidebar is closed */}
+            {!showSidebar && (
+              <button
+                onClick={toggleSidebar}
+                className="md:hidden absolute top-4 left-4 p-2 rounded-full bg-primary-500 text-white shadow-md"
+              >
+                <ChatBubbleLeftIcon className="h-5 w-5" />
+              </button>
+            )}
+          </div>
+        </div>
       )}
-
-    {/* {showVideoCall && (
-      <VideoCall
-        roomID={chatRoomId}
-        userId={currentUser?.id}
-        userName={currentUser?.first_name}
-        onClose={() => setShowVideoCall(false)}
-      />
-    )} */}
-  </>
+    </>
   );
 };
 

@@ -4,12 +4,15 @@ from student.models import StudentProfile
 from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from .models import Skill,Notification,UserActivity
-from .utils import generate_email_otp
-from cloudinary.utils import cloudinary_url
+from .models import Skill,Notification,UserActivity,Blog,Comment
+from .tasks import sent_otp_email
 from cloudinary.uploader import upload as cloudinary_upload
 from wallet.models import Wallet
+import logging
 
+
+
+logger = logging.getLogger(__name__)
 User = get_user_model()
 
 # Serializer for User Registration 
@@ -61,21 +64,28 @@ class UserCreationSerializer(serializers.Serializer):
             Wallet.objects.create(user=user)
             if role == 'student':
                 StudentProfile.objects.create(user=user)
-                print("Student created")
             elif role == 'tutor':
                 TutorProfile.objects.create(user=user)
-                print("Tutor created")
             cache.delete(f'otp_{email}') # Remove OTP after successful verification
             return {"message": "User created successfully."}
         
         elif email and password and role:
-            generate_email_otp(email, subject="Registration")
+            subject = "Registration"
+            try:
+                if isinstance(email, str) and isinstance(subject, str):
+                    task = sent_otp_email.delay(email, subject)
+                    logger.info(f"OTP email task sent for {email}")
+                else:
+                     logger.warning(f"Invalid email or subject: email={type(email)}, subject={type(subject)}")
+            except Exception as e:
+                 logger.error(f"Error sending OTP email task: {e}", exc_info=True)
             return {"message": "OTP sent for registration.", "email": email}
         
         elif email and not(password or role or otp or new_password):
             if not User.objects.filter(email=email).exists():
                 raise serializers.ValidationError("Email does not exists")
-            generate_email_otp(email, subject="Password reset")
+            subject="Password reset"
+            sent_otp_email.delay(email, subject)
             return {"message": "OTP sent for password reset.", "email": email}
         
         elif email and otp and not new_password:
@@ -123,37 +133,34 @@ class UserProfileSerializer(serializers.ModelSerializer):
     profile_pic_url = serializers.ImageField(required=False, allow_null=True)
     phone = serializers.CharField(required=False, allow_null=True)
     linkedin_url = serializers.CharField(required=False, allow_null=True)
+    full_name = serializers.CharField(source="get_full_name", read_only=True)
 
     class Meta:
         model = User
         fields = [
             'id','email', 'first_name', 'last_name', 'phone', 'profile_pic_url','linkedin_url', 'bio', 
-            'country', 'city', 'skills', 'role'
+            'country', 'city', 'skills', 'role', 'full_name'
         ]
         read_only_fields = ['wallet_balance', 'role', 'id']
 
     
     def validate_phone(self, value):
-        print("Inside validate_phone")
         user = self.context.get('request').user
 
         if value == user.phone:
             return value
         
         if User.objects.filter(phone=value).exclude(id=user.id).exists():
-            print("Inside If")
             raise serializers.ValidationError("This phone number is already in use.")
         return value
     
     def validate_linkedin_url(self, value):
-        print("Inside validate_linkedin_url")
         user = self.context.get('request').user
 
         if value == user.linkedin_url:
             return value
         
         if User.objects.filter(linkedin_url=value).exclude(id=user.id).exists():
-            print("Inside If")
             raise serializers.ValidationError("This linkedin url is already in use.")
         return value
     
@@ -186,3 +193,50 @@ class UserActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = UserActivity
         fields = ["date", "time_spent"]
+
+class BlogUserSerializer(serializers.ModelSerializer):
+    profile_pic_url = serializers.ImageField(read_only=True)
+    full_name = serializers.CharField(source="get_full_name", read_only=True)
+    class Meta:
+        model = User
+        fields = ['id', 'profile_pic_url', 'full_name']
+
+class CommentSerializer(serializers.ModelSerializer):
+    user = BlogUserSerializer(read_only=True)
+    replies = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Comment
+        fields = ['id', 'blog', 'user', 'content', 'parent', 'replies', 'created_at']
+
+    def get_replies(self, obj):
+        # Recursively serialize replies
+        replies = Comment.objects.filter(parent=obj).order_by('created_at')
+        serializer = CommentSerializer(replies, many=True)
+        return serializer.data
+    
+class BlogSerializer(serializers.ModelSerializer):
+    author = BlogUserSerializer(read_only=True)
+    total_likes = serializers.IntegerField(read_only=True)
+    comments = serializers.SerializerMethodField()
+    thumbnail = serializers.ImageField(required=False)
+    class Meta:
+        model = Blog
+        fields = fields = [
+            'id',
+            'author',
+            'title',
+            'description',
+            'thumbnail',
+            'created_at',
+            'updated_at',
+            'likes',
+            'total_likes',
+            'comments',
+        ]
+
+    def get_comments(self, obj):
+        # Only get top-level comments (no parent)
+        comments = Comment.objects.filter(blog=obj, parent=None).order_by('-created_at')
+        serializer = CommentSerializer(comments, many=True)
+        return serializer.data

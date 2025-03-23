@@ -6,7 +6,6 @@ import ForgotPasswordModal from '../../components/common/ForgotPasswordModal';
 import toast from 'react-hot-toast';
 import { GoogleLogin } from '@react-oauth/google';
 import { GraduationCap } from 'lucide-react';
-import background_img from '../../assets/images/background_img.jpg'
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -19,60 +18,54 @@ const LoginPage = () => {
 
   const handleGoogleSuccess = (response) => {
     const token = response.tokenId || response.credential;
-    dispatch(googleLogin({ token, role: userType }));
+    dispatch(googleLogin({ token, role: userType }))
+      .then((action) => {
+        if (googleLogin.fulfilled.match(action)) {
+          const { role } = action.payload;
+          const path = role === 'student' ? '/student/dashboard' : '/tutor/dashboard';
+          navigate(path);
+          toast.success("Logged in successfully");
+        }
+      })
+      .catch((error) => {
+        toast.error(error.message || "Google login failed");
+      });
   };
-
-  // useEffect(() => {
-  //   if (isError) {
-  //     toast.error(message);
-  //     dispatch(resetState());
-  //   }
-  // }, [isError, message, dispatch]);
-
-  // useEffect(() => {
-  //   dispatch(resetState());
-  //   if (role === 'student') {
-  //     navigate('/student/dashboard');
-  //     toast.success("Logged in successfully");
-  //   } else if (role === 'tutor') {
-  //     navigate('/tutor/dashboard');
-  //     toast.success("Logged in successfully");
-  //   }
-  // }, [isSuccess, role, navigate, dispatch]);
 
   useEffect(()=>{
     dispatch(resetState());
-    if (isSuccess && role) {
-      const path = role === 'student' ? '/student/dashboard' : '/tutor/dashboard';
-      navigate(path);
-      toast.success("Logged in successfully");
-    }
-    if (isError) {
-      toast.error(message);
-      dispatch(resetState());
-    }
-  }, [isSuccess, isError, role, message, navigate, dispatch])
+    
+  }, [dispatch])
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    dispatch(loginUser({ ...formData, role: userType }));
+    
+    const action = await dispatch(loginUser({ ...formData, role: userType }));
+  
+    // Check if login was successful before redirecting
+    if (loginUser.fulfilled.match(action)) {
+      const { role } = action.payload;
+      const path = role === 'student' ? '/student/dashboard' : '/tutor/dashboard';
+      navigate(path);
+      toast.success("Logged in successfully");
+    } else if (loginUser.rejected.match(action)) {
+      toast.error(action.payload || "Login failed");
+      console.error(action.payload);
+      
+    }
   };
+  
 
   return (
     <div className="min-h-screen w-full flex relative">
       {/* Left Section - Full Background */}
       <div className="absolute inset-0 bg-primary-500 lg:block">
         <div className="absolute inset-0 bg-black/20" />
-        {/* <img 
-          src={background_img} 
-          alt="Background" 
-          className="w-full h-full object-cover opacity-20"
-        /> */}
       </div>
 
       {/* Content Container */}

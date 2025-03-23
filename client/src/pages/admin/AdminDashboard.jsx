@@ -46,8 +46,6 @@ const AdminDashboard = () => {
       console.error('Error fetching earnings data:', err);
       setError('Failed to load earnings data');
       
-      // // Fallback to dummy data in case of error
-      // setChartData(generateFallbackData(timeframe));
     } finally {
       setIsLoading(false);
     }
@@ -67,44 +65,45 @@ const AdminDashboard = () => {
   
   
   const handleDownloadReport = async () => {
-    // setIsDownloading(true);
-    // try{
-    //   const response = await axiosInstance.get(`/tutor/purchase-details?timeframe=${chartTimeframe}`, {requiresAuth:true});
-    //   const purchaseData = response.data.purchases;
+    setIsDownloading(true);
+    try{
+      const response = await axiosInstance.get(`/tutor/purchase-details?timeframe=${chartTimeframe}`, {requiresAuth:true});
+      const purchaseData = response.data.purchases;
 
-    //   // Generate CSV content
-    //   let csvContent = "data:text/csv;charset=utf-8,";
+      // Generate CSV content
+      let csvContent = "data:text/csv;charset=utf-8,";
 
-    //   // Add CSV header
-    //   csvContent += "Course Name,User Name,Purchase Date,Purchase Type,Course Price,Purchase Amount\n";
+      // Add CSV header
+      csvContent += "Course Name,Purchased By,Purchase Date,Purchase Type,Course Price,Tutor Share,Credited Amount\n";
 
-    //   // Add data rows
-    //   purchaseData.forEach(purchase => {
-    //     const row = [
-    //       `"${purchase.course_name}"`,
-    //       `"${purchase.user_name}"`,
-    //       purchase.purchase_date,
-    //       purchase.purchase_type,
-    //       purchase.course_price,
-    //       purchase.transaction_amount
-    //     ].join(",");
-    //     csvContent += row + "\n";
-    //   });
+      // Add data rows
+      purchaseData.forEach(purchase => {
+        const row = [
+          `"${purchase.course_name}"`,
+          `"${purchase.user_name}"`,
+          purchase.purchase_date,
+          purchase.purchase_type,
+          purchase.course_price,
+          purchase.opposite_share,
+          purchase.credited_amount
+        ].join(",");
+        csvContent += row + "\n";
+      });
 
-    //   const encodedUri = encodeURI(csvContent);
-    //   const link = document.createElement("a");
-    //   link.setAttribute("href", encodedUri);
-    //   link.setAttribute("download", `earnings_report_${chartTimeframe}_${new Date().toISOString().split('T')[0]}.csv`);
-    //   document.body.appendChild(link);
-    //   link.click();
-    //   document.body.removeChild(link);
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `earnings_report_${chartTimeframe}_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
 
-    // }catch (err) {
-    //   console.error('Error downloading report:', err);
-    //   alert('Failed to download report. Please try again later.');
-    // } finally {
-    //   setIsDownloading(false);
-    // }
+    }catch (err) {
+      console.error('Error downloading report:', err);
+      alert('Failed to download report. Please try again later.');
+    } finally {
+      setIsDownloading(false);
+    }
   
 
   };
@@ -344,45 +343,6 @@ const AdminDashboard = () => {
               </div>
             </div>
             </div>
-          
-          {/* Courses in Progress */}
-          {/* <div className="bg-white rounded-lg shadow-md p-6 mb-8 transition duration-300 ease-in-out hover:shadow-lg">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-text-500">Courses in Progress</h2>
-              <button className="text-primary-500 text-sm flex items-center transition duration-200 hover:text-primary-600">
-                View All <FiChevronRight className="h-4 w-4 ml-1" />
-              </button>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {purchasedCoursesData.map(course => (
-                <div 
-                  key={course.id} 
-                  className="bg-background-100 rounded-lg overflow-hidden shadow transition duration-300 ease-in-out hover:shadow-lg hover:translate-y-1"
-                >
-                  <div className="relative">
-                    <img 
-                      src={course.thumbnail} 
-                      alt={course.title} 
-                      className="w-full h-32 object-cover"
-                    />
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-                      <span className="text-white text-sm font-medium">{course.progress || 0}% Complete</span>
-                    </div>
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-medium text-text-500 mb-2">{course.title}</h3>
-                    <div className="w-full bg-background-300 rounded-full h-2">
-                      <div 
-                        className="bg-secondary-500 h-2 rounded-full transition-all duration-500 ease-in-out" 
-                        style={{ width: `${course.progress}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div> */}
           
           {/* Two column layout for Top Courses and Top Tutors */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">

@@ -15,12 +15,6 @@ const TradeModal = ({ isOpen, closeModal, requestedCourseData }) => {
   const { tutorCoursesData } = useSelector(
     (state) => state.course
   );
-
-  console.log("owndedCourses",tutorCoursesData);
-  console.log("requestedCourse",requestedCourseData);
-  console.log("Selected Course", selectedCourse);
-  
-  
    
   const handleSubmit = async (e) => {
     e.preventDefault();

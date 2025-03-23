@@ -7,10 +7,7 @@ import { deleteComment, fetchComments, fetchPurchasedCourses, fetchReviews,  mar
 import TutorVerificationMessage from '../components/tutor/TutorVerificationMessage';
 import { ConfirmDialog } from '../components/common/ui/ConfirmDialog';
 import axiosInstance from '../api/axios.Config';
-import toast from 'react-hot-toast';
 
-// const fetchComments = (courseSlug) => async () => []; // Replace with actual API call
-// const postComment = (commentData) => async () => {};  // Replace with actual API call
 
 const CoursePlayer = () => {
   const dispatch = useDispatch();
@@ -89,7 +86,6 @@ const CoursePlayer = () => {
     }
   }, [singlePurchasedCourse?.modules]);
 
-  console.log(currentModule?.tasks);
 
 
   // Fetch initial data
@@ -102,8 +98,6 @@ const CoursePlayer = () => {
           { requiresAuth: true }
         );
         setChatRoomId(chatRoomResponse.data.id)
-        // toast.success("Connected to chat room");
-        console.log('Connected to chat room');
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -219,17 +213,12 @@ const CoursePlayer = () => {
     }
   }
 
-  // console.log("Comments:", commentsData);
-  // console.log("User:", userData);
-  console.log("Purchased Single Course:", singlePurchasedCourse);
-  
-
 
   
   if (isCourseLoading || !singlePurchasedCourse) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin h-10 w-10 text-primary" />
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -241,7 +230,7 @@ const CoursePlayer = () => {
       ) : (
         <div className="min-h-screen bg-background-100">
           {/* Immersive Video Player Section */}
-          <div className="w-full bg-primary-900 shadow-lg">
+          <div className="w-full bg-background-100 shadow-lg">
             <div className="max-w-6xl mx-auto px-4 py-6 md:py-8">
               <div className="aspect-video w-full max-w-5xl mx-auto rounded-xl overflow-hidden shadow-2xl">
                 <video

@@ -12,6 +12,10 @@ import AdminCourseManagement from '../pages/admin/AdminCourseManagement'
 import AdminCourseDetailView from '../pages/admin/AdminCourseDetailView'
 import AdminWallet from '../pages/admin/AdminWallet'
 import AdminLayout from '../components/admin/AdminLayout'
+import AdminCommunityManagement from '../pages/admin/AdminCommunityManagement'
+import NotFound from '../pages/NotFound'
+import BlogPage from '../pages/BlogPage'
+
 
 const AdminRoutes = () => {
   return (
@@ -25,11 +29,14 @@ const AdminRoutes = () => {
             <Route path="students" element={<AdminStudentManagement/>}/>
             <Route path="/students/:id" element={<AdminStudentDetailView/>}/>
             <Route path="/contentManagement/" element={<AdminContentManagement/>}/>
+            <Route path="/communities/" element={<AdminCommunityManagement/>}/>
             <Route path="courses" element={<AdminCourseManagement/>}/>
             <Route path="/courses/:id" element={<AdminCourseDetailView/>}/>
             <Route path="wallet" element={<AdminWallet/>}/>
+            <Route path="blogs" element={<BlogPage isAdminView={true}/>}/>
           </Route>
         </Route>
+        <Route path="*" element={<NotFound/>} />
     </Routes>
   )
 }

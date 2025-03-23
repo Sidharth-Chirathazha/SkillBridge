@@ -1,7 +1,8 @@
 import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
 import * as authService from '../services/authService';
 import { resetCourseState } from './courseSlice';
-import { act } from 'react';
+import toast from 'react-hot-toast';
+
 
 
 const handleApiError = (error, thunkAPI)=>{
@@ -11,6 +12,7 @@ const handleApiError = (error, thunkAPI)=>{
     Object.values(error.response?.data || {})[0] || // First error if object
     error.message ||
     error.toString();
+    // toast.error(message)
 
 return thunkAPI.rejectWithValue(message);
 }
@@ -150,12 +152,8 @@ export const updateUser = createAsyncThunk(
   
   "/updateUser",
   async(formData, thunkAPI)=>{
-    console.log("Inside Update uer thunk");
       try{
-        console.log("Request Data:", formData);
-        
         const response = await authService.updateUser(formData);
-        console.log(response.data);
         return response.data
           
       }catch(error){
@@ -296,7 +294,6 @@ const authSlice = createSlice({
         .addCase(registerUser.fulfilled, (state, action) => {
           state.isLoading = false;
           state.isSuccess = true;
-          state.message = "OTP sent successfully";
           state.otpRequestSuccess = true
         })
         .addCase(registerUser.rejected, (state, action) => {
@@ -429,14 +426,10 @@ const authSlice = createSlice({
           state.message = "";
         })
         .addCase(fetchUser.fulfilled, (state, action) => {
-          console.log('Previous state:', state);
-          console.log('Payload:', action.payload);
           state.isLoading = false;
           state.isSuccess = true;
           state.message = "";
           state.userData = action.payload;
-          console.log(state.userData);
-          
         })
         .addCase(fetchUser.rejected, (state, action) => {
           state.isError = true;
@@ -457,7 +450,6 @@ const authSlice = createSlice({
           state.isError = true;
           state.isUpdateError = true;
           state.message = action.payload;
-          console.log("updateUser slice:",state.message);
         })
         .addCase(fetchSkills.pending, (state)=>{
           state.isLoading = true;

@@ -10,7 +10,8 @@ import TutorVerificationMessage from '../components/tutor/TutorVerificationMessa
 import SearchBar from '../components/common/ui/SearchBar';
 import DropdownMenu from '../components/common/ui/DropdownMenu';
 
-const stripePromise = loadStripe('pk_test_51Qp6mdRZhgmNkKQoW8Hp4xmJjjpuuC9iwjD0s1utEDyqLsByg7yXK81XadWBK751vQE8nbAMV5RmL11nw25aQrFh00zV21sORj')
+const stripe_publish_key = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = loadStripe(stripe_publish_key)
 
 
 const CourseList = () => {
@@ -32,15 +33,13 @@ const CourseList = () => {
 
   useEffect(() => {
     if (!tutorId) return;
-    console.log(tutorId);
 
     const fetchData = async()=>{
       try{
         await dispatch(fetchTutorCourses({ tutorId, statues:"Approved" }));
-        console.log("Courses Fetched Successfully");
         
       }catch(error){
-       console.log("Failed to fetch Courses");
+       console.error("Failed to fetch Courses");
        
       }
     }
@@ -66,8 +65,6 @@ const CourseList = () => {
     
   }, [dispatch, page, searchQuery, selectedCategory]);
 
-  // console.log("All Course details in course list:", coursesData);
-  // console.log("Categories data in course list:", categoriesData);
   
 
   useEffect(() => {
@@ -84,17 +81,18 @@ const CourseList = () => {
         const {error} = await stripe.redirectToCheckout({
           sessionId: checkoutSession.sessionId
         });
-        if(error){
+        if (!error) {
+          dispatch(resetCheckout()); // ✅ Reset checkoutSession after redirect
+        }
+        else{
           console.error('Stripe redirect error:', error);
         }
       }
     };
     redirectToCheckout();
-  }, [checkoutSession])
+  }, [checkoutSession, dispatch])
 
-  const handleLike = (courseId) => {
-    // Handle like logic
-  };
+
 
   const handleSearch = (query) => {
     // setPage(1);
@@ -107,8 +105,6 @@ const CourseList = () => {
   };
 
   const handleBuy = async (courseId) => {
-    console.log("Inside handle buy",courseId);
-    
     try{
       await dispatch(initiateCheckout(courseId));
     }catch(error){
@@ -123,23 +119,23 @@ const CourseList = () => {
         <TutorVerificationMessage/>
       ) :(
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
-          {role === "student"
-            ? "Discover Your Next Learning Adventure"
-            : "Expand Your Expertise with New Courses"}
-          </h1>
-          <p className="text-gray-600 text-sm sm:text-base mt-1">
-          {role === "student"
-            ? "Browse through diverse courses and enhance your skills today!"
-            : "Find valuable courses to strengthen your knowledge and teaching skills!"}
-          </p>
-        </div>
+          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
+                {role === "student"
+                  ? "Discover Your Next Learning Adventure"
+                  : "Expand Your Expertise with New Courses"}
+              </h1>
+              <p className="text-gray-600 text-sm sm:text-base mt-1">
+                {role === "student"
+                  ? "Browse through diverse courses and enhance your skills today!"
+                  : "Find valuable courses to strengthen your knowledge and teaching skills!"}
+              </p>
+          </div>
 
         {isCourseLoading || isCheckoutLoading ? (
-            <div className="flex justify-center items-center h-screen">
-            <Loader className="animate-spin h-10 w-10 text-primary" />
-                </div>
+            <div className="flex justify-center items-center min-h-screen">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            </div>
         ) : checkoutError?(
               <div className="text-red-500 mb-4">
               Error: {checkoutError}

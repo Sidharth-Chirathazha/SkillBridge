@@ -15,7 +15,3 @@ class StudentProfile(models.Model):
     def __str__(self):
         return self.user.email
     
-    # def delete(self, *args, **kwargs):
-    #     # Delete the related User when the StudentProfile is deleted
-    #     self.user.delete()
-    #     super().delete(*args, **kwargs)

@@ -44,19 +44,22 @@ const StudentTutors = () => {
 
   return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
-            Discover Your Next Learning Adventure
-          </h1>
-          <p className="text-gray-600 text-sm sm:text-base mt-1">
-            Browse through diverse courses and enhance your skills today!
-          </p>
+        {/* Welcome Section with Profile */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8 flex flex-col md:flex-row items-center md:items-start gap-4">
+          <div className="flex-grow text-center md:text-left">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
+              Meet Our Expert Tutors!
+            </h1>
+            <p className="text-gray-600 text-sm sm:text-base mt-1 mb-2">
+              Discover skilled professionals, explore their profiles, and share your reviews and ratings.
+            </p>
+          </div>
         </div>
 
         
         {loading ? (
-            <div className="flex justify-center items-center h-screen">
-                <Loader className="animate-spin h-10 w-10 text-primary" />
+            <div className="flex justify-center items-center min-h-screen">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
             </div>
         ) :  (
             <>
