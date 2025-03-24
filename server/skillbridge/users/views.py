@@ -103,6 +103,9 @@ class UserProfileView(APIView):
     def get(self,request):
         try:
             user = request.user
+            if not user.is_active:
+                return Response({'error': 'Account is inactive. Please contact support.'}, status=status.HTTP_403_FORBIDDEN)
+            
             if user.role == 'tutor':
                 serializer = TutorProfileSerializer(user.tutor_profile)
             elif user.role == 'student':

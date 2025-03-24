@@ -59,27 +59,61 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Respnonse Interceptor - Handles 401 and Refreshes Token
 axiosInstance.interceptors.response.use(
   (response) => response,
-  async (error)=>{
-    if(error.response && error.response.status === 401){
-      console.warn("Access token expired. Attempting to refresh...");
-
+  async (error) => {
+    if (error.response) {
       const originalRequest = error.config;
-      if(!originalRequest._retry){
-        originalRequest._retry = true;
 
-        const newAccessToken = await refreshAccessToken();
-        if(newAccessToken){
-          originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
-          return axiosInstance(originalRequest);
+      // Handle 401: Unauthorized
+      if (error.response.status === 401) {
+        console.warn("Access token expired or invalid. Checking refresh token...");
+
+        const refreshToken = localStorage.getItem("refresh_token");
+
+        // If no refresh token is available, logout the user
+        if (!refreshToken) {
+          console.error("No refresh token available. Logging out user.");
+          handleLogout(); // Ensure clean logout
+          return Promise.reject(error);
         }
+
+        // Attempt to refresh token if it hasn't been retried yet
+        if (!originalRequest._retry) {
+          originalRequest._retry = true;
+
+          const newAccessToken = await refreshAccessToken();
+          if (newAccessToken) {
+            console.log("Token refreshed successfully. Retrying request.");
+            originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
+            return axiosInstance(originalRequest); // Retry request with new token
+          }
+        }
+
+        console.error("Token refresh failed. Logging out user.");
+        handleLogout();
+        return Promise.reject(error);
+      }
+
+      // Handle 403: Forbidden (If user is inactive)
+      if (error.response.status === 403) {
+        console.error("Access denied. Logging out user.");
+        handleLogout();
+        return Promise.reject(error);
       }
     }
+
     return Promise.reject(error);
   }
 );
+
+// Logout function
+const handleLogout = () => {
+  localStorage.removeItem("access_token");
+  localStorage.removeItem("refresh_token");
+  window.location.href = "/login"; // Redirect to login
+};
+
 
 export default axiosInstance;
 

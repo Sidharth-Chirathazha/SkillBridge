@@ -11,11 +11,32 @@ import toast from 'react-hot-toast';
 
 
 const schema = Joi.object({
-  title: Joi.string().required().label('Title'),
-  description: Joi.string().required().label('Description'),
-  max_members: Joi.number().min(1).max(500).required().label('Member Limit'),
+  title: Joi.string()
+    .pattern(/^[a-zA-Z0-9\s]+$/)
+    .min(1)
+    .required()
+    .label('Title')
+    .messages({
+      'string.pattern.base': 'Title can only contain alphabets, numbers, and spaces.'
+    }),
+
+  description: Joi.string()
+    .pattern(/^[a-zA-Z0-9\s]+$/)
+    .required()
+    .label('Description')
+    .messages({
+      'string.pattern.base': 'Description can only contain alphabets, numbers, and spaces.'
+    }),
+
+  max_members: Joi.number()
+    .min(1)
+    .max(500)
+    .required()
+    .label('Member Limit'),
+
   thumbnail: Joi.any().optional(),
 });
+
 
 const CreateCommunityModal = ({ isOpen, onClose, community }) => {
   const dispatch = useDispatch();
@@ -63,7 +84,6 @@ const CreateCommunityModal = ({ isOpen, onClose, community }) => {
       .then(() => {
         toast.success(isEditMode ? "Community updated successfully" : "Community added successfully");
         dispatch(fetchCommunities({ page: 1, pageSize: 6 }));
-        onClose();
       })
       .catch((error) => {
         toast.error(isEditMode ? "Failed to update community" : "Failed to add community");
@@ -71,6 +91,7 @@ const CreateCommunityModal = ({ isOpen, onClose, community }) => {
       })
       .finally(() => {
         setLocalLoading(false);
+        onClose();
       });
 
     reset();

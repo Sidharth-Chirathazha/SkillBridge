@@ -14,9 +14,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from datetime import timedelta
 import os
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
+
  
 
 load_dotenv()
@@ -34,9 +32,9 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = bool(os.getenv('DEBUG'))
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '').split()
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -92,6 +90,7 @@ INSTALLED_APPS = [
     'wallet',
     'chatbot',
     'cloudinary',
+    'cloudinary_storage',
     'community',
     'rest_framework',
     'corsheaders',
@@ -145,7 +144,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],
+            "hosts": [("redis", 6379)],
         },
     },
 }
@@ -153,11 +152,11 @@ CHANNEL_LAYERS = {
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:6379/0',
+        'LOCATION': 'redis://redis:6379/0',
     }
 }
 
-CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
+CELERY_BROKER_URL = 'redis://redis:6379/0'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
@@ -171,7 +170,7 @@ CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': os.getenv('DB_ENGINE'),
         'NAME': os.getenv('DB_NAME'),
         'USER': os.getenv('DB_USER'),
         'PASSWORD': os.getenv('DB_PASSWORD'),
@@ -262,13 +261,6 @@ STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
 GEMINI_API_KEY=os.getenv('GEMINI_API_KEY')
 
 AUTH_USER_MODEL = 'users.User'
-
-
-cloudinary.config(
-    cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),  
-    api_key=os.getenv('CLOUDINARY_API_KEY'),       
-    api_secret=os.getenv('CLOUDINARY_API_SECRET')  
-)
 
 
 ZEGO_APP_ID =  os.getenv('ZEGO_APP_ID')

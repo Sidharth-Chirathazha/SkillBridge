@@ -15,7 +15,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
-redis_client = redis.StrictRedis(host="127.0.0.1", port=6379, db=0, decode_responses=True)
+redis_client = redis.StrictRedis(host="redis", port=6379, db=0, decode_responses=True)
 
 
 class PrivateChatConsumer(AsyncWebsocketConsumer):
@@ -63,15 +63,6 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
 
         await self.send_presence_update()
 
-        # await self.channel_layer.group_send(
-        #     self.room_group_name,
-        #     {
-        #         "type": "presence.update",
-        #         "user_id": self.scope["user"].id,
-        #         "status": "online"
-        #     }
-        # )
-
     async def disconnect(self, close_code):
         if hasattr(self, "room_group_name"):
             user_id = str(self.scope["user"].id)
@@ -89,7 +80,7 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
             )
 
             # Send updated presence info
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.2)
             await self.send_presence_update()
             
             await self.channel_layer.group_discard(self.room_group_name, self.channel_name)

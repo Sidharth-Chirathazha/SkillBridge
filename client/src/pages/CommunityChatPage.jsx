@@ -1,15 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import MessageBubble from '../components/common/MessageBubble';
 import MembersList from '../components/common/MembersList';
 import axiosInstance from '../api/axios.Config';
 import toast from 'react-hot-toast';
 import { PaperAirplaneIcon, Bars3Icon as MenuIcon, XMarkIcon as XIcon } from '@heroicons/react/24/solid';
 import TutorVerificationMessage from '../components/tutor/TutorVerificationMessage';
+import { fetchSingleCommunity, leaveCommunity, deleteCommunity } from '../redux/slices/communitySlice';
+import { ConfirmDialog } from '../components/common/ui/ConfirmDialog';
+
 
 const CommunityChatPage = () => {
-  const { communityId } = useParams();
+  const { communityId} = useParams();
+   const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [members, setMembers] = useState([]);
@@ -19,7 +23,10 @@ const CommunityChatPage = () => {
   const [isActive, setIsActive] = useState(true);
   const currentUser = useSelector(state => state.auth.userData?.user);
   const {userData, role} = useSelector((state)=>state.auth)
-    
+  const { singleCommunity } = useSelector((state) => state.community);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const isCreator = currentUser?.id === singleCommunity?.creator
   
   const ws = useRef(null);
   const messagesEndRef = useRef(null);
@@ -51,6 +58,22 @@ const CommunityChatPage = () => {
 
     fetchData();
   }, [communityId]);
+
+
+  useEffect(() => {
+      const fetchData = async () => {
+          try {
+          setLoading(true);
+          await dispatch(fetchSingleCommunity(communityId)).unwrap();
+          } catch (error) {
+          console.error('Failed to fetch Community:', error);
+          navigate(`/${role}/communities/`)
+          } finally {
+              setLoading(false);
+          }
+      };
+      fetchData();
+    }, [communityId]);
 
 
   useEffect(() => {
@@ -115,19 +138,7 @@ const CommunityChatPage = () => {
     e.preventDefault();
     if (!newMessage.trim()) return;
 
-    // const tempMessage = {
-    //   id: `temp-${Date.now()}-${Math.random()}`, // Unique temporary ID
-    //   content: newMessage,
-    //   sender: currentUser.id,
-    //   created_at: new Date().toISOString(),
-    //   isCurrentUser: true,
-    // };
-
-    // setMessages(prev=>[...prev, tempMessage]);
-
     try {
-      // // Send via WebSocket
-      // ws.current.send(JSON.stringify({ message: newMessage }));
 
       // Persist to database using your existing message endpoint
       await axiosInstance.post('/community/messages/', 
@@ -153,6 +164,27 @@ const CommunityChatPage = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const handleLeaveCommunity = async ()=>{
+    try {
+      await dispatch(leaveCommunity(communityId));
+      navigate(`/${role}/communities`); // Navigate to communities list on success
+      toast.success(`You have left ${singleCommunity?.title}`)
+    } catch (error) {
+      console.error("Failed to leave the community:", error);
+    }
+  }
+
+  const handleDeleteCommunity = async()=>{
+    try{
+      await dispatch(deleteCommunity(communityId));
+      navigate(`/${role}/communities`);
+      toast.success('Community deleted successfully')
+    }catch(error){
+      console.error("Failed to delete the community:", error);
+    }
+
+  }
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -160,6 +192,16 @@ const CommunityChatPage = () => {
   const toggleMobileSidebar = () => {
     setIsMobileSidebarOpen(!isMobileSidebarOpen);
   };
+
+  
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+    }
 
   return (
     <>
@@ -171,13 +213,53 @@ const CommunityChatPage = () => {
         <div className="flex-1 flex flex-col h-full relative">
           {/* Topbar */}
           <div className="bg-white border-b border-background-300 shadow-sm py-3 px-4 flex items-center justify-between">
-            <h1 className="text-text-500 font-semibold">Community Chat</h1>
-            <button 
-              onClick={toggleMobileSidebar}
-              className="md:hidden p-2 rounded-full hover:bg-background-200 transition-colors focus:outline-none"
-            >
-              <MenuIcon className="h-5 w-5 text-text-400" />
-            </button>
+            <div className="flex items-center">
+              <h1 className="text-text-500 font-semibold">{singleCommunity?.title}</h1>
+            </div>
+            <div className="flex items-center gap-2">
+            {isCreator ? (
+                <ConfirmDialog
+                  trigger={(open) => (
+                    <button
+                      onClick={open}
+                      className="px-3 py-1.5 text-sm rounded-md bg-secondary-500 text-white hover:bg-secondary-600 transition-colors focus:outline-none focus:ring-2 focus:ring-red-300"
+                    >
+                      Delete Community
+                    </button>
+                  )}
+                  title="Delete Community"
+                  description="Are you sure you want to delete this community? This action cannot be undone."
+                  confirmText="Yes, Delete"
+                  cancelText="Cancel"
+                  onConfirm={handleDeleteCommunity}
+                  destructive
+                />
+              ) : (
+                <ConfirmDialog
+                  trigger={(open) => (
+                    <button
+                      onClick={open}
+                      className="px-3 py-1.5 text-sm rounded-md bg-secondary-500 text-white hover:bg-secondary-600 transition-colors focus:outline-none focus:ring-2 focus:ring-secondary-300"
+                    >
+                      Leave Community
+                    </button>
+                  )}
+                  title="Leave Community"
+                  description="Are you sure you want to leave this community?"
+                  confirmText="Yes, Leave"
+                  cancelText="Cancel"
+                  onConfirm={handleLeaveCommunity}
+                  destructive
+                />
+              )}
+
+              <button 
+                onClick={toggleMobileSidebar}
+                className="md:hidden p-2 rounded-full hover:bg-background-200 transition-colors focus:outline-none"
+              >
+                <MenuIcon className="h-5 w-5 text-text-400" />
+              </button>
+            </div>
           </div>
 
           {/* Messages area */}

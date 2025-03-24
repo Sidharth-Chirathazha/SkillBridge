@@ -115,7 +115,7 @@ const StudentTutorDetailView = () => {
               />
             ))}
             <span className="text-text-600 font-medium">
-              ({singleTutor.rating?.toFixed(1)}) • {singleTutor.review_count} reviews
+              ({singleTutor.rating?.toFixed(1)}) • {singleTutor.total_reviews} reviews
             </span>
           </div>
 

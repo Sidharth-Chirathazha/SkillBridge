@@ -14,6 +14,13 @@ export const fetchCommunities = async(page, pageSize, search=null)=>{
     return response.data;
 }
 
+//Fetch Single community
+export const fetchSingleCommunity = async(communityId)=>{
+    
+    const response = await axiosInstance.get(`/community/communities/${communityId}/`, {requiresAuth:true});
+    return response.data;
+}
+
 //Create Community
 export const createCommunity = async(communityInfo)=>{
 
@@ -40,6 +47,16 @@ export const joinCommunity = async(communityId)=>{
     return response.data;
 }
 
+//leave Community
+export const leaveCommunity = async(communityId)=>{
+    const response = await axiosInstance.post(
+        `/community/communities/${communityId}/leave_community/`,
+        {},
+        { requiresAuth:true }
+    );
+    return response.data;
+}
+
 
 //Update Community
 export const updateCommunity = async(id, updateData)=>{
@@ -52,6 +69,16 @@ export const updateCommunity = async(id, updateData)=>{
         `/community/communities/${id}/`,
         updateData,
         config
+    );
+    return response.data;
+}
+
+//Update Community
+export const deleteCommunity = async(id)=>{
+
+    const response = await axiosInstance.delete(
+        `/community/communities/${id}/`,
+        {requiresAuth:true}
     );
     return response.data;
 }
