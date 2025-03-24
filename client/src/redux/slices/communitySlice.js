@@ -11,9 +11,20 @@ const handleApiError = (error, thunkAPI)=>{
 
   export const fetchCommunities = createAsyncThunk(
     'community/fetchCommunities',
-    async ({page,pageSize,search}, thunkAPI) => {
+    async ({page,pageSize,search,id}, thunkAPI) => {
       try {
         return await communityService.fetchCommunities(page,pageSize,search);
+      } catch (error) {
+        return handleApiError(error, thunkAPI);
+      }
+    }
+  );
+
+  export const fetchSingleCommunity = createAsyncThunk(
+    'community/fetchSingleCommunity',
+    async (id, thunkAPI) => {
+      try {
+        return await communityService.fetchSingleCommunity(id);
       } catch (error) {
         return handleApiError(error, thunkAPI);
       }
@@ -42,11 +53,34 @@ const handleApiError = (error, thunkAPI)=>{
     }
   );
 
+  
+  export const leaveCommunity = createAsyncThunk(
+    'community/leaveCommunity',
+    async (communityId, thunkAPI) => {
+      try {
+        return await communityService.leaveCommunity(communityId);
+      } catch (error) {
+        return handleApiError(error, thunkAPI);
+      }
+    }
+  );
+
   export const updateCommunity = createAsyncThunk(
     'community/updateCommunity',
     async ({id, updateData}, thunkAPI) => {
       try {
         return await communityService.updateCommunity(id, updateData);
+      } catch (error) {
+        return handleApiError(error, thunkAPI);
+      }
+    }
+  );
+
+  export const deleteCommunity = createAsyncThunk(
+    'community/deleteCommunity',
+    async (id, thunkAPI) => {
+      try {
+        return await communityService.deleteCommunity(id);
       } catch (error) {
         return handleApiError(error, thunkAPI);
       }
@@ -59,6 +93,7 @@ const handleApiError = (error, thunkAPI)=>{
       name: "community",
       initialState: {
         communities : [],
+        singleCommunity:null,
         isCommunityLoading: false,
         isCommunityError : false,
         isCommunitySuccess: false,
@@ -101,8 +136,21 @@ const handleApiError = (error, thunkAPI)=>{
             community.members.push({ user: userId });
             community.members_count += 1;
         }
-        toast.success("You have successfully joined this community")
           
+        })
+
+        //Fethcing Communities
+        .addCase(fetchSingleCommunity.pending, (state)=>{
+          state.isCommunityLoading = true;
+        })
+        .addCase(fetchSingleCommunity.fulfilled,(state,action)=>{
+          state.isCommunityLoading = false;
+          state.isCommunitySuccess = true;
+          state.singleCommunity = action.payload;
+        })
+        .addCase(fetchSingleCommunity.rejected,(state)=>{
+          state.isCommunityError = true;
+          state.communityError = action.payload;
         })
   
          

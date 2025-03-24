@@ -1,10 +1,11 @@
 import { Star, Edit, Trash, Clock, BookOpen, Shield, UserCheck, XCircle, CheckCircle, LayoutGrid, Users } from 'lucide-react';
+import { ConfirmDialog } from './ConfirmDialog';
 
 const ManagementCourseCard = ({ 
   course, 
   variant = 'tutor', 
   onEdit, 
-  onDelete, 
+  onUpdate, 
   onManage 
 }) => {
   const statusConfig = {
@@ -86,17 +87,46 @@ const ManagementCourseCard = ({
 
         {/* Action Buttons */}
         <div className="mt-auto pt-4 border-t border-gray-100">
-          {variant === 'tutor' ? (
-            <div className="flex gap-2">
-              <button
-                onClick={() => onEdit(course.id)}
-                className="flex-1 flex items-center justify-center bg-primary text-white px-4 py-2 rounded-full hover:bg-primary-600 transition-colors"
-              >
-                <Edit size={18} className="mr-2" />
-                <span>Edit</span>
-              </button>
-              
-            </div>
+        {variant === "tutor" ? (
+          <div className="flex gap-2">
+            <button
+              onClick={() => onEdit(course.id)}
+              className="flex-1 flex items-center justify-center bg-primary text-white px-4 py-2 rounded-full hover:bg-primary-600 transition-colors"
+            >
+              <Edit size={18} className="mr-2" />
+              <span>Edit</span>
+            </button>
+
+            {course.status === "Approved" && (
+            <ConfirmDialog
+              trigger={(open) => (
+                <button
+                  onClick={open}
+                  className={`flex-1 flex items-center justify-center px-4 py-2 rounded-full text-white transition-colors ${
+                    course.is_active
+                      ? "bg-secondary-500 hover:bg-secondary-600"
+                      : "bg-primary-400 hover:bg-primary-500"
+                  }`}
+                >
+                  {course.is_active ? (
+                    <span>Unlist</span>
+                  ) : (
+                    <span>List</span>
+                  )}
+                </button>
+              )}
+              title={course.is_active ? "Unlist Course" : "List Course"}
+              description={`Are you sure you want to ${
+                course.is_active ? "unlist" : "list"
+              } the course "${course.title}"?`}
+              confirmText={course.is_active ? "Unlist" : "List"}
+              destructive={course.is_active} 
+              onConfirm={() => onUpdate(course.id, course.is_active)}
+              variant="user"
+            />
+            
+            )}
+          </div>
           ) : (
             <button
               onClick={() => onManage(course.id)}

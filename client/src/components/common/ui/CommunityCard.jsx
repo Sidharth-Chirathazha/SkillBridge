@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { AdvancedImage } from '@cloudinary/react';
 import { Cloudinary } from '@cloudinary/url-gen';
 import { Users, Pencil, Clock } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const cld = new Cloudinary({
   cloud: { cloudName: 'dz9kgofdy' },
@@ -22,8 +23,15 @@ const CommunityCard = ({ community, currentUserId, onEditCommunity, userRole }) 
   const isCreator = Number(community?.creator) === Number(currentUserId);
   const dispatch = useDispatch();
 
-  const handleJoin = () => {
-    dispatch(joinCommunity(community.id));
+  const handleJoin = async() => {
+    try{
+      await dispatch(joinCommunity(community.id));
+      toast.success("You have successfully joined this community")
+    }catch(error){
+      console.error("An error occured while joining the community")
+      toast.error("An error occured while joining the community")
+    }
+    
   };
 
   return (

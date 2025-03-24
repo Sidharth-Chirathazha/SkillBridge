@@ -2,9 +2,8 @@ import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import ManagementCourseCard from '../../components/common/ui/ManagementCourseCard';
 import Pagination from '../../components/common/ui/Pagination';
-import { deleteCourse, fetchCategories, fetchTutorCourses } from '../../redux/slices/courseSlice';
+import { fetchCategories, fetchTutorCourses, updateCourse } from '../../redux/slices/courseSlice';
 import { useNavigate } from 'react-router-dom';
-import { Loader } from 'lucide-react';
 import toast from 'react-hot-toast';
 import TutorVerificationMessage from '../../components/tutor/TutorVerificationMessage';
 import SearchBar from '../../components/common/ui/SearchBar';
@@ -61,13 +60,17 @@ const TutorTeaching = () => {
   const handleEdit = (courseId) => {
     navigate(`/tutor/teaching/edit/${courseId}`)
   };
-  const handleDelete = async (courseId)=>{
+
+  const handleCourseStatus = async (courseId,isActive)=>{
+    const formData = new FormData();
+    formData.append('is_active', !isActive);
+
     try{
-      await(dispatch(deleteCourse(courseId)))
+      await(dispatch(updateCourse({id:courseId, updateData:formData})))
       dispatch(fetchTutorCourses({ tutorId, page, pageSize }));
-      toast.success("Course deleted successfully!");
+      toast.success("Course status updated successfully!");
     }catch(error){
-      toast.error("An error occured while deleting the course")
+      toast.error("An error occured updating course status")
     }
   }
 
@@ -117,8 +120,8 @@ const TutorTeaching = () => {
                         key={course.id}
                         course={course}
                         variant='tutor'
-                        onEdit={ handleEdit}
-                        onDelete={handleDelete}
+                        onEdit={handleEdit}
+                        onUpdate={handleCourseStatus}
                       />
                       ))}
                   </div>

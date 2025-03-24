@@ -4,7 +4,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import { fetchCommunities } from '../redux/slices/communitySlice';
 import CommunityCard from '../components/common/ui/CommunityCard';
 import CreateCommunityModal from '../components/common/CreateCommunityModal';
-import { Loader } from 'lucide-react';
 import Pagination from '../components/common/ui/Pagination';
 import SearchBar from '../components/common/ui/SearchBar';
 import TutorVerificationMessage from '../components/tutor/TutorVerificationMessage';
@@ -28,7 +27,7 @@ const CommunitiesList = () => {
         setLoading(true);
         await dispatch(fetchCommunities({page,pageSize, search:searchQuery})).unwrap();
         } catch (error) {
-        console.error('Failed to fetch Course:', error);
+        console.error('Failed to fetch Community:', error);
         } finally {
             setLoading(false);
         }
@@ -65,7 +64,8 @@ const CommunitiesList = () => {
           {role === 'tutor' && (
             <button
               onClick={() => setShowCreateModal(true)}
-              className="bg-secondary text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-secondary-600 transition-colors"
+              className="bg-secondary text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-secondary-600 transition-colors 
+                          sm:px-5 sm:py-2 md:px-6 md:py-3 text-sm sm:text-base md:text-lg"
             >
               Create Community
             </button>

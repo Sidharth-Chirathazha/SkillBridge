@@ -16,13 +16,15 @@ const ACCEPTED_RESUME_TYPES = ['application/pdf', 'application/msword'];
 
 const schema = Joi.object({
     user: Joi.object({
-      first_name: Joi.string().min(2).required().messages({
+      first_name: Joi.string().min(2).regex(/^[A-Za-z]+$/).required().messages({
         'string.min': 'First name must be at least 2 characters',
-        'string.empty': 'First name is required'
+        'string.empty': 'First name is required',
+        'string.pattern.base': 'First name should only contain alphabets'
       }),
-      last_name: Joi.string().min(1).required().messages({
+      last_name: Joi.string().min(1).regex(/^[A-Za-z]+$/).required().messages({
         'string.min': 'Last name is required',
-        'string.empty': 'Last name is required'
+        'string.empty': 'Last name is required',
+        'string.pattern.base': 'First name should only contain alphabets'
       }),
       phone: Joi.string().regex(/^[0-9]{10}$/).required().messages({
         'string.pattern.base': 'Invalid phone number'

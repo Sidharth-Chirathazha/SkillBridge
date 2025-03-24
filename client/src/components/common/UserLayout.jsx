@@ -274,7 +274,7 @@ const UserLayout = () => {
         </nav>
   
         {/* Logout Button - Modified to improve dialog positioning */}
-        <button
+        {/* <button
           onClick={() => {
             setShowSidebarLogoutDialog(true);
           }}
@@ -284,7 +284,28 @@ const UserLayout = () => {
           <span className={`ml-3 ${!isMobile && !isSidebarOpen ? 'lg:hidden' : ''}`}>
             Logout
           </span>
-        </button>
+        </button> */}
+
+        <ConfirmDialog
+          trigger={(open) => (
+            <button
+              onClick={open}
+              className="w-full flex items-center px-4 py-3.5 text-sm font-medium text-background-50 hover:text-secondary-500 transition-colors duration-500"
+              role="menuitem"
+            >
+              <LogOut className="h-5 w-5 min-w-[1.25rem]" />
+              <span className={`ml-3 ${!isMobile && !isSidebarOpen ? 'lg:hidden' : ''}`}>
+                Logout
+              </span>
+            </button>
+          )}
+          title="Logout"
+          description={`Are you sure you want to logout?`}
+          confirmText='Confirm'
+          destructive
+          onConfirm={() => handleLogout()}
+          variant='user' 
+        />
       </div>
   
       {/* Main Content Area */}
@@ -444,7 +465,10 @@ const UserLayout = () => {
                       <ConfirmDialog
                         trigger={(open) => (
                           <button
-                            onClick={open}
+                            onClick={(e) => {
+                              e.stopPropagation(); // Change onMouseDown to onClick
+                              open();
+                            }}
                             className="w-full text-left px-4 py-2.5 text-sm text-secondary-500 hover:bg-background-100 flex items-center space-x-2"
                             role="menuitem"
                           >
@@ -453,7 +477,7 @@ const UserLayout = () => {
                           </button>
                         )}
                         title="Logout"
-                        description={`Are you sure you want to logout?`}
+                        description='Are you sure you want to logout?'
                         confirmText='Confirm'
                         destructive
                         onConfirm={() => handleLogout()}
@@ -525,22 +549,6 @@ const UserLayout = () => {
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-30 transition-opacity duration-300"
           onClick={() => setSidebarOpen(false)}
-        />
-      )}
-      
-      {/* Render the sidebar logout dialog outside of the sidebar */}
-      {showSidebarLogoutDialog && (
-        <ConfirmDialog
-          trigger={(open) => null} // We don't need a trigger since we're controlling it with state
-          title="Logout"
-          description={`Are you sure you want to logout?`}
-          confirmText='Confirm'
-          destructive
-          onConfirm={() => handleLogout()}
-          onCancel={() => setShowSidebarLogoutDialog(false)}
-          isOpen={showSidebarLogoutDialog}
-          setIsOpen={setShowSidebarLogoutDialog}
-          variant='user' 
         />
       )}
     </div>

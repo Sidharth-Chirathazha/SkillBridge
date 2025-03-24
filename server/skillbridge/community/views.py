@@ -2,6 +2,7 @@ import redis
 import json
 import logging
 from django.shortcuts import render
+from rest_framework.exceptions import PermissionDenied, NotFound
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import Community, Message, CommunityMember
@@ -18,7 +19,7 @@ from django.db.models import  Q
 
 # Create your views here.
 
-redis_client = redis.StrictRedis(host="127.0.0.1", port=6379, db=0, decode_responses=True)
+redis_client = redis.StrictRedis(host="redis", port=6379, db=0, decode_responses=True)
 logger = logging.getLogger(__name__)
 
 class CommunityViewSet(ModelViewSet):
@@ -47,6 +48,15 @@ class CommunityViewSet(ModelViewSet):
              return Response({"error": "Community not found."}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"error": "An error occurred while fetching communities.", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    def get_object(self):
+        try:
+            community = super().get_object()
+            if not self.request.user.is_staff and not community.is_active:
+                raise PermissionDenied("You do not have permission to view this community.")
+            return community
+        except Community.DoesNotExist:
+            raise NotFound("Community not found.")
 
     def perform_create(self, serializer):
         try:
@@ -58,6 +68,11 @@ class CommunityViewSet(ModelViewSet):
             CommunityMember.objects.create(user=self.request.user, community=community)
         except Exception as e:
             return Response({"detail": "An error occurred while creating the community ", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    def perform_destroy(self, instance):
+        if instance.creator != self.request.user:
+            raise PermissionDenied("You are not allowed to delete this community.")
+        instance.delete()
         
     def update(self, request, *args, **kwargs):
         if not request.user:  # Ensure only admins can update is_active status

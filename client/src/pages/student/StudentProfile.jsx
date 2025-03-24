@@ -23,7 +23,7 @@ const schema = Joi.object({
     last_name: Joi.string().min(1).regex(/^[A-Za-z]+$/).required().messages({
       'string.min': 'Last name is required',
       'string.empty': 'Last name is required',
-      'string.pattern.base': 'First name should only contain alphabets'
+      'string.pattern.base': 'Last name should only contain alphabets'
     }),
     phone: Joi.string().regex(/^[0-9]{10}$/).required().messages({
       'string.pattern.base': 'Invalid phone number'

@@ -29,10 +29,12 @@ const CourseCreation = () => {
   const navigate = useNavigate();
   
   const courseSchema = Joi.object({
-    title: Joi.string().min(1).required().messages({
+    title: Joi.string().pattern(/^[a-zA-Z0-9\s]+$/).min(1).required().messages({
+      'string.pattern.base': 'Title can only contain alphabets, numbers, and spaces.',
       'string.empty': 'Title is required',
     }),
-    description: Joi.string().min(1).required().messages({
+    description: Joi.string().pattern(/^[a-zA-Z0-9\s]+$/).min(1).required().messages({
+      'string.pattern.base': 'Description can only contain alphabets, numbers, and spaces.',
       'string.empty': 'Description is required',
       'string.min': 'Description must be at least 1 character'
     }),
@@ -66,11 +68,13 @@ const CourseCreation = () => {
   });
   
   const moduleSchema = Joi.object({
-    title: Joi.string().min(1).required().messages({
+    title: Joi.string().pattern(/^[a-zA-Z0-9\s]+$/).min(1).required().messages({
+      'string.pattern.base': 'Title can only contain alphabets, numbers, and spaces.',
       'string.empty': 'Module title is required',
       'string.min': 'Module title must be at least 1 character'
     }),
-    description: Joi.string().min(1).required().messages({
+    description: Joi.string().pattern(/^[a-zA-Z0-9\s]+$/).min(1).required().messages({
+      'string.pattern.base': 'Description can only contain alphabets, numbers, and spaces.',
       'string.empty': 'Module description is required',
       'string.min': 'Module description must be at least 1 character'
     }),
@@ -178,13 +182,10 @@ const CourseCreation = () => {
         
         await dispatch(updateCourse({id: urlCourseId, updateData: formData})).unwrap();
         setIsEditing(false);
-        dispatch(fetchTutorCourses({tutorId,page:1, pageSize:8}));
         toast.success('Course updated successfully!');
       }else{
         const response = await dispatch(addCourse(formData)).unwrap();
-        
-        navigate(`/tutor/teaching/edit/${response.id}`)
-        dispatch(fetchTutorCourses({tutorId, page:1, pageSize:8}));
+        navigate(`/tutor/teaching/`)
         toast.success('Course created successfully!');
       }
     }catch(error){

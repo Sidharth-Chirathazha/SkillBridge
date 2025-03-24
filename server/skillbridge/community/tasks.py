@@ -5,7 +5,7 @@ from .models import Message, Community
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
-redis_client =  redis.StrictRedis(host="127.0.0.1", port=6379, db=0, decode_responses=True)
+redis_client =  redis.StrictRedis(host="redis", port=6379, db=0, decode_responses=True)
 
 @shared_task
 def sync_messages_to_db():
