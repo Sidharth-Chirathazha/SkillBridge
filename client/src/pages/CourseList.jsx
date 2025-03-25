@@ -76,6 +76,11 @@ const CourseList = () => {
 
   useEffect(()=>{
     const redirectToCheckout = async()=>{
+      if (!checkoutSession?.sessionId) {
+        console.error('No valid sessionId found');
+        return;
+      }
+      
       if(checkoutSession?.sessionId){
         const stripe = await stripePromise;
         const {error} = await stripe.redirectToCheckout({

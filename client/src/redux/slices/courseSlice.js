@@ -208,7 +208,8 @@ export const initiateCheckout = createAsyncThunk(
   'courses/checkout',
   async (courseId, thunkAPI) => {
     try {
-      return await courseService.createCheckoutSession(courseId);
+      const response = await courseService.createCheckoutSession(courseId);
+      return response.data;
     } catch (error) {
       return handleApiError(error, thunkAPI);
     }
@@ -220,7 +221,8 @@ export const verifyPurchaseStatus = createAsyncThunk(
   'courses/verifyPurchase',
   async (sessionId, thunkAPI) => {
     try {
-      return await courseService.verifyPurchase(sessionId);
+      response = await courseService.verifyPurchase(sessionId);
+      return response.data;
     } catch (error) {
       return handleApiError(error, thunkAPI);
     }
@@ -634,7 +636,7 @@ const courseSlice = createSlice({
       })
       .addCase(initiateCheckout.fulfilled, (state, action) => {
         state.isCheckoutLoading = false;
-        state.checkoutSession = action.payload;
+        state.checkoutSession = action.payload?.sessionId || null;
       })
       .addCase(initiateCheckout.rejected, (state, action) => {
         state.isCheckoutLoading = false;
