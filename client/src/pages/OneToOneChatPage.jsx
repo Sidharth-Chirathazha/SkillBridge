@@ -142,7 +142,7 @@ const OneToOneChatPage = () => {
     const token = localStorage.getItem("access_token");
     if(!token || !chatRoomId) return;
 
-    const wsUrl = `ws://localhost:8000/ws/chat/${chatRoomId}/?token=${token}`;
+    const wsUrl = `wss://skillbridge.fun/ws/chat/${chatRoomId}/?token=${token}`;
 
     ws.current = new WebSocket(wsUrl);
 

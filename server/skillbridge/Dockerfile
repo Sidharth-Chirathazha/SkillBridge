@@ -3,7 +3,7 @@ FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYECODE=1
 # Prevents Python from buffering stdout and stderr
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONUNBUFFERED=1
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -23,9 +23,6 @@ RUN apt-get update && apt-get install -y \
 # Copy the dependencies file and install packages
 COPY requirements.txt .
 RUN pip --no-cache-dir install -r requirements.txt
-
-# Install Gunicorn (ensure it's in your requirements.txt or add explicitly)
-# RUN pip install gunicorn
 
 # Copy application files
 COPY . .

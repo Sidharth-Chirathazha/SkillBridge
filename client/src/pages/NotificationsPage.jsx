@@ -44,7 +44,7 @@ const NotificationsPage = () => {
 
   useEffect(()=>{
     const token  = localStorage.getItem("access_token")
-    ws.current = new WebSocket(`ws://localhost:8000/ws/notifications/?token=${token}`);
+    ws.current = new WebSocket(`wss://skillbridge.fun/ws/notifications/?token=${token}`);
 
     ws.current.onmessage = () => {
       fetchNotifications();

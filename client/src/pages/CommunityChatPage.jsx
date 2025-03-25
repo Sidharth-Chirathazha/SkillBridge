@@ -106,7 +106,7 @@ const CommunityChatPage = () => {
   useEffect(() => {
     const token = localStorage.getItem("access_token");
 
-    ws.current = new WebSocket(`ws://localhost:8000/ws/community/${communityId}/?token=${token}`);
+    ws.current = new WebSocket(`wss://skillbridge.fun/ws/community/${communityId}/?token=${token}`);
 
     ws.current.onmessage = (e) => {
       const messageData = JSON.parse(e.data);

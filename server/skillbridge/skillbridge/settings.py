@@ -180,12 +180,14 @@ DATABASES = {
 }
 
 
-# Email settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-EMAIL_PORT = os.getenv('EMAIL_PORT')
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 465
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True  # Enable SSL for secure communication
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')  # Your Gmail address
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')  # App Password or Gmail password
+
 
 
 # Password validation
@@ -249,7 +251,7 @@ SOCIALACCOUNT_PROVIDERS = {
 LOGIN_REDIRECT_URL = '/'
 
 # Define the URL for social login provider (Google in this case)
-SOCIAL_AUTH_GOOGLE_OAUTH2_CALLBACK_URL = 'http://127.0.0.1:8000/accounts/google/login/callback/'
+SOCIAL_AUTH_GOOGLE_OAUTH2_CALLBACK_URL = 'https://skillbridge.fun/accounts/google/login/callback/'
 
 # This setting is needed if you're using the allauth views for login/logout
 ACCOUNT_AUTHENTICATED_REDIRECT_URL = '/'  # URL to redirect after successful login
@@ -268,10 +270,8 @@ ZEGO_SERVER_SECRET =  os.getenv('ZEGO_SERVER_SECRET')
 
 
 CORS_ALLOWED_ORIGINS = [  
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:5174",
-    "http://127.0.0.1:5174", 
+    "https://skill-bridge-iota.vercel.app",
+    "https://www.skillbridge.fun",
 ]
 
 

@@ -314,8 +314,8 @@ class CreateCheckoutSession(APIView):
                     }
                 ],
                 mode='payment',
-                success_url=f'http://localhost:5173/{request.user.role}/courses/success?session_id={{CHECKOUT_SESSION_ID}}&course_title={course.title}',
-                cancel_url=f'http://localhost:5173/{request.user.role}/dashboard',
+                success_url=f'https://skill-bridge-iota.vercel.app/{request.user.role}/courses/success?session_id={{CHECKOUT_SESSION_ID}}&course_title={course.title}',
+                cancel_url=f'https://skill-bridge-iota.vercel.app/{request.user.role}/dashboard',
                 metadata={
                     'course_id': course_id,
                     'user_id': request.user.id,
