@@ -19,6 +19,7 @@ const CourseList = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const pageSize = 8;
+  const [stripe, setStripe] = useState(null);
   
   const { coursesData, currentPage, totalPages, 
     isCourseLoading, isCourseError, isCheckoutLoading, checkoutError, checkoutSession, categoriesData } = useSelector(
@@ -28,6 +29,15 @@ const CourseList = () => {
   const {role, userData} = useSelector((state)=>state.auth)
 
   const tutorId = userData?.id || null;
+
+  useEffect(() => {
+    stripePromise.then(stripe => {
+      setStripe(stripe);
+    }).catch(error => {
+      console.error('Failed to load Stripe:', error);
+      toast.error("Payment system unavailable. Please try again later.");
+    });
+  }, []);
 
 
   useEffect(() => {
@@ -72,31 +82,27 @@ const CourseList = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    const redirectToCheckout = async () => {
-      if (!checkoutSession) {
-        return;
-      }
+    const handleRedirect = async () => {
+      if (!checkoutSession || !stripe) return;
   
       try {
-        const stripe = await stripePromise;
         const { error } = await stripe.redirectToCheckout({
-          sessionId: checkoutSession,
+          sessionId: checkoutSession
         });
   
         if (error) {
-          throw error;
+          throw new Error(error.message);
         }
       } catch (error) {
-        console.error('Stripe redirect failed:', error);
-        toast.error("Payment session expired or invalid. Please try again.");
+        console.error('Checkout redirect failed:', error);
+        toast.error("Payment session expired. Please try again.");
       } finally {
-        // Always clear the session after attempt
         dispatch(resetCheckout());
       }
     };
   
-    redirectToCheckout();
-  }, [checkoutSession, dispatch]);
+    handleRedirect();
+  }, [checkoutSession, stripe, dispatch]);
 
 
 
@@ -109,12 +115,12 @@ const CourseList = () => {
     setPage(1);
     setSelectedCategory(categoryId);
   };
-
   const handleBuy = async (courseId) => {
-    try{
-      await dispatch(initiateCheckout(courseId));
-    }catch(error){
-      toast.error("Unexpected error occured")
+    try {
+      // Add .unwrap() to properly handle async flow
+      await dispatch(initiateCheckout(courseId)).unwrap();
+    } catch (error) {
+      toast.error(error.message || "Failed to initiate payment");
     }
   };
 
