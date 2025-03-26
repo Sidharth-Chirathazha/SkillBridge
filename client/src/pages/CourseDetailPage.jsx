@@ -35,26 +35,36 @@ const CourseDetailPage = () => {
     
 
     useEffect(() => {
-        // Cleanup on unmount
-        return () => {
-          dispatch(resetCheckout());
-        };
-      }, [dispatch]);
+      // Clear any existing checkout session when component mounts
+      dispatch(resetCheckout());
+    }, [dispatch]);
     
-      useEffect(()=>{
-        const redirectToCheckout = async()=>{
-          if(checkoutSession?.sessionId){
-            const stripe = await stripePromise;
-            const {error} = await stripe.redirectToCheckout({
-              sessionId: checkoutSession.sessionId
-            });
-            if(error){
-              console.error('Stripe redirect error:', error);
-            }
+    useEffect(() => {
+      const redirectToCheckout = async () => {
+        if (!checkoutSession) {
+          return;
+        }
+    
+        try {
+          const stripe = await stripePromise;
+          const { error } = await stripe.redirectToCheckout({
+            sessionId: checkoutSession,
+          });
+    
+          if (error) {
+            throw error;
           }
-        };
-        redirectToCheckout();
-      }, [checkoutSession])
+        } catch (error) {
+          console.error('Stripe redirect failed:', error);
+          toast.error("Payment session expired or invalid. Please try again.");
+        } finally {
+          // Always clear the session after attempt
+          dispatch(resetCheckout());
+        }
+      };
+    
+      redirectToCheckout();
+    }, [checkoutSession, dispatch]);
 
     const handleStudentAction = async ()=>{
 

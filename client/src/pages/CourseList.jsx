@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import CourseCard from '../components/common/ui/CourseCard';
 import Pagination from '../components/common/ui/Pagination';
 import { fetchCourses, initiateCheckout, resetCheckout, fetchTutorCourses, fetchCategories } from '../redux/slices/courseSlice';
-import { Loader } from 'lucide-react';
 import {loadStripe} from '@stripe/stripe-js'
 import toast from 'react-hot-toast';
 import TutorVerificationMessage from '../components/tutor/TutorVerificationMessage';
@@ -68,29 +67,31 @@ const CourseList = () => {
   
 
   useEffect(() => {
-    // Cleanup on unmount
-    return () => {
-      dispatch(resetCheckout());
-    };
+    // Clear any existing checkout session when component mounts
+    dispatch(resetCheckout());
   }, [dispatch]);
 
   useEffect(() => {
     const redirectToCheckout = async () => {
-      if (!checkoutSession?.sessionId) {
+      if (!checkoutSession) {
         return;
       }
   
-      const stripe = await stripePromise;
-      const { error } = await stripe.redirectToCheckout({
-        sessionId: checkoutSession.sessionId,
-      });
+      try {
+        const stripe = await stripePromise;
+        const { error } = await stripe.redirectToCheckout({
+          sessionId: checkoutSession,
+        });
   
-      // Reset checkout whether it's successful or not
-      dispatch(resetCheckout());
-  
-      if (error) {
-        console.error('Stripe redirect error:', error);
-        toast.error("Payment session expired. Please try again.");
+        if (error) {
+          throw error;
+        }
+      } catch (error) {
+        console.error('Stripe redirect failed:', error);
+        toast.error("Payment session expired or invalid. Please try again.");
+      } finally {
+        // Always clear the session after attempt
+        dispatch(resetCheckout());
       }
     };
   
