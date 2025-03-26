@@ -44,19 +44,6 @@ const SuccessPage = () => {
           message: error.message,
           details: error
         });
-
-        // More specific error handling
-        if (error.response) {
-          // The request was made and the server responded with a status code
-          toast.error(error.response.data.error || 'Purchase verification failed');
-        } else if (error.request) {
-          // The request was made but no response was received
-          toast.error('No response from server. Please contact support.');
-        } else {
-          // Something happened in setting up the request
-          toast.error('An unexpected error occurred during verification');
-        }
-
         navigate('/student/dashboard');
       }
     };
