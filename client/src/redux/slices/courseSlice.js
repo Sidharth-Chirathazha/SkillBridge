@@ -208,10 +208,21 @@ export const initiateCheckout = createAsyncThunk(
   'courses/checkout',
   async (courseId, thunkAPI) => {
     try {
+      console.log('Initiating checkout for course:', courseId);
       const response = await courseService.createCheckoutSession(courseId);
+      console.log('Checkout Response:', {
+        sessionId: response.data?.sessionId,
+        fullResponse: response
+      });
+      if (!response.data?.sessionId) {
+        throw new Error('No session ID received');
+      }
       return response.data;
     } catch (error) {
-      return handleApiError(error, thunkAPI);
+      console.error('Checkout Thunk Error:', error);
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.error || 'Checkout failed'
+      );
     }
   }
 );

@@ -30,13 +30,20 @@ const CourseList = () => {
 
   const tutorId = userData?.id || null;
 
-  useEffect(() => {
-    stripePromise.then(stripe => {
-      setStripe(stripe);
-    }).catch(error => {
-      console.error('Failed to load Stripe:', error);
-      toast.error("Payment system unavailable. Please try again later.");
-    });
+   // Stripe Initialization
+   useEffect(() => {
+    const initializeStripe = async () => {
+      try {
+        const stripeInstance = await loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+        console.log('Stripe Initialized:', !!stripeInstance);
+        setStripe(stripeInstance);
+      } catch (error) {
+        console.error('Stripe Initialization Error:', error);
+        toast.error('Payment system could not be loaded');
+      }
+    };
+
+    initializeStripe();
   }, []);
 
   console.log("Checkout sessions:", checkoutSession);
@@ -86,27 +93,34 @@ const CourseList = () => {
     dispatch(resetCheckout());
   }, [dispatch]);
 
+  // Checkout Redirect Effect
   useEffect(() => {
-    const handleRedirect = async () => {
+    const handleCheckoutRedirect = async () => {
+      console.log('Checkout Debug:', {
+        session: checkoutSession,
+        stripeReady: !!stripe
+      });
+
       if (!checkoutSession || !stripe) return;
-  
+
       try {
         const { error } = await stripe.redirectToCheckout({
           sessionId: checkoutSession
         });
-  
+
         if (error) {
-          throw new Error(error.message);
+          console.error('Checkout Redirect Error:', error);
+          toast.error(error.message || 'Payment redirection failed');
         }
       } catch (error) {
-        console.error('Checkout redirect failed:', error);
-        toast.error("Payment session expired. Please try again.");
+        console.error('Checkout Process Exception:', error);
+        toast.error('Payment processing encountered an error');
       } finally {
         dispatch(resetCheckout());
       }
     };
-  
-    handleRedirect();
+
+    handleCheckoutRedirect();
   }, [checkoutSession, stripe, dispatch]);
 
 
@@ -120,12 +134,19 @@ const CourseList = () => {
     setPage(1);
     setSelectedCategory(categoryId);
   };
+
   const handleBuy = async (courseId) => {
+    console.log('Attempting to buy course:', courseId);
+    
     try {
-      // Add .unwrap() to properly handle async flow
-      await dispatch(initiateCheckout(courseId)).unwrap();
+      const result = await dispatch(initiateCheckout(courseId)).unwrap();
+      console.log('Checkout Initiation Result:', result);
     } catch (error) {
-      toast.error(error.message || "Failed to initiate payment");
+      console.error('Checkout Initiation Error:', {
+        message: error.message,
+        details: error
+      });
+      toast.error(error.message || 'Failed to start payment process');
     }
   };
 

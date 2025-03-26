@@ -272,6 +272,8 @@ ZEGO_SERVER_SECRET =  os.getenv('ZEGO_SERVER_SECRET')
 CORS_ALLOWED_ORIGINS = [  
     "https://skill-bridge-iota.vercel.app",
     "https://www.skillbridge.fun",
+    "http://localhost:5173/",
+    "http://127.0.0.1:5173",
 ]
 
 

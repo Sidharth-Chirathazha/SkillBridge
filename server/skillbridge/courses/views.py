@@ -20,7 +20,7 @@ from django.db.models import Count, Sum, Q, Value
 from django.db.models.functions import Coalesce
 import stripe
 from django.utils import timezone
-from skillbridge import settings
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError, transaction
 from decimal import Decimal
@@ -293,6 +293,8 @@ class CategoryViewSet(ModelViewSet):
 class CreateCheckoutSession(APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request, *args, **kwargs):
+        logger.info(f"Checkout Session Request - User: {request.user.id}")
+        logger.info(f"Request Data: {request.data}")
         course_id = request.data.get("course_id")
         course = get_object_or_404(Course, id=course_id)
 
@@ -325,10 +327,10 @@ class CreateCheckoutSession(APIView):
                 customer_email=request.user.email if request.user.email else None,
                  
             )
-
+            print("Created session:", checkout_session.id)
             return Response({'sessionId':checkout_session.id})
         except Exception as e:
-            logger.error(f"An error occurred: {e}", exc_info=True)
+            logger.error(f"Checkout Session Error - User {request.user.id}: {e}", exc_info=True)
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
 

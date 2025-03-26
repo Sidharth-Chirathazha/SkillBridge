@@ -219,15 +219,30 @@ export const markModuleCompleted = async(moduleId)=>{
     return response.data;
 }
 
-//Stripe Checkout
-export const createCheckoutSession = async(courseId)=>{
-    
-    const response = await axiosInstance.post("/courses/create-checkout-session/",
-        {course_id: courseId},
-        {requiresAuth:true}
-    );
-    return response.data;
-}
+export const createCheckoutSession = async (courseId) => {
+    try {
+      console.log('Sending checkout request for course:', courseId);
+      const response = await axiosInstance.post("/courses/create-checkout-session/", 
+        { course_id: courseId },
+        { 
+          requiresAuth: true,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      console.log('Checkout Session Response:', response.data);
+      return response;
+    } catch (error) {
+      console.error('Checkout Session Error:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+      throw error;
+    }
+  };
 
 //Verify Purchase
 export const verifyPurchase = async(sessionId)=>{
