@@ -74,28 +74,28 @@ const CourseList = () => {
     };
   }, [dispatch]);
 
-  useEffect(()=>{
-    const redirectToCheckout = async()=>{
+  useEffect(() => {
+    const redirectToCheckout = async () => {
       if (!checkoutSession?.sessionId) {
-        console.error('No valid sessionId found');
         return;
       }
-      
-      if(checkoutSession?.sessionId){
-        const stripe = await stripePromise;
-        const {error} = await stripe.redirectToCheckout({
-          sessionId: checkoutSession.sessionId
-        });
-        if (!error) {
-          dispatch(resetCheckout()); // ✅ Reset checkoutSession after redirect
-        }
-        else{
-          console.error('Stripe redirect error:', error);
-        }
+  
+      const stripe = await stripePromise;
+      const { error } = await stripe.redirectToCheckout({
+        sessionId: checkoutSession.sessionId,
+      });
+  
+      // Reset checkout whether it's successful or not
+      dispatch(resetCheckout());
+  
+      if (error) {
+        console.error('Stripe redirect error:', error);
+        toast.error("Payment session expired. Please try again.");
       }
     };
+  
     redirectToCheckout();
-  }, [checkoutSession, dispatch])
+  }, [checkoutSession, dispatch]);
 
 
 
