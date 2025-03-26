@@ -39,6 +39,11 @@ const CourseList = () => {
     });
   }, []);
 
+  console.log("Checkout sessions:", checkoutSession);
+  console.log("Stripe:", stripe);
+  
+  
+
 
   useEffect(() => {
     if (!tutorId) return;
