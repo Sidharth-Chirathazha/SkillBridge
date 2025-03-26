@@ -233,9 +233,18 @@ export const verifyPurchaseStatus = createAsyncThunk(
   async (sessionId, thunkAPI) => {
     try {
       response = await courseService.verifyPurchase(sessionId);
+      console.log('Purchase Verification Response:', response.data);
       return response.data;
     } catch (error) {
-      return handleApiError(error, thunkAPI);
+      console.error('Purchase Verification Thunk Error:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      
+      return thunkAPI.rejectWithValue(
+        error.response?.data || { error: 'Purchase verification failed' }
+      );
     }
   }
 );

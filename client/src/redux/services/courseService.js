@@ -244,14 +244,31 @@ export const createCheckoutSession = async (courseId) => {
     }
   };
 
-//Verify Purchase
-export const verifyPurchase = async(sessionId)=>{
-    const response = await axiosInstance.post("/courses/verify-purchase/",
-        {session_id: sessionId},
-        {requiresAuth:true}
-    );
-    return response.data;
-}
+  export const verifyPurchase = async (sessionId) => {
+    try {
+      console.log('Sending purchase verification request:', sessionId);
+      
+      const response = await axiosInstance.post("/courses/verify-purchase/", 
+        { session_id: sessionId },
+        { 
+          requiresAuth: true,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      console.log('Verification Response:', response.data);
+      return response;
+    } catch (error) {
+      console.error('Purchase Verification Error:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+      throw error;
+    }
+  };
 
 //Post review
 export const postReview = async(reviewInfo)=>{
