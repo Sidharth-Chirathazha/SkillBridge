@@ -122,8 +122,3 @@ For any inquiries or collaborations, reach out via email: **sidharthchirathazha@
 
 
 
-## Contact
-For any inquiries or collaborations, reach out via email: **sidharthchirathazha@gmail.com**
-
-
-
