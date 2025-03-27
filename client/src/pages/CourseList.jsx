@@ -9,8 +9,6 @@ import TutorVerificationMessage from '../components/tutor/TutorVerificationMessa
 import SearchBar from '../components/common/ui/SearchBar';
 import DropdownMenu from '../components/common/ui/DropdownMenu';
 
-const stripe_publish_key = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-const stripePromise = loadStripe(stripe_publish_key)
 
 
 const CourseList = () => {
@@ -46,9 +44,6 @@ const CourseList = () => {
     initializeStripe();
   }, []);
 
-  console.log("Checkout sessions:", checkoutSession);
-  console.log("Stripe:", stripe);
-  
   
 
 
@@ -136,7 +131,6 @@ const CourseList = () => {
   };
 
   const handleBuy = async (courseId) => {
-    console.log('Attempting to buy course:', courseId);
     
     try {
       const result = await dispatch(initiateCheckout(courseId)).unwrap();

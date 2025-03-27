@@ -348,6 +348,9 @@ class StripeWebhookView(APIView):
             return Response({'error': 'Invalid payload'}, status=status.HTTP_400_BAD_REQUEST)
         except stripe.error.SignatureVerificationError as e:
             return Response({'error': 'Invalid signature'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if event['type'] == 'checkout.session.expired':
+            return Response({'status': 'Ignored expired session'}, status=status.HTTP_200_OK)
 
 
         if event['type'] == 'checkout.session.completed':
@@ -433,22 +436,56 @@ class VerifyPurchase(APIView):
     
     def post(self, request):
         session_id = request.data.get('session_id')
+        
+        # Validate input
+        if not session_id:
+            logger.warning(f"Verification attempt without session ID by user {request.user.id}")
+            return Response({'error': 'Session ID is required'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
+            # Retrieve Stripe session
             session = stripe.checkout.Session.retrieve(session_id)
-            if session.payment_status == 'paid':
-                purchase = Purchase.objects.get(
-                    user=request.user,
-                    course_id=session.metadata['course_id'] 
-                )
+            
+            # Log session details for debugging
+            logger.info(f"Stripe Session Retrieved - Status: {session.payment_status}")
+            logger.info(f"Session Metadata: {session.metadata}")
+
+            # Verify payment status
+            if session.payment_status != 'paid':
+                logger.warning(f"Unpaid session attempt by user {request.user.id}")
+                return Response({'error': 'Payment not completed'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Validate course and user
+            course_id = session.metadata.get('course_id')
+            if not course_id:
+                logger.error(f"No course ID in session metadata for session {session_id}")
+                return Response({'error': 'Invalid course information'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check if purchase already exists
+            purchase, created = Purchase.objects.get_or_create(
+                user=request.user,
+                course_id=course_id,
+                defaults={
+                    'status': 'completed',
+                    'purchase_type': 'Payment'
+                }
+            )
+
+            # Update existing purchase if not already completed
+            if not created and purchase.status != 'completed':
                 purchase.status = 'completed'
                 purchase.purchase_type = 'Payment'
                 purchase.save()
 
-                return Response({'status': 'success'})
+            logger.info(f"Purchase verified for user {request.user.id}, course {course_id}")
+            return Response({'status': 'success', 'course_id': course_id})
                 
+        except stripe.error.StripeError as e:
+            logger.error(f"Stripe Error during verification: {str(e)}")
+            return Response({'error': 'Payment verification failed'}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return Response({'error': str(e)}, status=400)
+            logger.error(f"Unexpected error during purchase verification: {str(e)}", exc_info=True)
+            return Response({'error': 'An unexpected error occurred'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
 
 """View to handle reviews and ratings"""

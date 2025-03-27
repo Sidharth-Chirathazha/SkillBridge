@@ -3,11 +3,9 @@ import CourseDetail from '../components/common/CourseDetail'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate, useParams } from 'react-router-dom'
 import { fetchSingleCourse, initiateCheckout, resetCheckout } from '../redux/slices/courseSlice'
-import { Loader } from 'lucide-react'
 import {loadStripe} from '@stripe/stripe-js'
 import TutorVerificationMessage from '../components/tutor/TutorVerificationMessage';
 
-const stripePromise = loadStripe('pk_test_51Qp6mdRZhgmNkKQoW8Hp4xmJjjpuuC9iwjD0s1utEDyqLsByg7yXK81XadWBK751vQE8nbAMV5RmL11nw25aQrFh00zV21sORj')
 
 const CourseDetailPage = () => {
     const [loading, setLoading] = useState(true);
@@ -16,6 +14,24 @@ const CourseDetailPage = () => {
     const {singleCourse, isCourseLoading, isCheckoutLoading, checkoutError, checkoutSession} = useSelector((state)=>state.course);
     const {id} = useParams();
     const {role, userData} = useSelector((state)=>state.auth)
+    const [stripe, setStripe] = useState(null);
+
+
+    // Stripe Initialization
+   useEffect(() => {
+    const initializeStripe = async () => {
+      try {
+        const stripeInstance = await loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+        console.log('Stripe Initialized:', !!stripeInstance);
+        setStripe(stripeInstance);
+      } catch (error) {
+        console.error('Stripe Initialization Error:', error);
+        toast.error('Payment system could not be loaded');
+      }
+    };
+
+    initializeStripe();
+  }, []);
 
     useEffect(() => {
     const fetchData = async () => {
@@ -39,40 +55,48 @@ const CourseDetailPage = () => {
       dispatch(resetCheckout());
     }, [dispatch]);
     
-    useEffect(() => {
-      const redirectToCheckout = async () => {
-        if (!checkoutSession) {
-          return;
+     // Checkout Redirect Effect
+  useEffect(() => {
+    const handleCheckoutRedirect = async () => {
+      console.log('Checkout Debug:', {
+        session: checkoutSession,
+        stripeReady: !!stripe
+      });
+
+      if (!checkoutSession || !stripe) return;
+
+      try {
+        const { error } = await stripe.redirectToCheckout({
+          sessionId: checkoutSession
+        });
+
+        if (error) {
+          console.error('Checkout Redirect Error:', error);
+          toast.error(error.message || 'Payment redirection failed');
         }
-    
-        try {
-          const stripe = await stripePromise;
-          const { error } = await stripe.redirectToCheckout({
-            sessionId: checkoutSession,
-          });
-    
-          if (error) {
-            throw error;
-          }
-        } catch (error) {
-          console.error('Stripe redirect failed:', error);
-          toast.error("Payment session expired or invalid. Please try again.");
-        } finally {
-          // Always clear the session after attempt
-          dispatch(resetCheckout());
-        }
-      };
-    
-      redirectToCheckout();
-    }, [checkoutSession, dispatch]);
+      } catch (error) {
+        console.error('Checkout Process Exception:', error);
+        toast.error('Payment processing encountered an error');
+      } finally {
+        dispatch(resetCheckout());
+      }
+    };
+
+    handleCheckoutRedirect();
+  }, [checkoutSession, stripe, dispatch]);
 
     const handleStudentAction = async ()=>{
 
-        try{
-            await dispatch(initiateCheckout(id));
-        }catch(error){
-            toast.error("Unexpected error occured")
-        }
+      try {
+        const result = await dispatch(initiateCheckout(id)).unwrap();
+        console.log('Checkout Initiation Result:', result);
+      } catch (error) {
+        console.error('Checkout Initiation Error:', {
+          message: error.message,
+          details: error
+        });
+        toast.error(error.message || 'Failed to start payment process');
+      }
     }
 
     if (loading || !singleCourse || isCheckoutLoading) {
