@@ -251,7 +251,10 @@ SOCIALACCOUNT_PROVIDERS = {
 LOGIN_REDIRECT_URL = '/'
 
 # Define the URL for social login provider (Google in this case)
-SOCIAL_AUTH_GOOGLE_OAUTH2_CALLBACK_URL = 'https://skillbridge.fun/accounts/google/login/callback/'
+SOCIAL_AUTH_GOOGLE_OAUTH2_CALLBACK_URL = 'https://api.skillbridge.fun/accounts/google/login/callback/'
+
+SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
+
 
 # This setting is needed if you're using the allauth views for login/logout
 ACCOUNT_AUTHENTICATED_REDIRECT_URL = '/'  # URL to redirect after successful login
@@ -270,7 +273,7 @@ ZEGO_SERVER_SECRET =  os.getenv('ZEGO_SERVER_SECRET')
 
 
 CORS_ALLOWED_ORIGINS = [  
-    "https://skill-bridge-iota.vercel.app",
+    "https://skillbridge.fun",
     "https://www.skillbridge.fun",
 ]
 
