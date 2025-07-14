@@ -94,6 +94,7 @@ INSTALLED_APPS = [
     'community',
     'rest_framework',
     'corsheaders',
+    'django_extensions',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'django.contrib.sites',  
@@ -107,8 +108,8 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = 'users.User'
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -272,13 +273,15 @@ ZEGO_APP_ID =  os.getenv('ZEGO_APP_ID')
 ZEGO_SERVER_SECRET =  os.getenv('ZEGO_SERVER_SECRET')
 
 
-CORS_ALLOWED_ORIGINS = [  
-    "https://skillbridge.fun",
+CORS_ALLOWED_ORIGINS = [
     "https://www.skillbridge.fun",
 ]
 
 
+
 CORS_ALLOW_METHODS = ["GET", "POST", "OPTIONS", "DELETE", "PUT", "PATCH"]
+
+CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_HEADERS = [
     "authorization",
@@ -286,6 +289,11 @@ CORS_ALLOW_HEADERS = [
     "x-csrftoken",
     "x-requested-with",
 ]
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://(\w+\.)?skillbridge\.fun$",
+]
+
 
 
 
